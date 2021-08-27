@@ -176,7 +176,7 @@ static inline int qt_safe_sendmsg(int sockfd, const struct msghdr *msg, int flag
 #ifdef MSG_NOSIGNAL
     flags |= MSG_NOSIGNAL;
 #else
-    qt_ignore_sigpipe();
+    // qt_ignore_sigpipe();
 #endif
 
     int ret;

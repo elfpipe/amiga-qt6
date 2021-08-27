@@ -43,6 +43,13 @@
 #ifndef QSTRING_H
 #define QSTRING_H
 
+#ifdef __amigaos4__
+#include <string>
+namespace std {
+typedef basic_string<wchar_t>    wstring;
+}
+#endif
+
 #if defined(QT_NO_CAST_FROM_ASCII) && defined(QT_RESTRICTED_CAST_FROM_ASCII)
 #error QT_NO_CAST_FROM_ASCII and QT_RESTRICTED_CAST_FROM_ASCII must not be defined at the same time
 #endif

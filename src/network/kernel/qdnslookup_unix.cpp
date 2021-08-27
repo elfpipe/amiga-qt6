@@ -50,7 +50,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/nameser.h>
-#if !defined(Q_OS_OPENBSD)
+#if !defined(Q_OS_OPENBSD) && !defined(__amigaos4__)
 #  include <arpa/nameser_compat.h>
 #endif
 #include <resolv.h>
@@ -74,12 +74,12 @@ typedef struct __res_state* res_state;
 #endif
 typedef int (*dn_expand_proto)(const unsigned char *, const unsigned char *, const unsigned char *, char *, int);
 static dn_expand_proto local_dn_expand = nullptr;
-typedef void (*res_nclose_proto)(res_state);
-static res_nclose_proto local_res_nclose = nullptr;
-typedef int (*res_ninit_proto)(res_state);
-static res_ninit_proto local_res_ninit = nullptr;
-typedef int (*res_nquery_proto)(res_state, const char *, int, int, unsigned char *, int);
-static res_nquery_proto local_res_nquery = nullptr;
+// typedef void (*res_nclose_proto)(res_state);
+// static res_nclose_proto local_res_nclose = nullptr;
+// typedef int (*res_ninit_proto)(res_state);
+// static res_ninit_proto local_res_ninit = nullptr;
+// typedef int (*res_nquery_proto)(res_state, const char *, int, int, unsigned char *, int);
+// static res_nquery_proto local_res_nquery = nullptr;
 
 // Custom deleter to close resolver state.
 
@@ -87,7 +87,7 @@ struct QDnsLookupStateDeleter
 {
     static inline void cleanup(struct __res_state *pointer)
     {
-        local_res_nclose(pointer);
+        // local_res_nclose(pointer);
     }
 };
 
@@ -97,7 +97,7 @@ static QFunctionPointer resolveSymbol(QLibrary &lib, const char *sym)
         return lib.resolve(sym);
 
 #if defined(RTLD_DEFAULT) && (defined(Q_OS_FREEBSD) || QT_CONFIG(dlopen))
-    return reinterpret_cast<QFunctionPointer>(dlsym(RTLD_DEFAULT, sym));
+    return reinterpret_cast<QFunctionPointer>(dlsym(RTLD_DEFAULT, (char *)sym));
 #else
     return nullptr;
 #endif
@@ -119,23 +119,23 @@ static bool resolveLibraryInternal()
     if (!local_dn_expand)
         local_dn_expand = dn_expand_proto(resolveSymbol(lib, "dn_expand"));
 
-    local_res_nclose = res_nclose_proto(resolveSymbol(lib, "__res_nclose"));
-    if (!local_res_nclose)
-        local_res_nclose = res_nclose_proto(resolveSymbol(lib, "res_9_nclose"));
-    if (!local_res_nclose)
-        local_res_nclose = res_nclose_proto(resolveSymbol(lib, "res_nclose"));
+    // local_res_nclose = res_nclose_proto(resolveSymbol(lib, "__res_nclose"));
+    // if (!local_res_nclose)
+    //     local_res_nclose = res_nclose_proto(resolveSymbol(lib, "res_9_nclose"));
+    // if (!local_res_nclose)
+    //     local_res_nclose = res_nclose_proto(resolveSymbol(lib, "res_nclose"));
 
-    local_res_ninit = res_ninit_proto(resolveSymbol(lib, "__res_ninit"));
-    if (!local_res_ninit)
-        local_res_ninit = res_ninit_proto(resolveSymbol(lib, "res_9_ninit"));
-    if (!local_res_ninit)
-        local_res_ninit = res_ninit_proto(resolveSymbol(lib, "res_ninit"));
+    // // local_res_ninit = res_ninit_proto(resolveSymbol(lib, "__res_ninit"));
+    // if (!local_res_ninit)
+    //     local_res_ninit = res_ninit_proto(resolveSymbol(lib, "res_9_ninit"));
+    // if (!local_res_ninit)
+    //     local_res_ninit = res_ninit_proto(resolveSymbol(lib, "res_ninit"));
 
-    local_res_nquery = res_nquery_proto(resolveSymbol(lib, "__res_nquery"));
-    if (!local_res_nquery)
-        local_res_nquery = res_nquery_proto(resolveSymbol(lib, "res_9_nquery"));
-    if (!local_res_nquery)
-        local_res_nquery = res_nquery_proto(resolveSymbol(lib, "res_nquery"));
+    // local_res_nquery = res_nquery_proto(resolveSymbol(lib, "__res_nquery"));
+    // if (!local_res_nquery)
+    //     local_res_nquery = res_nquery_proto(resolveSymbol(lib, "res_9_nquery"));
+    // if (!local_res_nquery)
+    //     local_res_nquery = res_nquery_proto(resolveSymbol(lib, "res_nquery"));
 
     return true;
 }
@@ -147,26 +147,26 @@ void QDnsLookupRunnable::query(const int requestType, const QByteArray &requestN
     resolveLibrary();
 
     // If dn_expand, res_ninit or res_nquery is missing, fail.
-    if (!local_dn_expand || !local_res_nclose || !local_res_ninit || !local_res_nquery) {
-        reply->error = QDnsLookup::ResolverError;
-        reply->errorString = tr("Resolver functions not found");
-        return;
-    }
+    // if (!local_dn_expand || !local_res_nclose || !local_res_ninit || !local_res_nquery) {
+    //     reply->error = QDnsLookup::ResolverError;
+    //     reply->errorString = tr("Resolver functions not found");
+    //     return;
+    // }
 
     // Initialize state.
-    struct __res_state state;
-    std::memset(&state, 0, sizeof(state));
-    if (local_res_ninit(&state) < 0) {
-        reply->error = QDnsLookup::ResolverError;
-        reply->errorString = tr("Resolver initialization failed");
-        return;
-    }
+    // struct __res_state state;
+    // std::memset(&state, 0, sizeof(state));
+    // if (local_res_ninit(&state) < 0) {
+    //     reply->error = QDnsLookup::ResolverError;
+    //     reply->errorString = tr("Resolver initialization failed");
+    //     return;
+    // }
 
     //Check if a nameserver was set. If so, use it
     if (!nameserver.isNull()) {
         if (nameserver.protocol() == QAbstractSocket::IPv4Protocol) {
-            state.nsaddr_list[0].sin_addr.s_addr = htonl(nameserver.toIPv4Address());
-            state.nscount = 1;
+            // state.nsaddr_list[0].sin_addr.s_addr = htonl(nameserver.toIPv4Address());
+            // state.nscount = 1;
         } else if (nameserver.protocol() == QAbstractSocket::IPv6Protocol) {
 #if defined(Q_OS_LINUX)
             struct sockaddr_in6 *ns;
@@ -204,205 +204,205 @@ void QDnsLookupRunnable::query(const int requestType, const QByteArray &requestN
 #ifdef QDNSLOOKUP_DEBUG
     state.options |= RES_DEBUG;
 #endif
-    QScopedPointer<struct __res_state, QDnsLookupStateDeleter> state_ptr(&state);
+    // QScopedPointer<struct __res_state, QDnsLookupStateDeleter> state_ptr(&state);
 
     // Perform DNS query.
     QVarLengthArray<unsigned char, PACKETSZ> buffer(PACKETSZ);
     std::memset(buffer.data(), 0, buffer.size());
-    int responseLength = local_res_nquery(&state, requestName, C_IN, requestType, buffer.data(), buffer.size());
-    if (Q_UNLIKELY(responseLength > PACKETSZ)) {
-        buffer.resize(responseLength);
-        std::memset(buffer.data(), 0, buffer.size());
-        responseLength = local_res_nquery(&state, requestName, C_IN, requestType, buffer.data(), buffer.size());
-        if (Q_UNLIKELY(responseLength > buffer.size())) {
-            // Ok, we give up.
-            reply->error = QDnsLookup::ResolverError;
-            reply->errorString.clear(); // We cannot be more specific, alas.
-            return;
-        }
-    }
+    // int responseLength = local_res_nquery(&state, requestName, C_IN, requestType, buffer.data(), buffer.size());
+    // if (Q_UNLIKELY(responseLength > PACKETSZ)) {
+    //     buffer.resize(responseLength);
+    //     std::memset(buffer.data(), 0, buffer.size());
+    //     responseLength = local_res_nquery(&state, requestName, C_IN, requestType, buffer.data(), buffer.size());
+    //     if (Q_UNLIKELY(responseLength > buffer.size())) {
+    //         // Ok, we give up.
+    //         reply->error = QDnsLookup::ResolverError;
+    //         reply->errorString.clear(); // We cannot be more specific, alas.
+    //         return;
+    //     }
+    // }
 
     unsigned char *response = buffer.data();
     // Check the response header. Though res_nquery returns -1 as a
     // responseLength in case of error, we still can extract the
     // exact error code from the response.
-    HEADER *header = (HEADER*)response;
-    const int answerCount = ntohs(header->ancount);
-    switch (header->rcode) {
-    case NOERROR:
-        break;
-    case FORMERR:
-        reply->error = QDnsLookup::InvalidRequestError;
-        reply->errorString = tr("Server could not process query");
-        return;
-    case SERVFAIL:
-        reply->error = QDnsLookup::ServerFailureError;
-        reply->errorString = tr("Server failure");
-        return;
-    case NXDOMAIN:
-        reply->error = QDnsLookup::NotFoundError;
-        reply->errorString = tr("Non existent domain");
-        return;
-    case REFUSED:
-        reply->error = QDnsLookup::ServerRefusedError;
-        reply->errorString = tr("Server refused to answer");
-        return;
-    default:
-        reply->error = QDnsLookup::InvalidReplyError;
-        reply->errorString = tr("Invalid reply received");
-        return;
-    }
+    // HEADER *header = (HEADER*)response;
+    // const int answerCount = ntohs(header->ancount);
+    // switch (header->rcode) {
+    // case NOERROR:
+    //     break;
+    // case FORMERR:
+    //     reply->error = QDnsLookup::InvalidRequestError;
+    //     reply->errorString = tr("Server could not process query");
+    //     return;
+    // case SERVFAIL:
+    //     reply->error = QDnsLookup::ServerFailureError;
+    //     reply->errorString = tr("Server failure");
+    //     return;
+    // case NXDOMAIN:
+    //     reply->error = QDnsLookup::NotFoundError;
+    //     reply->errorString = tr("Non existent domain");
+    //     return;
+    // case REFUSED:
+    //     reply->error = QDnsLookup::ServerRefusedError;
+    //     reply->errorString = tr("Server refused to answer");
+    //     return;
+    // default:
+    //     reply->error = QDnsLookup::InvalidReplyError;
+    //     reply->errorString = tr("Invalid reply received");
+    //     return;
+    // }
 
-    // Check the reply is valid.
-    if (responseLength < int(sizeof(HEADER))) {
-        reply->error = QDnsLookup::InvalidReplyError;
-        reply->errorString = tr("Invalid reply received");
-        return;
-    }
+    // // Check the reply is valid.
+    // if (responseLength < int(sizeof(HEADER))) {
+    //     reply->error = QDnsLookup::InvalidReplyError;
+    //     reply->errorString = tr("Invalid reply received");
+    //     return;
+    // }
 
     // Skip the query host, type (2 bytes) and class (2 bytes).
-    char host[PACKETSZ], answer[PACKETSZ];
-    unsigned char *p = response + sizeof(HEADER);
-    int status = local_dn_expand(response, response + responseLength, p, host, sizeof(host));
-    if (status < 0) {
-        reply->error = QDnsLookup::InvalidReplyError;
-        reply->errorString = tr("Could not expand domain name");
-        return;
-    }
-    p += status + 4;
+    // char host[PACKETSZ], answer[PACKETSZ];
+    // unsigned char *p = response + sizeof(HEADER);
+    // int status = local_dn_expand(response, response + responseLength, p, host, sizeof(host));
+    // if (status < 0) {
+    //     reply->error = QDnsLookup::InvalidReplyError;
+    //     reply->errorString = tr("Could not expand domain name");
+    //     return;
+    // }
+    // p += status + 4;
 
-    // Extract results.
-    int answerIndex = 0;
-    while ((p < response + responseLength) && (answerIndex < answerCount)) {
-        status = local_dn_expand(response, response + responseLength, p, host, sizeof(host));
-        if (status < 0) {
-            reply->error = QDnsLookup::InvalidReplyError;
-            reply->errorString = tr("Could not expand domain name");
-            return;
-        }
-        const QString name = QUrl::fromAce(host);
+    // // Extract results.
+    // int answerIndex = 0;
+    // while ((p < response + responseLength) && (answerIndex < answerCount)) {
+    //     status = local_dn_expand(response, response + responseLength, p, host, sizeof(host));
+    //     if (status < 0) {
+    //         reply->error = QDnsLookup::InvalidReplyError;
+    //         reply->errorString = tr("Could not expand domain name");
+    //         return;
+    //     }
+    //     const QString name = QUrl::fromAce(host);
 
-        p += status;
-        const quint16 type = (p[0] << 8) | p[1];
-        p += 2; // RR type
-        p += 2; // RR class
-        const quint32 ttl = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-        p += 4;
-        const quint16 size = (p[0] << 8) | p[1];
-        p += 2;
+    //     p += status;
+    //     const quint16 type = (p[0] << 8) | p[1];
+    //     p += 2; // RR type
+    //     p += 2; // RR class
+    //     const quint32 ttl = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+    //     p += 4;
+    //     const quint16 size = (p[0] << 8) | p[1];
+    //     p += 2;
 
-        if (type == QDnsLookup::A) {
-            if (size != 4) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid IPv4 address record");
-                return;
-            }
-            const quint32 addr = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
-            QDnsHostAddressRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            record.d->value = QHostAddress(addr);
-            reply->hostAddressRecords.append(record);
-        } else if (type == QDnsLookup::AAAA) {
-            if (size != 16) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid IPv6 address record");
-                return;
-            }
-            QDnsHostAddressRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            record.d->value = QHostAddress(p);
-            reply->hostAddressRecords.append(record);
-        } else if (type == QDnsLookup::CNAME) {
-            status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
-            if (status < 0) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid canonical name record");
-                return;
-            }
-            QDnsDomainNameRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            record.d->value = QUrl::fromAce(answer);
-            reply->canonicalNameRecords.append(record);
-        } else if (type == QDnsLookup::NS) {
-            status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
-            if (status < 0) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid name server record");
-                return;
-            }
-            QDnsDomainNameRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            record.d->value = QUrl::fromAce(answer);
-            reply->nameServerRecords.append(record);
-        } else if (type == QDnsLookup::PTR) {
-            status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
-            if (status < 0) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid pointer record");
-                return;
-            }
-            QDnsDomainNameRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            record.d->value = QUrl::fromAce(answer);
-            reply->pointerRecords.append(record);
-        } else if (type == QDnsLookup::MX) {
-            const quint16 preference = (p[0] << 8) | p[1];
-            status = local_dn_expand(response, response + responseLength, p + 2, answer, sizeof(answer));
-            if (status < 0) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid mail exchange record");
-                return;
-            }
-            QDnsMailExchangeRecord record;
-            record.d->exchange = QUrl::fromAce(answer);
-            record.d->name = name;
-            record.d->preference = preference;
-            record.d->timeToLive = ttl;
-            reply->mailExchangeRecords.append(record);
-        } else if (type == QDnsLookup::SRV) {
-            const quint16 priority = (p[0] << 8) | p[1];
-            const quint16 weight = (p[2] << 8) | p[3];
-            const quint16 port = (p[4] << 8) | p[5];
-            status = local_dn_expand(response, response + responseLength, p + 6, answer, sizeof(answer));
-            if (status < 0) {
-                reply->error = QDnsLookup::InvalidReplyError;
-                reply->errorString = tr("Invalid service record");
-                return;
-            }
-            QDnsServiceRecord record;
-            record.d->name = name;
-            record.d->target = QUrl::fromAce(answer);
-            record.d->port = port;
-            record.d->priority = priority;
-            record.d->timeToLive = ttl;
-            record.d->weight = weight;
-            reply->serviceRecords.append(record);
-        } else if (type == QDnsLookup::TXT) {
-            unsigned char *txt = p;
-            QDnsTextRecord record;
-            record.d->name = name;
-            record.d->timeToLive = ttl;
-            while (txt < p + size) {
-                const unsigned char length = *txt;
-                txt++;
-                if (txt + length > p + size) {
-                    reply->error = QDnsLookup::InvalidReplyError;
-                    reply->errorString = tr("Invalid text record");
-                    return;
-                }
-                record.d->values << QByteArray((char*)txt, length);
-                txt += length;
-            }
-            reply->textRecords.append(record);
-        }
-        p += size;
-        answerIndex++;
-    }
+    //     if (type == QDnsLookup::A) {
+    //         if (size != 4) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid IPv4 address record");
+    //             return;
+    //         }
+    //         const quint32 addr = (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+    //         QDnsHostAddressRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         record.d->value = QHostAddress(addr);
+    //         reply->hostAddressRecords.append(record);
+    //     } else if (type == QDnsLookup::AAAA) {
+    //         if (size != 16) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid IPv6 address record");
+    //             return;
+    //         }
+    //         QDnsHostAddressRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         record.d->value = QHostAddress(p);
+    //         reply->hostAddressRecords.append(record);
+    //     } else if (type == QDnsLookup::CNAME) {
+    //         status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
+    //         if (status < 0) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid canonical name record");
+    //             return;
+    //         }
+    //         QDnsDomainNameRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         record.d->value = QUrl::fromAce(answer);
+    //         reply->canonicalNameRecords.append(record);
+    //     } else if (type == QDnsLookup::NS) {
+    //         status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
+    //         if (status < 0) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid name server record");
+    //             return;
+    //         }
+    //         QDnsDomainNameRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         record.d->value = QUrl::fromAce(answer);
+    //         reply->nameServerRecords.append(record);
+    //     } else if (type == QDnsLookup::PTR) {
+    //         status = local_dn_expand(response, response + responseLength, p, answer, sizeof(answer));
+    //         if (status < 0) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid pointer record");
+    //             return;
+    //         }
+    //         QDnsDomainNameRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         record.d->value = QUrl::fromAce(answer);
+    //         reply->pointerRecords.append(record);
+    //     } else if (type == QDnsLookup::MX) {
+    //         const quint16 preference = (p[0] << 8) | p[1];
+    //         status = local_dn_expand(response, response + responseLength, p + 2, answer, sizeof(answer));
+    //         if (status < 0) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid mail exchange record");
+    //             return;
+    //         }
+    //         QDnsMailExchangeRecord record;
+    //         record.d->exchange = QUrl::fromAce(answer);
+    //         record.d->name = name;
+    //         record.d->preference = preference;
+    //         record.d->timeToLive = ttl;
+    //         reply->mailExchangeRecords.append(record);
+    //     } else if (type == QDnsLookup::SRV) {
+    //         const quint16 priority = (p[0] << 8) | p[1];
+    //         const quint16 weight = (p[2] << 8) | p[3];
+    //         const quint16 port = (p[4] << 8) | p[5];
+    //         status = local_dn_expand(response, response + responseLength, p + 6, answer, sizeof(answer));
+    //         if (status < 0) {
+    //             reply->error = QDnsLookup::InvalidReplyError;
+    //             reply->errorString = tr("Invalid service record");
+    //             return;
+    //         }
+    //         QDnsServiceRecord record;
+    //         record.d->name = name;
+    //         record.d->target = QUrl::fromAce(answer);
+    //         record.d->port = port;
+    //         record.d->priority = priority;
+    //         record.d->timeToLive = ttl;
+    //         record.d->weight = weight;
+    //         reply->serviceRecords.append(record);
+    //     } else if (type == QDnsLookup::TXT) {
+    //         unsigned char *txt = p;
+    //         QDnsTextRecord record;
+    //         record.d->name = name;
+    //         record.d->timeToLive = ttl;
+    //         while (txt < p + size) {
+    //             const unsigned char length = *txt;
+    //             txt++;
+    //             if (txt + length > p + size) {
+    //                 reply->error = QDnsLookup::InvalidReplyError;
+    //                 reply->errorString = tr("Invalid text record");
+    //                 return;
+    //             }
+    //             record.d->values << QByteArray((char*)txt, length);
+    //             txt += length;
+    //         }
+    //         reply->textRecords.append(record);
+    //     }
+    //     p += size;
+    //     answerIndex++;
+    // }
 }
 
 #else

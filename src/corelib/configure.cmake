@@ -486,7 +486,7 @@ closelog();
 qt_config_compile_test(xlocalescanprint
     LABEL "xlocale.h (or equivalents)"
     CODE
-"#define QT_BEGIN_NAMESPACE
+"
 #define QT_END_NAMESPACE
 
 #ifdef _MSVC_VER

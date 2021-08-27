@@ -65,8 +65,15 @@
 #include <cxxabi.h>
 #endif
 
+#ifndef __amigaos4__
 #include <sched.h>
+#endif
 #include <errno.h>
+
+#ifdef __amigaos4__
+#define TRUE 1
+#define FALSE 0
+#endif
 
 #ifdef Q_OS_BSD4
 #include <sys/sysctl.h>
@@ -439,7 +446,9 @@ int QThread::idealThreadCount() noexcept
 {
     int cores = 1;
 
-#if defined(Q_OS_HPUX)
+#if defined(__amigaos4__)
+//do nothing
+#elif defined(Q_OS_HPUX)
     // HP-UX
     struct pst_dynamic psd;
     if (pstat_getdynamic(&psd, sizeof(psd), 1, 0) == -1) {
@@ -496,7 +505,9 @@ int QThread::idealThreadCount() noexcept
 
 void QThread::yieldCurrentThread()
 {
+#ifndef __amigaos4__
     sched_yield();
+#endif
 }
 
 #endif // QT_CONFIG(thread)

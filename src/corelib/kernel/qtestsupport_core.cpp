@@ -43,6 +43,10 @@
 #include <qt_windows.h>
 #endif
 
+#ifdef __amigaos4__
+#include <unistd.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -68,6 +72,8 @@ Q_CORE_EXPORT void QTest::qSleep(int ms)
 
 #if defined(Q_OS_WIN)
     Sleep(uint(ms));
+#elif defined(__amigaos4__)
+    usleep(ms * 1000);
 #else
     struct timespec ts = { time_t(ms / 1000), (ms % 1000) * 1000 * 1000 };
     nanosleep(&ts, nullptr);

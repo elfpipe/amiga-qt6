@@ -165,6 +165,8 @@
 #  define Q_OS_VXWORKS
 #elif defined(__HAIKU__)
 #  define Q_OS_HAIKU
+#elif defined(__amigaos4__)
+#  define Q_OS_AMIGA
 #elif defined(__MAKEDEPEND__)
 #else
 #  error "Qt has not been ported to this OS - see http://www.qt-project.org/"

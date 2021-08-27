@@ -42,6 +42,577 @@
 #include <QOpenGLContext>
 #include <private/qopenglextensions_p.h>
 
+#ifdef __amigaos4__
+extern struct OGLES2IFace *IOGLES2;
+
+void aglActiveTexture(GLenum texture) {
+    IOGLES2->glActiveTexture(texture);
+}
+
+void aglAttachShader(GLuint program, GLuint shader) {
+    IOGLES2->glAttachShader(program, shader);
+}
+
+void aglBindAttribLocation(GLuint program, GLuint index, const GLchar * name) {
+    IOGLES2->glBindAttribLocation(program, index, name);
+}
+
+void aglBindBuffer(GLenum target, GLuint buffer) {
+    IOGLES2->glBindBuffer(target, buffer);
+}
+
+void aglBindFramebuffer(GLenum target, GLuint framebuffer) {
+    IOGLES2->glBindFramebuffer(target, framebuffer);
+}
+
+void aglBindRenderbuffer(GLenum target, GLuint renderbuffer) {
+    IOGLES2->glBindRenderbuffer(target, renderbuffer);
+}
+
+void aglBindTexture(GLenum target, GLuint texture) {
+    IOGLES2->glBindTexture(target, texture);
+}
+
+void aglBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
+    IOGLES2->glBlendColor(red, green, blue, alpha);
+}
+
+void aglBlendEquation(GLenum mode) {
+    IOGLES2->glBlendEquation(mode);
+}
+
+void aglBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha) {
+    IOGLES2->glBlendEquationSeparate(modeRGB, modeAlpha);
+}
+
+void aglBlendFunc(GLenum sfactor, GLenum dfactor) {
+    IOGLES2->glBlendFunc(sfactor, dfactor);
+}
+
+void aglBlendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha) {
+    IOGLES2->glBlendFuncSeparate(sfactorRGB, dfactorRGB, sfactorAlpha, dfactorAlpha);
+}
+
+void aglBufferData(GLenum target, GLsizeiptr size, const void * data, GLenum usage) {
+    IOGLES2->glBufferData(target, size, data, usage);
+}
+
+void aglBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void * data) {
+    IOGLES2->glBufferSubData(target, offset, size, data);
+}
+
+GLenum aglCheckFramebufferStatus(GLenum target) {
+    return IOGLES2->glCheckFramebufferStatus(target);
+}
+
+void aglClear(GLbitfield mask) {
+    IOGLES2->glClear(mask);
+}
+
+void aglClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha) {
+    IOGLES2->glClearColor(red, green, blue, alpha);
+}
+
+void aglClearDepthf(GLfloat d) {
+    IOGLES2->glClearDepthf(d);
+}
+
+void aglClearStencil(GLint s) {
+    IOGLES2->glClearStencil(s);
+}
+
+void aglColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha) {
+    IOGLES2->glColorMask(red, green, blue, alpha);
+}
+
+void aglCompileShader(GLuint shader) {
+    IOGLES2->glCompileShader(shader);
+}
+
+void aglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data) {
+    IOGLES2->glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+}
+
+void aglCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data) {
+    IOGLES2->glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+}
+
+void aglCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border) {
+    IOGLES2->glCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+}
+
+void aglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height) {
+    IOGLES2->glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+}
+
+GLuint aglCreateProgram() {
+    return IOGLES2->glCreateProgram();
+}
+
+GLuint aglCreateShader(GLenum type) {
+    return IOGLES2->glCreateShader(type);
+}
+
+void aglCullFace(GLenum mode) {
+    IOGLES2->glCullFace(mode);
+}
+
+void aglDeleteBuffers(GLsizei n, const GLuint * buffers) {
+    IOGLES2->glDeleteBuffers(n, buffers);
+}
+
+void aglDeleteFramebuffers(GLsizei n, const GLuint * framebuffers) {
+    IOGLES2->glDeleteFramebuffers(n, framebuffers);
+}
+
+void aglDeleteProgram(GLuint program) {
+    IOGLES2->glDeleteProgram(program);
+}
+
+void aglDeleteRenderbuffers(GLsizei n, const GLuint * renderbuffers) {
+    IOGLES2->glDeleteRenderbuffers(n, renderbuffers);
+}
+
+void aglDeleteShader(GLuint shader) {
+    IOGLES2->glDeleteShader(shader);
+}
+
+void aglDeleteTextures(GLsizei n, const GLuint * textures) {
+    IOGLES2->glDeleteTextures(n, textures);
+}
+
+void aglDepthFunc(GLenum func) {
+    IOGLES2->glDepthFunc(func);
+}
+
+void aglDepthMask(GLboolean flag) {
+    IOGLES2->glDepthMask(flag);
+}
+
+void aglDepthRangef(GLfloat n, GLfloat f) {
+    IOGLES2->glDepthRangef(n, f);
+}
+
+void aglDetachShader(GLuint program, GLuint shader) {
+    IOGLES2->glDetachShader(program, shader);
+}
+
+void aglDisable(GLenum cap) {
+    IOGLES2->glDisable(cap);
+}
+
+void aglDisableVertexAttribArray(GLuint index) {
+    IOGLES2->glDisableVertexAttribArray(index);
+}
+
+void aglDrawArrays(GLenum mode, GLint first, GLsizei count) {
+    IOGLES2->glDrawArrays(mode, first, count);
+}
+
+void aglDrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices) {
+    IOGLES2->glDrawElements(mode, count, type, indices);
+}
+
+void aglEnable(GLenum cap) {
+    IOGLES2->glEnable(cap);
+}
+
+void aglEnableVertexAttribArray(GLuint index) {
+    IOGLES2->glEnableVertexAttribArray(index);
+}
+
+void aglFinish() {
+    IOGLES2->glFinish();
+}
+
+void aglFlush() {
+    IOGLES2->glFlush();
+}
+
+void aglFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer) {
+    IOGLES2->glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+}
+
+void glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level) {
+    IOGLES2->glFramebufferTexture2D(target, attachment, textarget, texture, level);
+}
+
+void aglFrontFace(GLenum mode) {
+    IOGLES2->glFrontFace(mode);
+}
+
+void aglGenBuffers(GLsizei n, GLuint * buffers) {
+    IOGLES2->glGenBuffers(n, buffers);
+}
+
+void aglGenerateMipmap(GLenum target) {
+    IOGLES2->glGenerateMipmap(target);
+}
+
+void aglGenFramebuffers(GLsizei n, GLuint * framebuffers) {
+    IOGLES2->glGenFramebuffers(n, framebuffers);
+}
+
+void aglGenRenderbuffers(GLsizei n, GLuint * renderbuffers) {
+    IOGLES2->glGenRenderbuffers(n, renderbuffers);
+}
+
+void aglGenTextures(GLsizei n, GLuint * textures) {
+    IOGLES2->glGenTextures(n, textures);
+}
+
+void aglGetActiveAttrib(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name) {
+    IOGLES2->glGetActiveAttrib(program, index, bufSize, length, size, type, name);
+}
+
+void aglGetActiveUniform(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name) {
+    IOGLES2->glGetActiveUniform(program, index, bufSize, length, size, type, name);
+}
+
+void aglGetAttachedShaders(GLuint program, GLsizei maxCount, GLsizei * count, GLuint * shaders) {
+    IOGLES2->glGetAttachedShaders(program, maxCount, count, shaders);
+}
+
+GLint aglGetAttribLocation(GLuint program, const GLchar * name) {
+    return IOGLES2->glGetAttribLocation(program, name);
+}
+
+void aglGetBooleanv(GLenum pname, GLboolean * data) {
+    IOGLES2->glGetBooleanv(pname, data);
+}
+
+void aglGetBufferParameteriv(GLenum target, GLenum pname, GLint * params) {
+    IOGLES2->glGetBufferParameteriv(target, pname, params);
+}
+
+GLenum aglGetError() {
+    return IOGLES2->glGetError();
+}
+
+void aglGetFloatv(GLenum pname, GLfloat * data) {
+    IOGLES2->glGetFloatv(pname, data);
+}
+
+void aglGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint * params) {
+    IOGLES2->glGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
+}
+void aglGetIntegerv(GLenum pname, GLint * data) {
+    IOGLES2->glGetIntegerv(pname, data);
+}
+
+void aglGetProgramiv(GLuint program, GLenum pname, GLint * params) {
+    IOGLES2->glGetProgramiv(program, pname, params);
+}
+
+void aglGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog) {
+    IOGLES2->glGetProgramInfoLog(program, bufSize, length, infoLog);
+}
+
+void aglGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params) {
+    IOGLES2->glGetRenderbufferParameteriv (target, pname, params);
+}
+
+void aglGetShaderiv(GLuint shader, GLenum pname, GLint * params) {
+    IOGLES2->glGetShaderiv(shader, pname, params);
+}
+
+void aglGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog) {
+    IOGLES2->glGetShaderInfoLog(shader, bufSize, length, infoLog);
+}
+
+void aglGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision) {
+    IOGLES2->glGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+}
+
+void aglGetShaderSource(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source) {
+    IOGLES2->glGetShaderSource(shader, bufSize, length, source);
+}
+
+const GLubyte *aglGetString(GLenum name) {
+    return IOGLES2->glGetString(name);
+}
+
+void aglGetTexParameterfv(GLenum target, GLenum pname, GLfloat * params) {
+    IOGLES2->glGetTexParameterfv(target, pname, params);
+}
+
+void aglGetTexParameteriv(GLenum target, GLenum pname, GLint * params) {
+    IOGLES2->glGetTexParameteriv(target, pname, params);
+}
+
+void aglGetUniformfv(GLuint program, GLint location, GLfloat * params) {
+    IOGLES2->glGetUniformfv(program, location, params);
+}
+
+void aglGetUniformiv(GLuint program, GLint location, GLint * params) {
+    IOGLES2->glGetUniformiv(program, location, params);
+}
+
+GLint aglGetUniformLocation(GLuint program, const GLchar * name) {
+    return IOGLES2->glGetUniformLocation(program, name);
+}
+
+void aglGetVertexAttribfv(GLuint index, GLenum pname, GLfloat * params) {
+    IOGLES2->glGetVertexAttribfv(index, pname, params);
+}
+
+void aglGetVertexAttribiv(GLuint index, GLenum pname, GLint * params) {
+    IOGLES2->glGetVertexAttribiv(index, pname, params);
+}
+
+void aglGetVertexAttribPointerv(GLuint index, GLenum pname, void ** pointer) {
+    IOGLES2->glGetVertexAttribPointerv(index, pname, pointer);
+}
+
+void aglHint(GLenum target, GLenum mode) {
+    IOGLES2->glHint(target, mode);
+}
+
+GLboolean aglIsBuffer(GLuint buffer) {
+    return IOGLES2->glIsBuffer (buffer);
+}
+
+GLboolean aglIsEnabled(GLenum cap) {
+    return IOGLES2->glIsEnabled(cap);
+}
+
+GLboolean aglIsFramebuffer(GLuint framebuffer) {
+    return IOGLES2->glIsFramebuffer(framebuffer);
+}
+
+GLboolean aglIsProgram(GLuint program) {
+    return IOGLES2->glIsProgram(program);
+}
+
+GLboolean aglIsRenderbuffer(GLuint renderbuffer) {
+    return IOGLES2->glIsRenderbuffer(renderbuffer);
+}
+
+GLboolean aglIsShader(GLuint shader) {
+    return IOGLES2->glIsShader(shader);
+}
+
+GLboolean aglIsTexture(GLuint texture) {
+    return IOGLES2->glIsTexture(texture);
+}
+
+void aglLineWidth(GLfloat width) {
+    IOGLES2->glLineWidth(width);
+}
+
+void aglLinkProgram(GLuint program) {
+    IOGLES2->glLinkProgram(program);
+}
+
+void aglPixelStorei(GLenum pname, GLint param) {
+    IOGLES2->glPixelStorei(pname, param);
+}
+
+void aglPolygonOffset(GLfloat factor, GLfloat units) {
+    IOGLES2->glPolygonOffset(factor, units);
+}
+
+void aglReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels) {
+    IOGLES2->glReadPixels(x, y, width, height, format, type, pixels);
+}
+
+void aglReleaseShaderCompiler() {
+    IOGLES2->glReleaseShaderCompiler();
+}
+
+void aglRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height) {
+    IOGLES2->glRenderbufferStorage(target, internalformat, width, height);
+}
+
+void aglSampleCoverage(GLfloat value, GLboolean invert) {
+    IOGLES2->glSampleCoverage(value, invert);
+}
+
+void aglScissor(GLint x, GLint y, GLsizei width, GLsizei height) {
+    IOGLES2->glScissor(x, y, width, height);
+}
+
+void aglShaderBinary(GLsizei count, const GLuint * shaders, GLenum binaryformat, const void * binary, GLsizei length) {
+    IOGLES2->glShaderBinary(count, shaders, binaryformat, binary, length);
+}
+
+void aglShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length) {
+    IOGLES2->glShaderSource(shader, count, string, length);
+}
+
+void aglStencilFunc(GLenum func, GLint ref, GLuint mask) {
+    IOGLES2->glStencilFunc(func, ref, mask);
+}
+
+void aglStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask) {
+    IOGLES2->glStencilFuncSeparate(face, func, ref, mask);
+}
+
+void aglStencilMask(GLuint mask) {
+    IOGLES2->glStencilMask(mask);
+}
+
+void aglStencilMaskSeparate(GLenum face, GLuint mask) {
+    IOGLES2->glStencilMaskSeparate(face, mask);
+}
+
+void aglStencilOp(GLenum fail, GLenum zfail, GLenum zpass) {
+    IOGLES2->glStencilOp(fail, zfail, zpass);
+}
+
+void aglStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass) {
+    IOGLES2->glStencilOpSeparate(face, sfail, dpfail, dppass);
+}
+
+void aglTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels) {
+    IOGLES2->glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+}
+
+void aglTexParameterf(GLenum target, GLenum pname, GLfloat param) {
+    IOGLES2->glTexParameterf(target, pname, param);
+}
+
+void aglTexParameterfv(GLenum target, GLenum pname, const GLfloat * params) {
+    IOGLES2->glTexParameterfv(target, pname, params);
+}
+
+void aglTexParameteri(GLenum target, GLenum pname, GLint param) {
+    IOGLES2->glTexParameteri(target, pname, param);
+}
+
+void aglTexParameteriv(GLenum target, GLenum pname, const GLint * params) {
+    IOGLES2->glTexParameteriv(target, pname, params);
+}
+
+void aglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels) {
+    IOGLES2->glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+}
+
+void aglUniform1f(GLint location, GLfloat v0) {
+    IOGLES2->glUniform1f(location, v0);
+}
+
+void aglUniform1fv(GLint location, GLsizei count, const GLfloat * value) {
+    IOGLES2->glUniform1fv(location, count, value);
+}
+
+void aglUniform1i(GLint location, GLint v0) {
+    IOGLES2->glUniform1i(location, v0);
+}
+
+void aglUniform1iv(GLint location, GLsizei count, const GLint * value) {
+    IOGLES2->glUniform1iv(location, count, value);
+}
+
+void aglUniform2f(GLint location, GLfloat v0, GLfloat v1) {
+    IOGLES2->glUniform2f(location, v0, v1);
+}
+
+void aglUniform2fv(GLint location, GLsizei count, const GLfloat * value) {
+    IOGLES2->glUniform2fv(location, count, value);
+}
+
+void aglUniform2i(GLint location, GLint v0, GLint v1) {
+    IOGLES2->glUniform2i(location, v0, v1);
+}
+
+void aglUniform2iv(GLint location, GLsizei count, const GLint * value) {
+    IOGLES2->glUniform2iv(location, count, value);
+}
+
+void aglUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2) {
+    IOGLES2->glUniform3f(location, v0, v1, v2);
+}
+
+void aglUniform3fv(GLint location, GLsizei count, const GLfloat * value) {
+    IOGLES2->glUniform3fv(location, count, value);
+}
+
+void aglUniform3i(GLint location, GLint v0, GLint v1, GLint v2) {
+    IOGLES2->glUniform3i(location, v0, v1, v2);
+}
+
+void aglUniform3iv(GLint location, GLsizei count, const GLint * value) {
+    IOGLES2->glUniform3iv(location, count, value);
+}
+
+void aglUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3) {
+    IOGLES2->glUniform4f(location, v0, v1, v2, v3);
+}
+
+void aglUniform4fv(GLint location, GLsizei count, const GLfloat * value) {
+    IOGLES2->glUniform4fv(location, count, value);
+}
+
+void aglUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3) {
+    IOGLES2->glUniform4i(location, v0, v1, v2, v3);
+}
+
+void aglUniform4iv(GLint location, GLsizei count, const GLint * value) {
+    IOGLES2->glUniform4iv(location, count, value);
+}
+
+void aglUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value) {
+    IOGLES2->glUniformMatrix2fv(location, count, transpose, value);
+}
+
+void aglUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value) {
+    IOGLES2->glUniformMatrix3fv(location, count, transpose, value);
+}
+
+void aglUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value) {
+    IOGLES2->glUniformMatrix4fv(location, count, transpose, value);
+}
+
+void aglUseProgram(GLuint program) {
+    IOGLES2->glUseProgram(program);
+}
+
+void aglValidateProgram(GLuint program) {
+    IOGLES2->glValidateProgram(program);
+}
+
+void aglVertexAttrib1f(GLuint index, GLfloat x) {
+    IOGLES2->glVertexAttrib1f(index, x);
+}
+
+void aglVertexAttrib1fv(GLuint index, const GLfloat * v) {
+    IOGLES2->glVertexAttrib1fv(index, v);
+}
+
+void aglVertexAttrib2f(GLuint index, GLfloat x, GLfloat y) {
+    IOGLES2->glVertexAttrib2f(index, x, y);
+}
+
+void aglVertexAttrib2fv(GLuint index, const GLfloat * v) {
+    IOGLES2->glVertexAttrib2fv(index, v);
+}
+
+void aglVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z) {
+    IOGLES2->glVertexAttrib3f(index, x, y, z);
+}
+
+void aglVertexAttrib3fv(GLuint index, const GLfloat * v) {
+    IOGLES2->glVertexAttrib3fv(index, v);
+}
+
+void aglVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w) {
+    IOGLES2->glVertexAttrib4f(index, x, y, z, w);
+}
+
+void aglVertexAttrib4fv(GLuint index, const GLfloat * v) {
+    IOGLES2->glVertexAttrib4fv(index, v);
+}
+
+void aglVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer) {
+    IOGLES2->glVertexAttribPointer(index, size, type, normalized, stride, pointer);
+}
+
+void aglViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
+    IOGLES2->glViewport(x, y, width, height);
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QOpenGLTextureHelper::QOpenGLTextureHelper(QOpenGLContext *context)
@@ -157,13 +728,13 @@ QOpenGLTextureHelper::QOpenGLTextureHelper(QOpenGLContext *context)
     // OpenGL 1.3
     GetCompressedTexImage = 0;
     CompressedTexSubImage1D = 0;
-    CompressedTexSubImage2D = ::glCompressedTexSubImage2D;
+    CompressedTexSubImage2D = aglCompressedTexSubImage2D;
     CompressedTexImage1D = 0;
-    CompressedTexImage2D = ::glCompressedTexImage2D;
-    ActiveTexture = ::glActiveTexture;
+    CompressedTexImage2D = aglCompressedTexImage2D;
+    ActiveTexture = aglActiveTexture;
 
     // OpenGL 3.0
-    GenerateMipmap = ::glGenerateMipmap;
+    GenerateMipmap = aglGenerateMipmap;
 
     // OpenGL 3.2
     TexImage3DMultisample = 0;

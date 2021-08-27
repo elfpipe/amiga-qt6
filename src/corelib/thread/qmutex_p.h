@@ -60,6 +60,8 @@
 #include <QtCore/qatomic.h>
 #include <QtCore/qdeadlinetimer.h>
 
+#include <pthread.h>
+
 #if defined(Q_OS_MAC)
 # include <mach/semaphore.h>
 #elif defined(Q_OS_UNIX)

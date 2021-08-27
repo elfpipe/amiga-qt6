@@ -48,6 +48,151 @@
 #include <QtOpenGL/QOpenGLVersionFunctions>
 #include <QtGui/qopenglcontext.h>
 
+#ifdef __amigaos4__
+void aglActiveTexture(GLenum texture);
+void aglAttachShader(GLuint program, GLuint shader);
+void aglBindAttribLocation(GLuint program, GLuint index, const GLchar * name);
+void aglBindBuffer(GLenum target, GLuint buffer);
+void aglBindFramebuffer(GLenum target, GLuint framebuffer);
+void aglBindRenderbuffer(GLenum target, GLuint renderbuffer);
+void aglBindTexture(GLenum target, GLuint texture);
+void aglBlendColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+void aglBlendEquation(GLenum mode);
+void aglBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha);
+void aglBlendFunc(GLenum sfactor, GLenum dfactor);
+void aglBlendFuncSeparate(GLenum sfactorRGB, GLenum dfactorRGB, GLenum sfactorAlpha, GLenum dfactorAlpha);
+void aglBufferData(GLenum target, GLsizeiptr size, const void * data, GLenum usage);
+void aglBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const void * data);
+GLenum aglCheckFramebufferStatus(GLenum target);
+void aglClear(GLbitfield mask);
+void aglClearColor(GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha);
+void aglClearDepthf(GLfloat d);
+void aglClearStencil(GLint s);
+void aglColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha);
+void aglCompileShader(GLuint shader);
+void aglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data);
+void aglCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
+void aglCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border);
+void aglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height);
+GLuint aglCreateProgram();
+GLuint aglCreateShader(GLenum type);
+void aglCullFace(GLenum mode);
+void aglDeleteBuffers(GLsizei n, const GLuint * buffers);
+void aglDeleteFramebuffers(GLsizei n, const GLuint * framebuffers);
+void aglDeleteProgram(GLuint program);
+void aglDeleteRenderbuffers(GLsizei n, const GLuint * renderbuffers);
+void aglDeleteShader(GLuint shader);
+void aglDeleteTextures(GLsizei n, const GLuint * textures);
+void aglDepthFunc(GLenum func);
+void aglDepthMask(GLboolean flag);
+void aglDepthRangef(GLfloat n, GLfloat f);
+void aglDetachShader(GLuint program, GLuint shader);
+void aglDisable(GLenum cap);
+void aglDisableVertexAttribArray(GLuint index);
+void aglDrawArrays(GLenum mode, GLint first, GLsizei count);
+void aglDrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices);
+void aglEnable(GLenum cap);
+void aglEnableVertexAttribArray(GLuint index);
+void aglFinish();
+void aglFlush();
+void aglFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+void aglFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+void aglFrontFace(GLenum mode);
+void aglGenBuffers(GLsizei n, GLuint * buffers);
+void aglGenerateMipmap(GLenum target);
+void aglGenFramebuffers(GLsizei n, GLuint * framebuffers);
+void aglGenRenderbuffers(GLsizei n, GLuint * renderbuffers);
+void aglGenTextures(GLsizei n, GLuint * textures);
+void aglGetActiveAttrib(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
+void aglGetActiveUniform(GLuint program, GLuint index, GLsizei bufSize, GLsizei * length, GLint * size, GLenum * type, GLchar * name);
+void aglGetAttachedShaders(GLuint program, GLsizei maxCount, GLsizei * count, GLuint * shaders);
+GLint aglGetAttribLocation(GLuint program, const GLchar * name);
+void aglGetBooleanv(GLenum pname, GLboolean * data);
+void aglGetBufferParameteriv(GLenum target, GLenum pname, GLint * params);
+GLenum aglGetError();
+void aglGetFloatv(GLenum pname, GLfloat * data);
+void aglGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint * params);
+void aglGetIntegerv(GLenum pname, GLint * data);
+void aglGetProgramiv(GLuint program, GLenum pname, GLint * params);
+void aglGetProgramInfoLog(GLuint program, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
+void aglGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint * params);
+void aglGetShaderiv(GLuint shader, GLenum pname, GLint * params);
+void aglGetShaderInfoLog(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * infoLog);
+void aglGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint * range, GLint * precision);
+void aglGetShaderSource(GLuint shader, GLsizei bufSize, GLsizei * length, GLchar * source);
+const GLubyte *aglGetString(GLenum name);
+void aglGetTexParameterfv(GLenum target, GLenum pname, GLfloat * params);
+void aglGetTexParameteriv(GLenum target, GLenum pname, GLint * params);
+void aglGetUniformfv(GLuint program, GLint location, GLfloat * params);
+void aglGetUniformiv(GLuint program, GLint location, GLint * params);
+GLint aglGetUniformLocation(GLuint program, const GLchar * name);
+void aglGetVertexAttribfv(GLuint index, GLenum pname, GLfloat * params);
+void aglGetVertexAttribiv(GLuint index, GLenum pname, GLint * params);
+void aglGetVertexAttribPointerv(GLuint index, GLenum pname, void ** pointer);
+void aglHint(GLenum target, GLenum mode);
+GLboolean aglIsBuffer(GLuint buffer);
+GLboolean aglIsEnabled(GLenum cap);
+GLboolean aglIsFramebuffer(GLuint framebuffer);
+GLboolean aglIsProgram(GLuint program);
+GLboolean aglIsRenderbuffer(GLuint renderbuffer);
+GLboolean aglIsShader(GLuint shader);
+GLboolean aglIsTexture(GLuint texture);
+void aglLineWidth(GLfloat width);
+void aglLinkProgram(GLuint program);
+void aglPixelStorei(GLenum pname, GLint param);
+void aglPolygonOffset(GLfloat factor, GLfloat units);
+void aglReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, void * pixels);
+void aglReleaseShaderCompiler();
+void aglRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+void aglSampleCoverage(GLfloat value, GLboolean invert);
+void aglScissor(GLint x, GLint y, GLsizei width, GLsizei height);
+void aglShaderBinary(GLsizei count, const GLuint * shaders, GLenum binaryformat, const void * binary, GLsizei length);
+void aglShaderSource(GLuint shader, GLsizei count, const GLchar *const* string, const GLint * length);
+void aglStencilFunc(GLenum func, GLint ref, GLuint mask);
+void aglStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask);
+void aglStencilMask(GLuint mask);
+void aglStencilMaskSeparate(GLenum face, GLuint mask);
+void aglStencilOp(GLenum fail, GLenum zfail, GLenum zpass);
+void aglStencilOpSeparate(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+void aglTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const void * pixels);
+void aglTexParameterf(GLenum target, GLenum pname, GLfloat param);
+void aglTexParameterfv(GLenum target, GLenum pname, const GLfloat * params);
+void aglTexParameteri(GLenum target, GLenum pname, GLint param);
+void aglTexParameteriv(GLenum target, GLenum pname, const GLint * params);
+void aglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const void * pixels);
+void aglUniform1f(GLint location, GLfloat v0);
+void aglUniform1fv(GLint location, GLsizei count, const GLfloat * value);
+void aglUniform1i(GLint location, GLint v0);
+void aglUniform1iv(GLint location, GLsizei count, const GLint * value);
+void aglUniform2f(GLint location, GLfloat v0, GLfloat v1);
+void aglUniform2fv(GLint location, GLsizei count, const GLfloat * value);
+void aglUniform2i(GLint location, GLint v0, GLint v1);
+void aglUniform2iv(GLint location, GLsizei count, const GLint * value);
+void aglUniform3f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2);
+void aglUniform3fv(GLint location, GLsizei count, const GLfloat * value);
+void aglUniform3i(GLint location, GLint v0, GLint v1, GLint v2);
+void aglUniform3iv(GLint location, GLsizei count, const GLint * value);
+void aglUniform4f(GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+void aglUniform4fv(GLint location, GLsizei count, const GLfloat * value);
+void aglUniform4i(GLint location, GLint v0, GLint v1, GLint v2, GLint v3);
+void aglUniform4iv(GLint location, GLsizei count, const GLint * value);
+void aglUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+void aglUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+void aglUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat * value);
+void aglUseProgram(GLuint program);
+void aglValidateProgram(GLuint program);
+void aglVertexAttrib1f(GLuint index, GLfloat x);
+void aglVertexAttrib1fv(GLuint index, const GLfloat * v);
+void aglVertexAttrib2f(GLuint index, GLfloat x, GLfloat y);
+void aglVertexAttrib2fv(GLuint index, const GLfloat * v);
+void aglVertexAttrib3f(GLuint index, GLfloat x, GLfloat y, GLfloat z);
+void aglVertexAttrib3fv(GLuint index, const GLfloat * v);
+void aglVertexAttrib4f(GLuint index, GLfloat x, GLfloat y, GLfloat z, GLfloat w);
+void aglVertexAttrib4fv(GLuint index, const GLfloat * v);
+void aglVertexAttribPointer(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer);
+void aglViewport(GLint x, GLint y, GLsizei width, GLsizei height);
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QOpenGLFunctions_ES2Private;
@@ -215,714 +360,714 @@ private:
 };
 
 // OpenGL ES2 core functions
-inline void QOpenGLFunctions_ES2::glActiveTexture(GLenum texture)
+inline void QOpenGLFunctions_ES2aglActiveTexture(GLenum texture)
 {
-    ::glActiveTexture(texture);
+    aglActiveTexture(texture);
 }
 
-inline void QOpenGLFunctions_ES2::glAttachShader(GLuint program, GLuint shader)
+inline void QOpenGLFunctions_ES2aglAttachShader(GLuint program, GLuint shader)
 {
-    ::glAttachShader(program, shader);
+    aglAttachShader(program, shader);
 }
 
-inline void QOpenGLFunctions_ES2::glBindAttribLocation(GLuint program, GLuint index, const GLchar* name)
+inline void QOpenGLFunctions_ES2aglBindAttribLocation(GLuint program, GLuint index, const GLchar* name)
 {
-    ::glBindAttribLocation(program, index, name);
+    aglBindAttribLocation(program, index, name);
 }
 
-inline void QOpenGLFunctions_ES2::glBindBuffer(GLenum target, GLuint buffer)
+inline void QOpenGLFunctions_ES2aglBindBuffer(GLenum target, GLuint buffer)
 {
-    ::glBindBuffer(target, buffer);
+    aglBindBuffer(target, buffer);
 }
 
-inline void QOpenGLFunctions_ES2::glBindFramebuffer(GLenum target, GLuint framebuffer)
+inline void QOpenGLFunctions_ES2aglBindFramebuffer(GLenum target, GLuint framebuffer)
 {
-    ::glBindFramebuffer(target, framebuffer);
+    aglBindFramebuffer(target, framebuffer);
 }
 
-inline void QOpenGLFunctions_ES2::glBindRenderbuffer(GLenum target, GLuint renderbuffer)
+inline void QOpenGLFunctions_ES2aglBindRenderbuffer(GLenum target, GLuint renderbuffer)
 {
-    ::glBindRenderbuffer(target, renderbuffer);
+    aglBindRenderbuffer(target, renderbuffer);
 }
 
-inline void QOpenGLFunctions_ES2::glBindTexture(GLenum target, GLuint texture)
+inline void QOpenGLFunctions_ES2aglBindTexture(GLenum target, GLuint texture)
 {
-    ::glBindTexture(target, texture);
+    aglBindTexture(target, texture);
 }
 
-inline void QOpenGLFunctions_ES2::glBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+inline void QOpenGLFunctions_ES2aglBlendColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-    ::glBlendColor(red, green, blue, alpha);
+    aglBlendColor(red, green, blue, alpha);
 }
 
-inline void QOpenGLFunctions_ES2::glBlendEquation(GLenum mode)
+inline void QOpenGLFunctions_ES2aglBlendEquation(GLenum mode)
 {
-    ::glBlendEquation(mode);
+    aglBlendEquation(mode);
 }
 
-inline void QOpenGLFunctions_ES2::glBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
+inline void QOpenGLFunctions_ES2aglBlendEquationSeparate(GLenum modeRGB, GLenum modeAlpha)
 {
-    ::glBlendEquationSeparate(modeRGB, modeAlpha);
+    aglBlendEquationSeparate(modeRGB, modeAlpha);
 }
 
-inline void QOpenGLFunctions_ES2::glBlendFunc(GLenum sfactor, GLenum dfactor)
+inline void QOpenGLFunctions_ES2aglBlendFunc(GLenum sfactor, GLenum dfactor)
 {
-    ::glBlendFunc(sfactor, dfactor);
+    aglBlendFunc(sfactor, dfactor);
 }
 
-inline void QOpenGLFunctions_ES2::glBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
+inline void QOpenGLFunctions_ES2aglBlendFuncSeparate(GLenum srcRGB, GLenum dstRGB, GLenum srcAlpha, GLenum dstAlpha)
 {
-    ::glBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
+    aglBlendFuncSeparate(srcRGB, dstRGB, srcAlpha, dstAlpha);
 }
 
-inline void QOpenGLFunctions_ES2::glBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
+inline void QOpenGLFunctions_ES2aglBufferData(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage)
 {
-    ::glBufferData(target, size, data, usage);
+    aglBufferData(target, size, data, usage);
 }
 
-inline void QOpenGLFunctions_ES2::glBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
+inline void QOpenGLFunctions_ES2aglBufferSubData(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data)
 {
-    ::glBufferSubData(target, offset, size, data);
+    aglBufferSubData(target, offset, size, data);
 }
 
-inline GLenum QOpenGLFunctions_ES2::glCheckFramebufferStatus(GLenum target)
+inline GLenum QOpenGLFunctions_ES2aglCheckFramebufferStatus(GLenum target)
 {
-    return ::glCheckFramebufferStatus(target);
+    return aglCheckFramebufferStatus(target);
 }
 
-inline void QOpenGLFunctions_ES2::glClear(GLbitfield mask)
+inline void QOpenGLFunctions_ES2aglClear(GLbitfield mask)
 {
-    ::glClear(mask);
+    aglClear(mask);
 }
 
-inline void QOpenGLFunctions_ES2::glClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
+inline void QOpenGLFunctions_ES2aglClearColor(GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-    ::glClearColor(red, green, blue, alpha);
+    aglClearColor(red, green, blue, alpha);
 }
 
-inline void QOpenGLFunctions_ES2::glClearDepthf(GLclampf depth)
+inline void QOpenGLFunctions_ES2aglClearDepthf(GLclampf depth)
 {
-    ::glClearDepthf(depth);
+    aglClearDepthf(depth);
 }
 
-inline void QOpenGLFunctions_ES2::glClearStencil(GLint s)
+inline void QOpenGLFunctions_ES2aglClearStencil(GLint s)
 {
-    ::glClearStencil(s);
+    aglClearStencil(s);
 }
 
-inline void QOpenGLFunctions_ES2::glColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
+inline void QOpenGLFunctions_ES2aglColorMask(GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
-    ::glColorMask(red, green, blue, alpha);
+    aglColorMask(red, green, blue, alpha);
 }
 
-inline void QOpenGLFunctions_ES2::glCompileShader(GLuint shader)
+inline void QOpenGLFunctions_ES2aglCompileShader(GLuint shader)
 {
-    ::glCompileShader(shader);
+    aglCompileShader(shader);
 }
 
-inline void QOpenGLFunctions_ES2::glCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
+inline void QOpenGLFunctions_ES2aglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const GLvoid* data)
 {
-    ::glCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
+    aglCompressedTexImage2D(target, level, internalformat, width, height, border, imageSize, data);
 }
 
-inline void QOpenGLFunctions_ES2::glCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data)
+inline void QOpenGLFunctions_ES2aglCompressedTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const GLvoid* data)
 {
-    ::glCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
+    aglCompressedTexSubImage2D(target, level, xoffset, yoffset, width, height, format, imageSize, data);
 }
 
-inline void QOpenGLFunctions_ES2::glCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
+inline void QOpenGLFunctions_ES2aglCopyTexImage2D(GLenum target, GLint level, GLenum internalformat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border)
 {
-    ::glCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
+    aglCopyTexImage2D(target, level, internalformat, x, y, width, height, border);
 }
 
-inline void QOpenGLFunctions_ES2::glCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
+inline void QOpenGLFunctions_ES2aglCopyTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    ::glCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
+    aglCopyTexSubImage2D(target, level, xoffset, yoffset, x, y, width, height);
 }
 
-inline GLuint QOpenGLFunctions_ES2::glCreateProgram(void)
+inline GLuint QOpenGLFunctions_ES2aglCreateProgram(void)
 {
-    return ::glCreateProgram();
+    return aglCreateProgram();
 }
 
-inline GLuint QOpenGLFunctions_ES2::glCreateShader(GLenum type)
+inline GLuint QOpenGLFunctions_ES2aglCreateShader(GLenum type)
 {
-    return ::glCreateShader(type);
+    return aglCreateShader(type);
 }
 
-inline void QOpenGLFunctions_ES2::glCullFace(GLenum mode)
+inline void QOpenGLFunctions_ES2aglCullFace(GLenum mode)
 {
-    ::glCullFace(mode);
+    aglCullFace(mode);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteBuffers(GLsizei n, const GLuint* buffers)
+inline void QOpenGLFunctions_ES2aglDeleteBuffers(GLsizei n, const GLuint* buffers)
 {
-    ::glDeleteBuffers(n, buffers);
+    aglDeleteBuffers(n, buffers);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
+inline void QOpenGLFunctions_ES2aglDeleteFramebuffers(GLsizei n, const GLuint* framebuffers)
 {
-    ::glDeleteFramebuffers(n, framebuffers);
+    aglDeleteFramebuffers(n, framebuffers);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteProgram(GLuint program)
+inline void QOpenGLFunctions_ES2aglDeleteProgram(GLuint program)
 {
-    ::glDeleteProgram(program);
+    aglDeleteProgram(program);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
+inline void QOpenGLFunctions_ES2aglDeleteRenderbuffers(GLsizei n, const GLuint* renderbuffers)
 {
-    ::glDeleteRenderbuffers(n, renderbuffers);
+    aglDeleteRenderbuffers(n, renderbuffers);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteShader(GLuint shader)
+inline void QOpenGLFunctions_ES2aglDeleteShader(GLuint shader)
 {
-    ::glDeleteShader(shader);
+    aglDeleteShader(shader);
 }
 
-inline void QOpenGLFunctions_ES2::glDeleteTextures(GLsizei n, const GLuint* textures)
+inline void QOpenGLFunctions_ES2aglDeleteTextures(GLsizei n, const GLuint* textures)
 {
-    ::glDeleteTextures(n, textures);
+    aglDeleteTextures(n, textures);
 }
 
-inline void QOpenGLFunctions_ES2::glDepthFunc(GLenum func)
+inline void QOpenGLFunctions_ES2aglDepthFunc(GLenum func)
 {
-    ::glDepthFunc(func);
+    aglDepthFunc(func);
 }
 
-inline void QOpenGLFunctions_ES2::glDepthMask(GLboolean flag)
+inline void QOpenGLFunctions_ES2aglDepthMask(GLboolean flag)
 {
-    ::glDepthMask(flag);
+    aglDepthMask(flag);
 }
 
-inline void QOpenGLFunctions_ES2::glDepthRangef(GLclampf zNear, GLclampf zFar)
+inline void QOpenGLFunctions_ES2aglDepthRangef(GLclampf zNear, GLclampf zFar)
 {
-    ::glDepthRangef(zNear, zFar);
+    aglDepthRangef(zNear, zFar);
 }
 
-inline void QOpenGLFunctions_ES2::glDetachShader(GLuint program, GLuint shader)
+inline void QOpenGLFunctions_ES2aglDetachShader(GLuint program, GLuint shader)
 {
-    ::glDetachShader(program, shader);
+    aglDetachShader(program, shader);
 }
 
-inline void QOpenGLFunctions_ES2::glDisable(GLenum cap)
+inline void QOpenGLFunctions_ES2aglDisable(GLenum cap)
 {
-    ::glDisable(cap);
+    aglDisable(cap);
 }
 
-inline void QOpenGLFunctions_ES2::glDisableVertexAttribArray(GLuint index)
+inline void QOpenGLFunctions_ES2aglDisableVertexAttribArray(GLuint index)
 {
-    ::glDisableVertexAttribArray(index);
+    aglDisableVertexAttribArray(index);
 }
 
-inline void QOpenGLFunctions_ES2::glDrawArrays(GLenum mode, GLint first, GLsizei count)
+inline void QOpenGLFunctions_ES2aglDrawArrays(GLenum mode, GLint first, GLsizei count)
 {
-    ::glDrawArrays(mode, first, count);
+    aglDrawArrays(mode, first, count);
 }
 
-inline void QOpenGLFunctions_ES2::glDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
+inline void QOpenGLFunctions_ES2aglDrawElements(GLenum mode, GLsizei count, GLenum type, const GLvoid* indices)
 {
-    ::glDrawElements(mode, count, type, indices);
+    aglDrawElements(mode, count, type, indices);
 }
 
-inline void QOpenGLFunctions_ES2::glEnable(GLenum cap)
+inline void QOpenGLFunctions_ES2aglEnable(GLenum cap)
 {
-    ::glEnable(cap);
+    aglEnable(cap);
 }
 
-inline void QOpenGLFunctions_ES2::glEnableVertexAttribArray(GLuint index)
+inline void QOpenGLFunctions_ES2aglEnableVertexAttribArray(GLuint index)
 {
-    ::glEnableVertexAttribArray(index);
+    aglEnableVertexAttribArray(index);
 }
 
-inline void QOpenGLFunctions_ES2::glFinish(void)
+inline void QOpenGLFunctions_ES2aglFinish(void)
 {
-    ::glFinish();
+    aglFinish();
 }
 
-inline void QOpenGLFunctions_ES2::glFlush(void)
+inline void QOpenGLFunctions_ES2aglFlush(void)
 {
-    ::glFlush();
+    aglFlush();
 }
 
-inline void QOpenGLFunctions_ES2::glFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
+inline void QOpenGLFunctions_ES2aglFramebufferRenderbuffer(GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer)
 {
-    ::glFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
+    aglFramebufferRenderbuffer(target, attachment, renderbuffertarget, renderbuffer);
 }
 
-inline void QOpenGLFunctions_ES2::glFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
+inline void QOpenGLFunctions_ES2aglFramebufferTexture2D(GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level)
 {
-    ::glFramebufferTexture2D(target, attachment, textarget, texture, level);
+    aglFramebufferTexture2D(target, attachment, textarget, texture, level);
 }
 
-inline void QOpenGLFunctions_ES2::glFrontFace(GLenum mode)
+inline void QOpenGLFunctions_ES2aglFrontFace(GLenum mode)
 {
-    ::glFrontFace(mode);
+    aglFrontFace(mode);
 }
 
-inline void QOpenGLFunctions_ES2::glGenBuffers(GLsizei n, GLuint* buffers)
+inline void QOpenGLFunctions_ES2aglGenBuffers(GLsizei n, GLuint* buffers)
 {
-    ::glGenBuffers(n, buffers);
+    aglGenBuffers(n, buffers);
 }
 
-inline void QOpenGLFunctions_ES2::glGenerateMipmap(GLenum target)
+inline void QOpenGLFunctions_ES2aglGenerateMipmap(GLenum target)
 {
-    ::glGenerateMipmap(target);
+    aglGenerateMipmap(target);
 }
 
-inline void QOpenGLFunctions_ES2::glGenFramebuffers(GLsizei n, GLuint* framebuffers)
+inline void QOpenGLFunctions_ES2aglGenFramebuffers(GLsizei n, GLuint* framebuffers)
 {
-    ::glGenFramebuffers(n, framebuffers);
+    aglGenFramebuffers(n, framebuffers);
 }
 
-inline void QOpenGLFunctions_ES2::glGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
+inline void QOpenGLFunctions_ES2aglGenRenderbuffers(GLsizei n, GLuint* renderbuffers)
 {
-    ::glGenRenderbuffers(n, renderbuffers);
+    aglGenRenderbuffers(n, renderbuffers);
 }
 
-inline void QOpenGLFunctions_ES2::glGenTextures(GLsizei n, GLuint* textures)
+inline void QOpenGLFunctions_ES2aglGenTextures(GLsizei n, GLuint* textures)
 {
-    ::glGenTextures(n, textures);
+    aglGenTextures(n, textures);
 }
 
-inline void QOpenGLFunctions_ES2::glGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
+inline void QOpenGLFunctions_ES2aglGetActiveAttrib(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
 {
-    ::glGetActiveAttrib(program, index, bufsize, length, size, type, name);
+    aglGetActiveAttrib(program, index, bufsize, length, size, type, name);
 }
 
-inline void QOpenGLFunctions_ES2::glGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
+inline void QOpenGLFunctions_ES2aglGetActiveUniform(GLuint program, GLuint index, GLsizei bufsize, GLsizei* length, GLint* size, GLenum* type, GLchar* name)
 {
-    ::glGetActiveUniform(program, index, bufsize, length, size, type, name);
+    aglGetActiveUniform(program, index, bufsize, length, size, type, name);
 }
 
-inline void QOpenGLFunctions_ES2::glGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders)
+inline void QOpenGLFunctions_ES2aglGetAttachedShaders(GLuint program, GLsizei maxcount, GLsizei* count, GLuint* shaders)
 {
-    ::glGetAttachedShaders(program, maxcount, count, shaders);
+    aglGetAttachedShaders(program, maxcount, count, shaders);
 }
 
-inline int QOpenGLFunctions_ES2::glGetAttribLocation(GLuint program, const GLchar* name)
+inline int QOpenGLFunctions_ES2aglGetAttribLocation(GLuint program, const GLchar* name)
 {
-    return ::glGetAttribLocation(program, name);
+    return aglGetAttribLocation(program, name);
 }
 
-inline void QOpenGLFunctions_ES2::glGetBooleanv(GLenum pname, GLboolean* params)
+inline void QOpenGLFunctions_ES2aglGetBooleanv(GLenum pname, GLboolean* params)
 {
-    ::glGetBooleanv(pname, params);
+    aglGetBooleanv(pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetBufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    ::glGetBufferParameteriv(target, pname, params);
+    aglGetBufferParameteriv(target, pname, params);
 }
 
-inline GLenum QOpenGLFunctions_ES2::glGetError(void)
+inline GLenum QOpenGLFunctions_ES2aglGetError(void)
 {
-    return ::glGetError();
+    return aglGetError();
 }
 
-inline void QOpenGLFunctions_ES2::glGetFloatv(GLenum pname, GLfloat* params)
+inline void QOpenGLFunctions_ES2aglGetFloatv(GLenum pname, GLfloat* params)
 {
-    ::glGetFloatv(pname, params);
+    aglGetFloatv(pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetFramebufferAttachmentParameteriv(GLenum target, GLenum attachment, GLenum pname, GLint* params)
 {
-    ::glGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
+    aglGetFramebufferAttachmentParameteriv(target, attachment, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetIntegerv(GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetIntegerv(GLenum pname, GLint* params)
 {
-    ::glGetIntegerv(pname, params);
+    aglGetIntegerv(pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetProgramiv(GLuint program, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetProgramiv(GLuint program, GLenum pname, GLint* params)
 {
-    ::glGetProgramiv(program, pname, params);
+    aglGetProgramiv(program, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog)
+inline void QOpenGLFunctions_ES2aglGetProgramInfoLog(GLuint program, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
-    ::glGetProgramInfoLog(program, bufsize, length, infolog);
+    aglGetProgramInfoLog(program, bufsize, length, infolog);
 }
 
-inline void QOpenGLFunctions_ES2::glGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetRenderbufferParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    ::glGetRenderbufferParameteriv(target, pname, params);
+    aglGetRenderbufferParameteriv(target, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetShaderiv(GLuint shader, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetShaderiv(GLuint shader, GLenum pname, GLint* params)
 {
-    ::glGetShaderiv(shader, pname, params);
+    aglGetShaderiv(shader, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog)
+inline void QOpenGLFunctions_ES2aglGetShaderInfoLog(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* infolog)
 {
-    ::glGetShaderInfoLog(shader, bufsize, length, infolog);
+    aglGetShaderInfoLog(shader, bufsize, length, infolog);
 }
 
-inline void QOpenGLFunctions_ES2::glGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision)
+inline void QOpenGLFunctions_ES2aglGetShaderPrecisionFormat(GLenum shadertype, GLenum precisiontype, GLint* range, GLint* precision)
 {
-    ::glGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
+    aglGetShaderPrecisionFormat(shadertype, precisiontype, range, precision);
 }
 
-inline void QOpenGLFunctions_ES2::glGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
+inline void QOpenGLFunctions_ES2aglGetShaderSource(GLuint shader, GLsizei bufsize, GLsizei* length, GLchar* source)
 {
-    ::glGetShaderSource(shader, bufsize, length, source);
+    aglGetShaderSource(shader, bufsize, length, source);
 }
 
-inline const GLubyte* QOpenGLFunctions_ES2::glGetString(GLenum name)
+inline const GLubyte* QOpenGLFunctions_ES2aglGetString(GLenum name)
 {
-    return ::glGetString(name);
+    return aglGetString(name);
 }
 
-inline void QOpenGLFunctions_ES2::glGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
+inline void QOpenGLFunctions_ES2aglGetTexParameterfv(GLenum target, GLenum pname, GLfloat* params)
 {
-    ::glGetTexParameterfv(target, pname, params);
+    aglGetTexParameterfv(target, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetTexParameteriv(GLenum target, GLenum pname, GLint* params)
 {
-    ::glGetTexParameteriv(target, pname, params);
+    aglGetTexParameteriv(target, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetUniformfv(GLuint program, GLint location, GLfloat* params)
+inline void QOpenGLFunctions_ES2aglGetUniformfv(GLuint program, GLint location, GLfloat* params)
 {
-    ::glGetUniformfv(program, location, params);
+    aglGetUniformfv(program, location, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetUniformiv(GLuint program, GLint location, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetUniformiv(GLuint program, GLint location, GLint* params)
 {
-    ::glGetUniformiv(program, location, params);
+    aglGetUniformiv(program, location, params);
 }
 
-inline int QOpenGLFunctions_ES2::glGetUniformLocation(GLuint program, const GLchar* name)
+inline int QOpenGLFunctions_ES2aglGetUniformLocation(GLuint program, const GLchar* name)
 {
-    return ::glGetUniformLocation(program, name);
+    return aglGetUniformLocation(program, name);
 }
 
-inline void QOpenGLFunctions_ES2::glGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
+inline void QOpenGLFunctions_ES2aglGetVertexAttribfv(GLuint index, GLenum pname, GLfloat* params)
 {
-    ::glGetVertexAttribfv(index, pname, params);
+    aglGetVertexAttribfv(index, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
+inline void QOpenGLFunctions_ES2aglGetVertexAttribiv(GLuint index, GLenum pname, GLint* params)
 {
-    ::glGetVertexAttribiv(index, pname, params);
+    aglGetVertexAttribiv(index, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer)
+inline void QOpenGLFunctions_ES2aglGetVertexAttribPointerv(GLuint index, GLenum pname, GLvoid** pointer)
 {
-    ::glGetVertexAttribPointerv(index, pname, pointer);
+    aglGetVertexAttribPointerv(index, pname, pointer);
 }
 
-inline void QOpenGLFunctions_ES2::glHint(GLenum target, GLenum mode)
+inline void QOpenGLFunctions_ES2aglHint(GLenum target, GLenum mode)
 {
-    ::glHint(target, mode);
+    aglHint(target, mode);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsBuffer(GLuint buffer)
+inline GLboolean QOpenGLFunctions_ES2aglIsBuffer(GLuint buffer)
 {
-    return ::glIsBuffer(buffer);
+    return aglIsBuffer(buffer);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsEnabled(GLenum cap)
+inline GLboolean QOpenGLFunctions_ES2aglIsEnabled(GLenum cap)
 {
-    return ::glIsEnabled(cap);
+    return aglIsEnabled(cap);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsFramebuffer(GLuint framebuffer)
+inline GLboolean QOpenGLFunctions_ES2aglIsFramebuffer(GLuint framebuffer)
 {
-    return ::glIsFramebuffer(framebuffer);
+    return aglIsFramebuffer(framebuffer);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsProgram(GLuint program)
+inline GLboolean QOpenGLFunctions_ES2aglIsProgram(GLuint program)
 {
-    return ::glIsProgram(program);
+    return aglIsProgram(program);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsRenderbuffer(GLuint renderbuffer)
+inline GLboolean QOpenGLFunctions_ES2aglIsRenderbuffer(GLuint renderbuffer)
 {
-    return ::glIsRenderbuffer(renderbuffer);
+    return aglIsRenderbuffer(renderbuffer);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsShader(GLuint shader)
+inline GLboolean QOpenGLFunctions_ES2aglIsShader(GLuint shader)
 {
-    return ::glIsShader(shader);
+    return aglIsShader(shader);
 }
 
-inline GLboolean QOpenGLFunctions_ES2::glIsTexture(GLuint texture)
+inline GLboolean QOpenGLFunctions_ES2aglIsTexture(GLuint texture)
 {
-    return ::glIsTexture(texture);
+    return aglIsTexture(texture);
 }
 
-inline void QOpenGLFunctions_ES2::glLineWidth(GLfloat width)
+inline void QOpenGLFunctions_ES2aglLineWidth(GLfloat width)
 {
-    ::glLineWidth(width);
+    aglLineWidth(width);
 }
 
-inline void QOpenGLFunctions_ES2::glLinkProgram(GLuint program)
+inline void QOpenGLFunctions_ES2aglLinkProgram(GLuint program)
 {
-    ::glLinkProgram(program);
+    aglLinkProgram(program);
 }
 
-inline void QOpenGLFunctions_ES2::glPixelStorei(GLenum pname, GLint param)
+inline void QOpenGLFunctions_ES2aglPixelStorei(GLenum pname, GLint param)
 {
-    ::glPixelStorei(pname, param);
+    aglPixelStorei(pname, param);
 }
 
-inline void QOpenGLFunctions_ES2::glPolygonOffset(GLfloat factor, GLfloat units)
+inline void QOpenGLFunctions_ES2aglPolygonOffset(GLfloat factor, GLfloat units)
 {
-    ::glPolygonOffset(factor, units);
+    aglPolygonOffset(factor, units);
 }
 
-inline void QOpenGLFunctions_ES2::glReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
+inline void QOpenGLFunctions_ES2aglReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format, GLenum type, GLvoid* pixels)
 {
-    ::glReadPixels(x, y, width, height, format, type, pixels);
+    aglReadPixels(x, y, width, height, format, type, pixels);
 }
 
-inline void QOpenGLFunctions_ES2::glReleaseShaderCompiler(void)
+inline void QOpenGLFunctions_ES2aglReleaseShaderCompiler(void)
 {
-    ::glReleaseShaderCompiler();
+    aglReleaseShaderCompiler();
 }
 
-inline void QOpenGLFunctions_ES2::glRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
+inline void QOpenGLFunctions_ES2aglRenderbufferStorage(GLenum target, GLenum internalformat, GLsizei width, GLsizei height)
 {
-    ::glRenderbufferStorage(target, internalformat, width, height);
+    aglRenderbufferStorage(target, internalformat, width, height);
 }
 
-inline void QOpenGLFunctions_ES2::glSampleCoverage(GLclampf value, GLboolean invert)
+inline void QOpenGLFunctions_ES2aglSampleCoverage(GLclampf value, GLboolean invert)
 {
-    ::glSampleCoverage(value, invert);
+    aglSampleCoverage(value, invert);
 }
 
-inline void QOpenGLFunctions_ES2::glScissor(GLint x, GLint y, GLsizei width, GLsizei height)
+inline void QOpenGLFunctions_ES2aglScissor(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    ::glScissor(x, y, width, height);
+    aglScissor(x, y, width, height);
 }
 
-inline void QOpenGLFunctions_ES2::glShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
+inline void QOpenGLFunctions_ES2aglShaderBinary(GLsizei n, const GLuint* shaders, GLenum binaryformat, const GLvoid* binary, GLsizei length)
 {
-    ::glShaderBinary(n, shaders, binaryformat, binary, length);
+    aglShaderBinary(n, shaders, binaryformat, binary, length);
 }
 
-inline void QOpenGLFunctions_ES2::glShaderSource(GLuint shader, GLsizei count, const GLchar* *string, const GLint* length)
+inline void QOpenGLFunctions_ES2aglShaderSource(GLuint shader, GLsizei count, const GLchar* *string, const GLint* length)
 {
-    ::glShaderSource(shader, count, string, length);
+    aglShaderSource(shader, count, string, length);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilFunc(GLenum func, GLint ref, GLuint mask)
+inline void QOpenGLFunctions_ES2aglStencilFunc(GLenum func, GLint ref, GLuint mask)
 {
-    ::glStencilFunc(func, ref, mask);
+    aglStencilFunc(func, ref, mask);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
+inline void QOpenGLFunctions_ES2aglStencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
 {
-    ::glStencilFuncSeparate(face, func, ref, mask);
+    aglStencilFuncSeparate(face, func, ref, mask);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilMask(GLuint mask)
+inline void QOpenGLFunctions_ES2aglStencilMask(GLuint mask)
 {
-    ::glStencilMask(mask);
+    aglStencilMask(mask);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilMaskSeparate(GLenum face, GLuint mask)
+inline void QOpenGLFunctions_ES2aglStencilMaskSeparate(GLenum face, GLuint mask)
 {
-    ::glStencilMaskSeparate(face, mask);
+    aglStencilMaskSeparate(face, mask);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
+inline void QOpenGLFunctions_ES2aglStencilOp(GLenum fail, GLenum zfail, GLenum zpass)
 {
-    ::glStencilOp(fail, zfail, zpass);
+    aglStencilOp(fail, zfail, zpass);
 }
 
-inline void QOpenGLFunctions_ES2::glStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
+inline void QOpenGLFunctions_ES2aglStencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
 {
-    ::glStencilOpSeparate(face, fail, zfail, zpass);
+    aglStencilOpSeparate(face, fail, zfail, zpass);
 }
 
-inline void QOpenGLFunctions_ES2::glTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
+inline void QOpenGLFunctions_ES2aglTexImage2D(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid* pixels)
 {
-    ::glTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
+    aglTexImage2D(target, level, internalformat, width, height, border, format, type, pixels);
 }
 
-inline void QOpenGLFunctions_ES2::glTexParameterf(GLenum target, GLenum pname, GLfloat param)
+inline void QOpenGLFunctions_ES2aglTexParameterf(GLenum target, GLenum pname, GLfloat param)
 {
-    ::glTexParameterf(target, pname, param);
+    aglTexParameterf(target, pname, param);
 }
 
-inline void QOpenGLFunctions_ES2::glTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
+inline void QOpenGLFunctions_ES2aglTexParameterfv(GLenum target, GLenum pname, const GLfloat* params)
 {
-    ::glTexParameterfv(target, pname, params);
+    aglTexParameterfv(target, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glTexParameteri(GLenum target, GLenum pname, GLint param)
+inline void QOpenGLFunctions_ES2aglTexParameteri(GLenum target, GLenum pname, GLint param)
 {
-    ::glTexParameteri(target, pname, param);
+    aglTexParameteri(target, pname, param);
 }
 
-inline void QOpenGLFunctions_ES2::glTexParameteriv(GLenum target, GLenum pname, const GLint* params)
+inline void QOpenGLFunctions_ES2aglTexParameteriv(GLenum target, GLenum pname, const GLint* params)
 {
-    ::glTexParameteriv(target, pname, params);
+    aglTexParameteriv(target, pname, params);
 }
 
-inline void QOpenGLFunctions_ES2::glTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels)
+inline void QOpenGLFunctions_ES2aglTexSubImage2D(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid* pixels)
 {
-    ::glTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
+    aglTexSubImage2D(target, level, xoffset, yoffset, width, height, format, type, pixels);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform1f(GLint location, GLfloat x)
+inline void QOpenGLFunctions_ES2aglUniform1f(GLint location, GLfloat x)
 {
-    ::glUniform1f(location, x);
+    aglUniform1f(location, x);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform1fv(GLint location, GLsizei count, const GLfloat* v)
+inline void QOpenGLFunctions_ES2aglUniform1fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    ::glUniform1fv(location, count, v);
+    aglUniform1fv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform1i(GLint location, GLint x)
+inline void QOpenGLFunctions_ES2aglUniform1i(GLint location, GLint x)
 {
-    ::glUniform1i(location, x);
+    aglUniform1i(location, x);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform1iv(GLint location, GLsizei count, const GLint* v)
+inline void QOpenGLFunctions_ES2aglUniform1iv(GLint location, GLsizei count, const GLint* v)
 {
-    ::glUniform1iv(location, count, v);
+    aglUniform1iv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform2f(GLint location, GLfloat x, GLfloat y)
+inline void QOpenGLFunctions_ES2aglUniform2f(GLint location, GLfloat x, GLfloat y)
 {
-    ::glUniform2f(location, x, y);
+    aglUniform2f(location, x, y);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform2fv(GLint location, GLsizei count, const GLfloat* v)
+inline void QOpenGLFunctions_ES2aglUniform2fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    ::glUniform2fv(location, count, v);
+    aglUniform2fv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform2i(GLint location, GLint x, GLint y)
+inline void QOpenGLFunctions_ES2aglUniform2i(GLint location, GLint x, GLint y)
 {
-    ::glUniform2i(location, x, y);
+    aglUniform2i(location, x, y);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform2iv(GLint location, GLsizei count, const GLint* v)
+inline void QOpenGLFunctions_ES2aglUniform2iv(GLint location, GLsizei count, const GLint* v)
 {
-    ::glUniform2iv(location, count, v);
+    aglUniform2iv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform3f(GLint location, GLfloat x, GLfloat y, GLfloat z)
+inline void QOpenGLFunctions_ES2aglUniform3f(GLint location, GLfloat x, GLfloat y, GLfloat z)
 {
-    ::glUniform3f(location, x, y, z);
+    aglUniform3f(location, x, y, z);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform3fv(GLint location, GLsizei count, const GLfloat* v)
+inline void QOpenGLFunctions_ES2aglUniform3fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    ::glUniform3fv(location, count, v);
+    aglUniform3fv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform3i(GLint location, GLint x, GLint y, GLint z)
+inline void QOpenGLFunctions_ES2aglUniform3i(GLint location, GLint x, GLint y, GLint z)
 {
-    ::glUniform3i(location, x, y, z);
+    aglUniform3i(location, x, y, z);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform3iv(GLint location, GLsizei count, const GLint* v)
+inline void QOpenGLFunctions_ES2aglUniform3iv(GLint location, GLsizei count, const GLint* v)
 {
-    ::glUniform3iv(location, count, v);
+    aglUniform3iv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+inline void QOpenGLFunctions_ES2aglUniform4f(GLint location, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-    ::glUniform4f(location, x, y, z, w);
+    aglUniform4f(location, x, y, z, w);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform4fv(GLint location, GLsizei count, const GLfloat* v)
+inline void QOpenGLFunctions_ES2aglUniform4fv(GLint location, GLsizei count, const GLfloat* v)
 {
-    ::glUniform4fv(location, count, v);
+    aglUniform4fv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform4i(GLint location, GLint x, GLint y, GLint z, GLint w)
+inline void QOpenGLFunctions_ES2aglUniform4i(GLint location, GLint x, GLint y, GLint z, GLint w)
 {
-    ::glUniform4i(location, x, y, z, w);
+    aglUniform4i(location, x, y, z, w);
 }
 
-inline void QOpenGLFunctions_ES2::glUniform4iv(GLint location, GLsizei count, const GLint* v)
+inline void QOpenGLFunctions_ES2aglUniform4iv(GLint location, GLsizei count, const GLint* v)
 {
-    ::glUniform4iv(location, count, v);
+    aglUniform4iv(location, count, v);
 }
 
-inline void QOpenGLFunctions_ES2::glUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+inline void QOpenGLFunctions_ES2aglUniformMatrix2fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    ::glUniformMatrix2fv(location, count, transpose, value);
+    aglUniformMatrix2fv(location, count, transpose, value);
 }
 
-inline void QOpenGLFunctions_ES2::glUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+inline void QOpenGLFunctions_ES2aglUniformMatrix3fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    ::glUniformMatrix3fv(location, count, transpose, value);
+    aglUniformMatrix3fv(location, count, transpose, value);
 }
 
-inline void QOpenGLFunctions_ES2::glUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
+inline void QOpenGLFunctions_ES2aglUniformMatrix4fv(GLint location, GLsizei count, GLboolean transpose, const GLfloat* value)
 {
-    ::glUniformMatrix4fv(location, count, transpose, value);
+    aglUniformMatrix4fv(location, count, transpose, value);
 }
 
-inline void QOpenGLFunctions_ES2::glUseProgram(GLuint program)
+inline void QOpenGLFunctions_ES2aglUseProgram(GLuint program)
 {
-    ::glUseProgram(program);
+    aglUseProgram(program);
 }
 
-inline void QOpenGLFunctions_ES2::glValidateProgram(GLuint program)
+inline void QOpenGLFunctions_ES2aglValidateProgram(GLuint program)
 {
-    ::glValidateProgram(program);
+    aglValidateProgram(program);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib1f(GLuint indx, GLfloat x)
+inline void QOpenGLFunctions_ES2aglVertexAttrib1f(GLuint indx, GLfloat x)
 {
-    ::glVertexAttrib1f(indx, x);
+    aglVertexAttrib1f(indx, x);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib1fv(GLuint indx, const GLfloat* values)
+inline void QOpenGLFunctions_ES2aglVertexAttrib1fv(GLuint indx, const GLfloat* values)
 {
-    ::glVertexAttrib1fv(indx, values);
+    aglVertexAttrib1fv(indx, values);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
+inline void QOpenGLFunctions_ES2aglVertexAttrib2f(GLuint indx, GLfloat x, GLfloat y)
 {
-    ::glVertexAttrib2f(indx, x, y);
+    aglVertexAttrib2f(indx, x, y);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib2fv(GLuint indx, const GLfloat* values)
+inline void QOpenGLFunctions_ES2aglVertexAttrib2fv(GLuint indx, const GLfloat* values)
 {
-    ::glVertexAttrib2fv(indx, values);
+    aglVertexAttrib2fv(indx, values);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
+inline void QOpenGLFunctions_ES2aglVertexAttrib3f(GLuint indx, GLfloat x, GLfloat y, GLfloat z)
 {
-    ::glVertexAttrib3f(indx, x, y, z);
+    aglVertexAttrib3f(indx, x, y, z);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib3fv(GLuint indx, const GLfloat* values)
+inline void QOpenGLFunctions_ES2aglVertexAttrib3fv(GLuint indx, const GLfloat* values)
 {
-    ::glVertexAttrib3fv(indx, values);
+    aglVertexAttrib3fv(indx, values);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
+inline void QOpenGLFunctions_ES2aglVertexAttrib4f(GLuint indx, GLfloat x, GLfloat y, GLfloat z, GLfloat w)
 {
-    ::glVertexAttrib4f(indx, x, y, z, w);
+    aglVertexAttrib4f(indx, x, y, z, w);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttrib4fv(GLuint indx, const GLfloat* values)
+inline void QOpenGLFunctions_ES2aglVertexAttrib4fv(GLuint indx, const GLfloat* values)
 {
-    ::glVertexAttrib4fv(indx, values);
+    aglVertexAttrib4fv(indx, values);
 }
 
-inline void QOpenGLFunctions_ES2::glVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
+inline void QOpenGLFunctions_ES2aglVertexAttribPointer(GLuint indx, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-    ::glVertexAttribPointer(indx, size, type, normalized, stride, ptr);
+    aglVertexAttribPointer(indx, size, type, normalized, stride, ptr);
 }
 
-inline void QOpenGLFunctions_ES2::glViewport(GLint x, GLint y, GLsizei width, GLsizei height)
+inline void QOpenGLFunctions_ES2aglViewport(GLint x, GLint y, GLsizei width, GLsizei height)
 {
-    ::glViewport(x, y, width, height);
+    aglViewport(x, y, width, height);
 }
 
 QT_END_NAMESPACE

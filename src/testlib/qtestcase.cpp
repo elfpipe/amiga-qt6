@@ -191,7 +191,7 @@ static void disableCoreDump()
     bool ok = false;
     const int disableCoreDump = qEnvironmentVariableIntValue("QTEST_DISABLE_CORE_DUMP", &ok);
     if (ok && disableCoreDump) {
-#if defined(Q_OS_UNIX) && !defined(Q_OS_INTEGRITY)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_INTEGRITY) && !defined(__amigaos4__)
         struct rlimit limit;
         limit.rlim_cur = 0;
         limit.rlim_max = 0;
@@ -1667,7 +1667,7 @@ public:
 #  endif
         SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
         SetUnhandledExceptionFilter(windowsFaultHandler);
-#elif defined(Q_OS_UNIX) && !defined(Q_OS_WASM)
+#elif defined(Q_OS_UNIX) && !defined(Q_OS_WASM) && !defined(__amigaos4__)
         sigemptyset(&handledSignals);
 
         const int fatalSignals[] = {
@@ -1727,7 +1727,7 @@ public:
 
     ~FatalSignalHandler()
     {
-#if defined(Q_OS_UNIX) && !defined(Q_OS_WASM)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_WASM) && !defined(__amigaos4__)
         // Unregister any of our remaining signal handlers
         struct sigaction act;
         memset(&act, 0, sizeof(act));

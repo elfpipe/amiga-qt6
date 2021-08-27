@@ -84,6 +84,11 @@ static inline unsigned short encode_half(double val)
     return (unsigned short)(sign | ((exp + 15) << 10) | mant);
 }
 
+#ifdef __amigaos4__
+#define INFINITY 1.0/0.0
+#define NAN 0.0
+#endif
+
 /* this function was copied & adapted from RFC 7049 Appendix D */
 static inline double decode_half(unsigned short half)
 {

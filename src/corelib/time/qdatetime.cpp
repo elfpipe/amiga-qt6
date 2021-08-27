@@ -2375,6 +2375,8 @@ static QString qt_tzname(QDateTimePrivate::DaylightStatus daylightStatus)
     if (_get_tzname(&s, name, 512, isDst))
         return QString();
     return QString::fromLocal8Bit(name);
+#elif defined(__amigaos4__)
+    return QString();
 #else
     return QString::fromLocal8Bit(tzname[isDst]);
 #endif // Q_OS_WIN

@@ -265,7 +265,8 @@ bool QDBusUnixFileDescriptor::isSupported()
 void QDBusUnixFileDescriptor::setFileDescriptor(int fileDescriptor)
 {
     if (fileDescriptor != -1)
-        giveFileDescriptor(qt_safe_dup(fileDescriptor));
+        // giveFileDescriptor(qt_safe_dup(fileDescriptor));
+        giveFileDescriptor(dup(fileDescriptor));
 }
 
 /*!

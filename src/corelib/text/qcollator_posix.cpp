@@ -88,7 +88,11 @@ int QCollator::compare(QStringView s1, QStringView s2) const
     QVarLengthArray<wchar_t> array1, array2;
     stringToWCharArray(array1, s1);
     stringToWCharArray(array2, s2);
+#ifdef __amigaos4__
+    return s1.compare(s2, caseSensitivity());
+#else
     return std::wcscoll(array1.constData(), array2.constData());
+#endif
 }
 
 QCollatorSortKey QCollator::sortKey(const QString &string) const
@@ -99,8 +103,11 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
     QVarLengthArray<wchar_t> original;
     stringToWCharArray(original, string);
     QList<wchar_t> result(original.size());
+#ifndef __amigaos4__
     if (d->isC()) {
+#endif
         std::copy(original.cbegin(), original.cend(), result.begin());
+#ifndef __amigaos4__
     } else {
         size_t size = std::wcsxfrm(result.data(), original.constData(), string.size());
         if (size > uint(result.size())) {
@@ -110,12 +117,23 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
         result.resize(size+1);
         result[size] = 0;
     }
+#endif
     return QCollatorSortKey(new QCollatorSortKeyPrivate(std::move(result)));
 }
 
+#ifdef __amigaos4__
+namespace std {
+typedef basic_string<wchar_t>    wstring;
+}
+#endif
+
 int QCollatorSortKey::compare(const QCollatorSortKey &otherKey) const
 {
+#ifdef __amigaos4__
+    return std::wstring(d->m_key.constData()) == std::wstring(otherKey.d->m_key.constData());
+#else
     return std::wcscmp(d->m_key.constData(), otherKey.d->m_key.constData());
+#endif
 }
 
 QT_END_NAMESPACE

@@ -66,6 +66,10 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifdef __amigaos4__
+#include <pthread.h>
+#endif
+
 #if !defined (Q_OS_VXWORKS)
 # if !defined(Q_OS_HPUX) || defined(__ia64)
 #  include <sys/select.h>
@@ -158,7 +162,7 @@ inline timeval timespecToTimeval(const timespec &ts)
     return tv;
 }
 
-
+#ifndef __amigaos4__
 inline void qt_ignore_sigpipe()
 {
     // Set to ignore SIGPIPE once only.
@@ -174,6 +178,7 @@ inline void qt_ignore_sigpipe()
         atom.storeRelaxed(1);
     }
 }
+#endif
 
 #if defined(Q_PROCESSOR_X86_32) && defined(__GLIBC__)
 #  if !__GLIBC_PREREQ(2, 22)
@@ -203,7 +208,7 @@ static inline int qt_safe_open(const char *pathname, int flags, mode_t mode = 07
 #undef QT_OPEN
 #define QT_OPEN         qt_safe_open
 
-#ifndef Q_OS_VXWORKS // no POSIX pipes in VxWorks
+#if !defined(Q_OS_VXWORKS) && !defined(__amigaos4__) // no POSIX pipes in VxWorks
 // don't call ::pipe
 // call qt_safe_pipe
 static inline int qt_safe_pipe(int pipefd[2], int flags = 0)
@@ -234,6 +239,7 @@ static inline int qt_safe_pipe(int pipefd[2], int flags = 0)
 
 #endif // Q_OS_VXWORKS
 
+#ifndef __amigaos4__
 // don't call dup or fcntl(F_DUPFD)
 static inline int qt_safe_dup(int oldfd, int atleast = 0, int flags = FD_CLOEXEC)
 {
@@ -275,6 +281,7 @@ static inline int qt_safe_dup2(int oldfd, int newfd, int flags = FD_CLOEXEC)
     return 0;
 #endif
 }
+#endif //_amigaos4__
 
 static inline qint64 qt_safe_read(int fd, void *data, qint64 maxlen)
 {
@@ -296,7 +303,9 @@ static inline qint64 qt_safe_write(int fd, const void *data, qint64 len)
 
 static inline qint64 qt_safe_write_nosignal(int fd, const void *data, qint64 len)
 {
+#ifndef __amigaos4__
     qt_ignore_sigpipe();
+#endif
     return qt_safe_write(fd, data, len);
 }
 
@@ -310,7 +319,7 @@ static inline int qt_safe_close(int fd)
 #define QT_CLOSE qt_safe_close
 
 // - VxWorks & iOS/tvOS/watchOS don't have processes
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
 static inline int qt_safe_execve(const char *filename, char *const argv[],
                                  char *const envp[])
 {
@@ -350,6 +359,7 @@ timespec qt_gettime() noexcept;
 void qt_nanosleep(timespec amount);
 QByteArray qt_readlink(const char *path);
 
+#ifndef __amigaos4__
 /* non-static */
 inline bool qt_haveLinuxProcfs()
 {
@@ -364,6 +374,7 @@ inline bool qt_haveLinuxProcfs()
     return false;
 #endif
 }
+#endif //__amigaos4__
 
 Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts);
 

@@ -92,7 +92,7 @@ QTextStream &operator<<(QTextStream &str, const QSurfaceFormat &format)
 
 /* This test contains code from the qtdiag tool. Its purpose is to output the
  * graphics configuration to the CI log and to verify that Open GL can be
- * initialized for platforms on which the qopengl test is marked as
+ * initialized for platforms on which the q is marked as
  * insignificant. */
 
 class tst_QOpenGlConfig : public QObject

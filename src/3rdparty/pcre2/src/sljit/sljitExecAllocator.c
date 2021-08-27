@@ -165,6 +165,9 @@ static SLJIT_INLINE void apple_update_wx_flags(sljit_s32 enable_exec)
 
 static SLJIT_INLINE void* alloc_chunk(sljit_uw size)
 {
+#ifdef __amigaos4__
+	return malloc(size);
+#else
 	void *retval;
 	int prot = PROT_READ | PROT_WRITE | PROT_EXEC;
 	int flags = MAP_PRIVATE;
@@ -195,11 +198,16 @@ static SLJIT_INLINE void* alloc_chunk(sljit_uw size)
 	SLJIT_UPDATE_WX_FLAGS(retval, (uint8_t *)retval + size, 0);
 
 	return retval;
+#endif
 }
 
 static SLJIT_INLINE void free_chunk(void *chunk, sljit_uw size)
 {
+#ifdef __amigaos4__
+	free(chunk);
+#else
 	munmap(chunk, size);
+#endif
 }
 
 #endif /* windows */

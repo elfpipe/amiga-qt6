@@ -19,8 +19,11 @@ extern "C" {
  * If any other extensions using these types are defined,
  * the typedefs must move out of this block and be shared.
  */
-typedef khronos_int64_t GLint64;
-typedef khronos_uint64_t GLuint64;
+// typedef khronos_int64_t GLint64;
+// typedef khronos_uint64_t GLuint64;
+#include <exec/types.h>
+typedef int64 GLint64;
+typedef uint64 GLuint64;
 typedef struct __GLsync *GLsync;
 #endif
 
@@ -2822,8 +2825,11 @@ GL_APICALL void GL_APIENTRY glRenderbufferStorageMultisampleNV (GLenum target, G
 
 #ifndef GL_NV_gpu_shader5
 #define GL_NV_gpu_shader5 1
-typedef khronos_int64_t GLint64EXT;
-typedef khronos_uint64_t GLuint64EXT;
+// typedef khronos_int64_t GLint64EXT;
+// typedef khronos_uint64_t GLuint64EXT;
+typedef int64 GLint64EXT;
+typedef uint64 GLuint64EXT;
+
 #define GL_INT64_NV                       0x140E
 #define GL_UNSIGNED_INT64_NV              0x140F
 #define GL_INT8_NV                        0x8FE0

@@ -69,7 +69,7 @@
 #  include <zstd.h>
 #endif
 
-#if defined(Q_OS_UNIX) && !defined(Q_OS_NACL) && !defined(Q_OS_INTEGRITY)
+#if !defined(__amigaos4__) && defined(Q_OS_UNIX) && !defined(Q_OS_NACL) && !defined(Q_OS_INTEGRITY)
 #  define QT_USE_MMAP
 #  include <sys/mman.h>
 #endif
@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
 #  define RCC_FEATURE_SYMBOL(feature)   \
     extern Q_CORE_EXPORT const quint8 qt_resourceFeature ## feature; \
     const quint8 qt_resourceFeature ## feature = 0;
-#else
+    #else
 #  define RCC_FEATURE_SYMBOL(feature)   \
     Q_CORE_EXPORT quint8 qResourceFeature ## feature() { return 0; }
 #endif

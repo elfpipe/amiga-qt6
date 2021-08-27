@@ -72,7 +72,11 @@ QTimerInfoList::QTimerInfoList()
         tms unused;
         previousTicks = times(&unused);
 
+#ifdef __amigaos4__
+        ticksPerSecond = 100;
+#else
         ticksPerSecond = sysconf(_SC_CLK_TCK);
+#endif
         msPerTick = 1000/ticksPerSecond;
     } else {
         // detected monotonic timers

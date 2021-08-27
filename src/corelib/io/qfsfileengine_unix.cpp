@@ -52,7 +52,9 @@
 #include "qdatetime.h"
 #include "qvarlengtharray.h"
 
+#ifndef __amigaos4__
 #include <sys/mman.h>
+#endif
 #include <stdlib.h>
 #include <limits.h>
 #include <errno.h>
@@ -592,6 +594,7 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
         qWarning("QFSFileEngine::map: Mapping a file beyond its size is not portable");
 
     int access = 0;
+#ifndef __amigaos4__
     if (openMode & QIODevice::ReadOnly) access |= PROT_READ;
     if (openMode & QIODevice::WriteOnly) access |= PROT_WRITE;
 
@@ -600,9 +603,12 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
         sharemode = MAP_PRIVATE;
         access |= PROT_WRITE;
     }
+#endif
 
 #if defined(Q_OS_INTEGRITY)
     int pageSize = sysconf(_SC_PAGESIZE);
+#elif defined(__amigaos4__)
+    int pageSize = 4096;
 #else
     int pageSize = getpagesize();
 #endif
@@ -617,6 +623,11 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
     QT_OFF_T realOffset = QT_OFF_T(offset);
     realOffset &= ~(QT_OFF_T(pageSize - 1));
 
+#ifdef __amigaos4__
+    void *mapAddress = malloc(realSize);
+    lseek(nativeHandle(), realOffset, SEEK_SET);
+    read(nativeHandle(), mapAddress, realSize);
+#else
     void *mapAddress = QT_MMAP((void*)nullptr, realSize,
                    access, sharemode, nativeHandle(), realOffset);
     if (MAP_FAILED != mapAddress) {
@@ -624,6 +635,7 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
         maps[address] = {extra, realSize};
         return address;
     }
+#endif
 
     switch(errno) {
     case EBADF:
@@ -644,7 +656,10 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
 
 bool QFSFileEnginePrivate::unmap(uchar *ptr)
 {
-#if !defined(Q_OS_INTEGRITY)
+#if defined(__amigaos4__)
+    free(ptr);
+    return true;
+#elif !defined(Q_OS_INTEGRITY)
     Q_Q(QFSFileEngine);
     const auto it = std::as_const(maps).find(ptr);
     if (it == maps.cend()) {

@@ -62,7 +62,7 @@
 
 QT_BEGIN_NAMESPACE
 
-namespace {
+namespace NotAmiga{
 struct Message {
     QString content;
     QString type;
@@ -77,7 +77,7 @@ public:
     QCheckBox * again;
     QTextEdit * errors;
     QLabel * icon;
-    std::queue<Message> pending;
+    std::queue<NotAmiga::Message> pending;
     QSet<QString> doNotShow;
     QSet<QString> doNotShowType;
     QString currentMessage;

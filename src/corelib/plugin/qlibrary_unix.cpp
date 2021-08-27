@@ -323,7 +323,7 @@ Q_CORE_EXPORT QFunctionPointer qt_mac_resolve_sys(void *handle, const char *symb
 
 QFunctionPointer QLibraryPrivate::resolve_sys(const char *symbol)
 {
-    QFunctionPointer address = QFunctionPointer(dlsym(pHnd.loadAcquire(), symbol));
+    QFunctionPointer address = QFunctionPointer(dlsym(pHnd.loadAcquire(), (char *)symbol));
     return address;
 }
 

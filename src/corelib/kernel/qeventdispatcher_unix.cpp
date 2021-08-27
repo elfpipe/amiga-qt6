@@ -130,7 +130,7 @@ static void initThreadPipeFD(int fd)
 
 bool QThreadPipe::init()
 {
-#if defined(Q_OS_WASM)
+#if defined(Q_OS_WASM) || defined(__amigaos4__)
     // do nothing.
 #elif defined(Q_OS_VXWORKS)
     qsnprintf(name, sizeof(name), "/pipe/qt_%08x", int(taskIdSelf()));

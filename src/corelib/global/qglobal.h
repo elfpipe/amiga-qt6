@@ -41,6 +41,23 @@
 #ifndef QGLOBAL_H
 #define QGLOBAL_H
 
+#if defined(__amigaos4__) && defined(__cplusplus)
+namespace std {
+    inline long int lround (double arg) {
+        long double a = arg - (long int)arg;
+        if(arg > 0) {
+            return (long int)arg + (a >= 0.5 ? 1.0 : 0.0);
+        } else {
+            return (long int)arg - (a <= -0.5 ? 1.0 : 0.0);
+        }
+    }
+    inline float copysign(float mag, float sgn) {
+        float m = mag < 0.0 ? - mag : mag;
+        return sgn > 0.0 ? m : -m;
+    }
+}
+#endif
+
 #ifdef __cplusplus
 #  include <type_traits>
 #  include <cstddef>
@@ -668,7 +685,7 @@ using qsizetype = QIntegerForSizeof<std::size_t>::Signed;
 // platform.
 //
 // We know that sizeof(size_t) == sizeof(void *) == sizeof(qptrdiff).
-#if SIZE_MAX == 4294967295ULL
+#if SIZE_MAX == 4294967295ULL || defined(__amigaos4__)
 #define PRIuQUINTPTR "u"
 #define PRIoQUINTPTR "o"
 #define PRIxQUINTPTR "x"

@@ -103,7 +103,7 @@ typedef INT (WSAAPI *LPFN_WSASENDMSG)(SOCKET s, LPWSAMSG lpMsg, DWORD dwFlags,
 union qt_sockaddr {
     sockaddr a;
     sockaddr_in a4;
-    sockaddr_in6 a6;
+    // sockaddr_in6 a6;
 };
 
 namespace {
@@ -303,16 +303,16 @@ public:
             || address.protocol() == QAbstractSocket::AnyIPProtocol
             || socketProtocol == QAbstractSocket::IPv6Protocol
             || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-            memset(&aa->a6, 0, sizeof(sockaddr_in6));
-            aa->a6.sin6_family = AF_INET6;
-#if QT_CONFIG(networkinterface)
-            aa->a6.sin6_scope_id = scopeIdFromString(address.scopeId());
-#endif
-            aa->a6.sin6_port = htons(port);
-            Q_IPV6ADDR tmp = address.toIPv6Address();
-            memcpy(&aa->a6.sin6_addr, &tmp, sizeof(tmp));
-            *sockAddrSize = sizeof(sockaddr_in6);
-            SetSALen::set(&aa->a, sizeof(sockaddr_in6));
+//             memset(&aa->a6, 0, sizeof(sockaddr_in6));
+//             aa->a6.sin6_family = AF_INET6;
+// #if QT_CONFIG(networkinterface)
+//             aa->a6.sin6_scope_id = scopeIdFromString(address.scopeId());
+// #endif
+//             aa->a6.sin6_port = htons(port);
+//             Q_IPV6ADDR tmp = address.toIPv6Address();
+//             memcpy(&aa->a6.sin6_addr, &tmp, sizeof(tmp));
+//             *sockAddrSize = sizeof(sockaddr_in6);
+//             SetSALen::set(&aa->a, sizeof(sockaddr_in6));
         } else {
             memset(&aa->a, 0, sizeof(sockaddr_in));
             aa->a4.sin_family = AF_INET;

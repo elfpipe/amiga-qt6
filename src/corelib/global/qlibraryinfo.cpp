@@ -435,6 +435,8 @@ static QString getRelocatablePrefix()
         + QLatin1String(QT_CONFIGURE_LIBLOCATION_TO_PREFIX_PATH);
 
     prefixPath = QDir::cleanPath(prefixDir);
+#elif defined(__amigaos4__)
+    prefixPath = QString();
 #elif QT_CONFIG(dlopen)
     Dl_info info;
     int result = dladdr(reinterpret_cast<void *>(&QLibraryInfo::isDebugBuild), &info);

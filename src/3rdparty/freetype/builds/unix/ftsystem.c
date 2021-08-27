@@ -31,7 +31,7 @@
 #include <unistd.h>
 #endif
 
-#include <sys/mman.h>
+//#include <sys/mman.h>
 #ifndef MAP_FILE
 #define MAP_FILE  0x00
 #endif
@@ -290,13 +290,17 @@
     /* This cast potentially truncates a 64bit to 32bit! */
     stream->size = (unsigned long)stat_buf.st_size;
     stream->pos  = 0;
+#ifdef __amigaos4__
+    stream->base = malloc(stream->size);
+    read(file, stream->base, stream->size);
+#else
     stream->base = (unsigned char *)mmap( NULL,
                                           stream->size,
                                           PROT_READ,
                                           MAP_FILE | MAP_PRIVATE,
                                           file,
                                           0 );
-
+#endif
     /* on some RTOS, mmap might return 0 */
     if ( (long)stream->base != -1 && stream->base != NULL )
       stream->close = ft_close_stream_by_munmap;

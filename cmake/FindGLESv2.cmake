@@ -5,9 +5,9 @@ include(CheckCXXSourceCompiles)
 if(EMSCRIPTEN)
     set(HAVE_GLESv2 ON)
 else()
-    find_library(GLESv2_LIBRARY NAMES GLESv2 OpenGLES)
-    find_path(GLESv2_INCLUDE_DIR NAMES "GLES2/gl2.h" "OpenGLES/ES2/gl.h" DOC "The OpenGLES 2 include path")
-    find_package(EGL)
+    # find_library(GLESv2_LIBRARY NAMES GLESv2 OpenGLES)
+    # find_path(GLESv2_INCLUDE_DIR NAMES "GLES2/gl2.h" "OpenGLES/ES2/gl.h" DOC "The OpenGLES 2 include path")
+    # find_package(EGL)
     set(_libraries "${CMAKE_REQUIRED_LIBRARIES}")
     if(GLESv2_LIBRARY)
         list(APPEND CMAKE_REQUIRED_LIBRARIES "${GLESv2_LIBRARY}")
@@ -19,23 +19,28 @@ else()
     list(APPEND CMAKE_REQUIRED_INCLUDES "${GLESv2_INCLUDE_DIR}")
 
     check_cxx_source_compiles("
-#ifdef __APPLE__
-#  include <OpenGLES/ES2/gl.h>
-#else
-#  define GL_GLEXT_PROTOTYPES
-#  include <GLES2/gl2.h>
-#endif
-
-int main(int argc, char *argv[]) {
-    glUniform1f(1, GLfloat(1.0));
-    glClear(GL_COLOR_BUFFER_BIT);
-}" HAVE_GLESv2)
+    #ifdef __APPLE__
+    #  include <OpenGLES/ES2/gl.h>
+    #else
+    #  ifdef __amigaos4__
+    #    include <proto/ogles2.h>
+    #    include <inline4/ogles2.h>
+    struct OGLES2IFace *IOGLES2 = NULL;
+    #  endif
+    #  define GL_GLEXT_PROTOTYPES
+    #  include <GLES2/gl2.h>
+    #endif
+    
+    int main(int argc, char *argv[]) {
+        glUniform1f(1, GLfloat(1.0));
+        glClear(GL_COLOR_BUFFER_BIT);
+    }" HAVE_GLESv2)
 
     set(CMAKE_REQUIRED_LIBRARY "${_libraries}")
     unset(_libraries)
     set(CMAKE_REQUIRED_INCLUDES "${_includes}")
     unset(_includes)
-    set(package_args GLESv2_INCLUDE_DIR GLESv2_LIBRARY HAVE_GLESv2)
+    # set(package_args GLESv2_INCLUDE_DIR GLESv2_LIBRARY HAVE_GLESv2)
 endif()
 
 # Framework handling partially inspired by FindGLUT.cmake.

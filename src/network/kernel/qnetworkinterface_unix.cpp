@@ -80,17 +80,17 @@ static QHostAddress addressFromSockaddr(sockaddr *sa, int ifindex = 0, const QSt
 
     if (sa->sa_family == AF_INET)
         address.setAddress(htonl(((sockaddr_in *)sa)->sin_addr.s_addr));
-    else if (sa->sa_family == AF_INET6) {
-        address.setAddress(((sockaddr_in6 *)sa)->sin6_addr.s6_addr);
-        int scope = ((sockaddr_in6 *)sa)->sin6_scope_id;
-        if (scope && scope == ifindex) {
-            // this is the most likely scenario:
-            // a scope ID in a socket is that of the interface this address came from
-            address.setScopeId(ifname);
-        } else if (scope) {
-            address.setScopeId(QNetworkInterfaceManager::interfaceNameFromIndex(scope));
-        }
-    }
+    // else if (sa->sa_family == AF_INET6) {
+    //     address.setAddress(((sockaddr_in6 *)sa)->sin6_addr.s6_addr);
+    //     int scope = ((sockaddr_in6 *)sa)->sin6_scope_id;
+    //     if (scope && scope == ifindex) {
+    //         // this is the most likely scenario:
+    //         // a scope ID in a socket is that of the interface this address came from
+    //         address.setScopeId(ifname);
+    //     } else if (scope) {
+    //         address.setScopeId(QNetworkInterfaceManager::interfaceNameFromIndex(scope));
+    //     }
+    // }
     return address;
 
 }
@@ -177,16 +177,16 @@ static QSet<QByteArray> interfaceNames(int socket)
         interfaceList.ifc_len = storageBuffer.size();
 
         // get the interface list
-        if (qt_safe_ioctl(socket, SIOCGIFCONF, &interfaceList) >= 0) {
-            if (int(interfaceList.ifc_len + sizeof(ifreq) + 64) < storageBuffer.size()) {
-                // if the buffer was big enough, break
-                storageBuffer.resize(interfaceList.ifc_len);
-                break;
-            }
-        } else {
-            // internal error
-            return result;
-        }
+        // if (qt_safe_ioctl(socket, SIOCGIFCONF, &interfaceList) >= 0) {
+        //     if (int(interfaceList.ifc_len + sizeof(ifreq) + 64) < storageBuffer.size()) {
+        //         // if the buffer was big enough, break
+        //         storageBuffer.resize(interfaceList.ifc_len);
+        //         break;
+        //     }
+        // } else {
+        //     // internal error
+        //     return result;
+        // }
         if (storageBuffer.size() > 100000) {
             // out of space
             return result;
@@ -295,9 +295,9 @@ static QList<QNetworkInterfacePrivate *> interfaceListing()
         }
 
         // Get interface flags
-        if (qt_safe_ioctl(socket, SIOCGIFFLAGS, &req) >= 0) {
-            iface->flags = convertFlags(req.ifr_flags);
-        }
+        // if (qt_safe_ioctl(socket, SIOCGIFFLAGS, &req) >= 0) {
+        //     iface->flags = convertFlags(req.ifr_flags);
+        // }
         iface->mtu = getMtu(socket, &req);
 
 #ifdef SIOCGIFHWADDR
@@ -310,27 +310,27 @@ static QList<QNetworkInterfacePrivate *> interfaceListing()
 
         // Get the address of the interface
         QNetworkAddressEntry entry;
-        if (qt_safe_ioctl(socket, SIOCGIFADDR, &req) >= 0) {
-            sockaddr *sa = &req.ifr_addr;
-            entry.setIp(addressFromSockaddr(sa));
+        // if (qt_safe_ioctl(socket, SIOCGIFADDR, &req) >= 0) {
+        //     sockaddr *sa = &req.ifr_addr;
+        //     entry.setIp(addressFromSockaddr(sa));
 
-            // Get the interface broadcast address
-            if (iface->flags & QNetworkInterface::CanBroadcast) {
-                if (qt_safe_ioctl(socket, SIOCGIFBRDADDR, &req) >= 0) {
-                    sockaddr *sa = &req.ifr_addr;
-                    if (sa->sa_family == AF_INET)
-                        entry.setBroadcast(addressFromSockaddr(sa));
-                }
-            }
+        //     // Get the interface broadcast address
+        //     if (iface->flags & QNetworkInterface::CanBroadcast) {
+        //         if (qt_safe_ioctl(socket, SIOCGIFBRDADDR, &req) >= 0) {
+        //             sockaddr *sa = &req.ifr_addr;
+        //             if (sa->sa_family == AF_INET)
+        //                 entry.setBroadcast(addressFromSockaddr(sa));
+        //         }
+        //     }
 
-            // Get the interface netmask
-            if (qt_safe_ioctl(socket, SIOCGIFNETMASK, &req) >= 0) {
-                sockaddr *sa = &req.ifr_addr;
-                entry.setNetmask(addressFromSockaddr(sa));
-            }
+        //     // Get the interface netmask
+        //     if (qt_safe_ioctl(socket, SIOCGIFNETMASK, &req) >= 0) {
+        //         sockaddr *sa = &req.ifr_addr;
+        //         entry.setNetmask(addressFromSockaddr(sa));
+        //     }
 
-            iface->addressEntries << entry;
-        }
+        //     iface->addressEntries << entry;
+        // }
     }
 
     ::close(socket);

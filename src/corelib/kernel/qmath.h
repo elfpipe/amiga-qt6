@@ -40,6 +40,13 @@
 #ifndef QMATH_H
 #define QMATH_H
 
+#ifdef __amigaos4__
+namespace std {
+//double hypot(double k1,double k2,double k3) {return sqrt((k1*k1)+(k2*k2)+(k3*k3)); }
+double hypot(double k1,double k2)   { return hypot((k1),(k2),0); }
+};
+#endif
+
 #if 0
 #pragma qt_class(QtMath)
 #endif
