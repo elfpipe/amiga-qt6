@@ -205,17 +205,23 @@ int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
     }
 
     forever {
-        const int max_fd = qt_poll_prepare(fds, nfds, &read_fds, &write_fds, &except_fds);
+        /*const*/ int max_fd = qt_poll_prepare(fds, nfds, &read_fds, &write_fds, &except_fds);
 
         if (max_fd < 0)
             return max_fd;
 
+#ifdef __amigaos4__
+        if(max_fd == 0) {
+            FD_SET(0, &read_fds);
+            max_fd = 1;
+        }
+#endif
         if (n_bad_fds > 0) {
             tv.tv_sec = 0;
             tv.tv_usec = 0;
             ptv = &tv;
         }
-
+printf("select: sec %d usec %d\n", tv.tv_sec, tv.tv_usec);
         const int ret = ::select(max_fd, &read_fds, &write_fds, &except_fds, ptv);
 
         if (ret == 0)

@@ -60,9 +60,4 @@ void *qReallocAligned(void *oldptr, size_t newsize, size_t oldsize, size_t align
 #include <sys/time.h>
 #include <grp.h>
 
-// struct timespec {
-//                          time_t          tv_sec;
-//                          long            tv_nsec;
-//                  };                 
-
 #endif // QPLATFORMDEFS_H

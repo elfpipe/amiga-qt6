@@ -94,7 +94,7 @@ static SLJIT_INLINE void free_chunk(void *chunk, sljit_uw size)
 
 #else /* POSIX */
 
-#if defined(__APPLE__) && defined(MAP_JIT)
+#if defined(__APPLE__) && defined(MAP_JIT) && !defined(__amigaos4__)
 /*
    On macOS systems, returns MAP_JIT if it is defined _and_ we're running on a
    version where it's OK to have more than one JIT block or where MAP_JIT is
@@ -198,7 +198,7 @@ static SLJIT_INLINE void* alloc_chunk(sljit_uw size)
 	SLJIT_UPDATE_WX_FLAGS(retval, (uint8_t *)retval + size, 0);
 
 	return retval;
-#endif
+#endif //__amigaos4__
 }
 
 static SLJIT_INLINE void free_chunk(void *chunk, sljit_uw size)

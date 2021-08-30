@@ -425,7 +425,7 @@ hb_blob_t::try_make_writable_inplace_unix ()
 #elif defined(HAVE_SYSCONF) && defined(_SC_PAGESIZE)
   pagesize = (uintptr_t) sysconf (_SC_PAGESIZE);
 #elif defined(HAVE_GETPAGESIZE)
-  pagesize = (uintptr_t) getpagesize ();
+//  pagesize = (uintptr_t) getpagesize ();
 #endif
 
   if ((uintptr_t) -1L == pagesize) {

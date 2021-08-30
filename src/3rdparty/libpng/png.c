@@ -1,4 +1,5 @@
-
+#include <stdio.h>
+struct iob ** __iob;
 /* png.c - location for general purpose libpng functions
  *
  * Copyright (c) 2018-2019 Cosmin Truta

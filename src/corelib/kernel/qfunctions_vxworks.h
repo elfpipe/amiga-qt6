@@ -149,7 +149,7 @@ int gettimeofday(struct timeval *tv, void /*struct timezone*/ *) __attribute__((
 #endif
 
 // getpagesize() not available
-int getpagesize();
+//int getpagesize();
 
 // symlinks are not supported (lstat is now just a call to stat - see qplatformdefs.h)
 int symlink(const char *, const char *);

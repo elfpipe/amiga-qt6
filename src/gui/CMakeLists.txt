@@ -30,7 +30,7 @@ if (QT_FEATURE_gui)
     elseif(WASM)
         set(_default_platform "wasm")
     else()
-        set(_default_platform "xcb")
+       set(_default_platform "xcb")
     endif()
 
     set(QT_QPA_DEFAULT_PLATFORM "${_default_platform}" CACHE STRING "QPA default platform")
@@ -1037,6 +1037,11 @@ qt_internal_extend_target(Gui CONDITION (QT_FEATURE_eglfs OR QT_FEATURE_xcb)
         util/qedidvendortable_p.h
 )
 
+qt_internal_extend_target(Gui
+    SOURCES
+        ../plugins/platforms/amiga/qamigaintegration.cpp
+        ../plugins/platforms/amiga/qamigabackingstore.cpp
+)
 
 qt_internal_create_tracepoints(Gui qtgui.tracepoints)
 qt_internal_add_docs(Gui

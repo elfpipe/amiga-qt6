@@ -15,7 +15,7 @@
  */
 
 #include "pngpriv.h"
-#if defined(PNG_SIMPLIFIED_READ_SUPPORTED) && defined(PNG_STDIO_SUPPORTED)
+#if defined(PNG_SIMPLIFIED_READ_SUPPORTED) && defined(PNG_STDIO_SUPPORTED) && !defined(__amigaos4__)
 #  include <errno.h>
 #endif
 
@@ -1520,8 +1520,8 @@ png_image_begin_read_from_file(png_imagep image, const char *file_name)
             (void)fclose(fp);
          }
 
-         else
-            return png_image_error(image, strerror(errno));
+         // else
+         //    return png_image_error(image, strerror(errno));
       }
 
       else

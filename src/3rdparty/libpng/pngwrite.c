@@ -13,7 +13,7 @@
 
 #include "pngpriv.h"
 #ifdef PNG_SIMPLIFIED_WRITE_STDIO_SUPPORTED
-#  include <errno.h>
+// #  include <errno.h>
 #endif /* SIMPLIFIED_WRITE_STDIO */
 
 #ifdef PNG_WRITE_SUPPORTED
@@ -2349,12 +2349,12 @@ png_image_write_to_file(png_imagep image, const char *file_name,
                   if (fclose(fp) == 0)
                      return 1;
 
-                  error = errno; /* from fclose */
+                  // error = errno; /* from fclose */
                }
 
                else
                {
-                  error = errno; /* from fflush or ferror */
+                  // error = errno; /* from fflush or ferror */
                   (void)fclose(fp);
                }
 
@@ -2374,8 +2374,8 @@ png_image_write_to_file(png_imagep image, const char *file_name,
             }
          }
 
-         else
-            return png_image_error(image, strerror(errno));
+         // else
+         //    return png_image_error(image, strerror(errno));
       }
 
       else

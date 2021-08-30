@@ -209,7 +209,7 @@ static SLJIT_INLINE struct chunk_header* alloc_chunk(sljit_uw size)
 	retval->executable = mmap(NULL, size, PROT_READ | PROT_EXEC, MAP_SHARED, fd, 0);
 
 	if (retval->executable == MAP_FAILED) {
-		munmap((void *)retval, size);
+		// munmap((void *)retval, size);
 		close(fd);
 		return NULL;
 	}
@@ -235,13 +235,13 @@ static SLJIT_INLINE struct chunk_header* alloc_chunk(sljit_uw size)
 
 	retval->executable = mremap(retval, size, NULL, size, MAP_REMAPDUP);
 	if (retval->executable == MAP_FAILED) {
-		munmap((void *)retval, size);
+		// munmap((void *)retval, size);
 		return NULL;
 	}
 
 	if (mprotect(retval->executable, size, PROT_READ | PROT_EXEC) == -1) {
-		munmap(retval->executable, size);
-		munmap((void *)retval, size);
+		// munmap(retval->executable, size);
+		// munmap((void *)retval, size);
 		return NULL;
 	}
 
@@ -253,8 +253,8 @@ static SLJIT_INLINE void free_chunk(void *chunk, sljit_uw size)
 {
 	struct chunk_header *header = ((struct chunk_header *)chunk) - 1;
 
-	munmap(header->executable, size);
-	munmap((void *)header, size);
+	// munmap(header->executable, size);
+	// munmap((void *)header, size);
 }
 
 /* --------------------------------------------------------------------- */

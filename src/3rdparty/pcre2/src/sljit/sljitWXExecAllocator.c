@@ -142,7 +142,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_malloc_exec(sljit_uw size)
 		se_protected = check_se_protected(ptr, size);
 		SLJIT_SE_UNLOCK();
 		if (SLJIT_UNLIKELY(se_protected < 0)) {
-			munmap((void *)ptr, size);
+			// munmap((void *)ptr, size);
 			return NULL;
 		}
 	}
@@ -158,7 +158,7 @@ SLJIT_API_FUNC_ATTRIBUTE void* sljit_malloc_exec(sljit_uw size)
 SLJIT_API_FUNC_ATTRIBUTE void sljit_free_exec(void* ptr)
 {
 	sljit_uw *start_ptr = ((sljit_uw*)ptr) - 1;
-	munmap((void*)start_ptr, *start_ptr);
+	// munmap((void*)start_ptr, *start_ptr);
 }
 
 static void sljit_update_wx_flags(void *from, void *to, sljit_s32 enable_exec)

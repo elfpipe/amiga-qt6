@@ -219,7 +219,7 @@ bool QBsdFbScreen::initialize()
     mPhysicalSize = determinePhysicalSize(userMmSize, geometry.size());
 
     // mmap the framebuffer
-    const size_t pagemask = getpagesize() - 1;
+    const size_t pagemask = -1; //getpagesize() - 1;
     m_mmap.size = (m_bytesPerLine * fb.fb_height + pagemask) & ~pagemask;
     uchar *data = static_cast<uchar*>(mmap(nullptr, m_mmap.size, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebufferFd, 0));
     if (data == MAP_FAILED) {

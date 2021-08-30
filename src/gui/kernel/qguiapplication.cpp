@@ -92,6 +92,10 @@
 
 #include <qpa/qplatformthemefactory_p.h>
 
+#ifdef __amigaos4__
+#include "../../plugins/platforms/amiga/qamigaintegration.h"
+#endif
+
 #if QT_CONFIG(draganddrop)
 #include <qpa/qplatformdrag.h>
 #include <private/qdnd_p.h>
@@ -1206,7 +1210,11 @@ static void init_platform(const QString &pluginNamesWithArguments, const QString
         arguments.append(QLibraryInfo::platformPluginArguments(argumentsKey));
 
         // Create the platform integration.
+#ifdef __amigaos4__
+        QGuiApplicationPrivate::platform_integration = new QAmigaIntegration(arguments);
+#else
         QGuiApplicationPrivate::platform_integration = QPlatformIntegrationFactory::create(name, arguments, argc, argv, platformPluginPath);
+#endif
         if (Q_UNLIKELY(!QGuiApplicationPrivate::platform_integration)) {
             if (availablePlugins.contains(name)) {
                 qCInfo(lcQpaPluginLoading).nospace().noquote()

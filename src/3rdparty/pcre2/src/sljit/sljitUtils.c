@@ -150,6 +150,8 @@ static SLJIT_INLINE sljit_sw get_page_alignment(void) {
 	if (sljit_page_align < 0) {
 #ifdef _SC_PAGESIZE
 		sljit_page_align = sysconf(_SC_PAGESIZE);
+#elif __amigaos4__
+		sljit_page_align = 4096;
 #else
 		sljit_page_align = getpagesize();
 #endif
@@ -227,7 +229,7 @@ SLJIT_API_FUNC_ATTRIBUTE void SLJIT_FUNC sljit_free_stack(struct sljit_stack *st
 SLJIT_API_FUNC_ATTRIBUTE void SLJIT_FUNC sljit_free_stack(struct sljit_stack *stack, void *allocator_data)
 {
 	SLJIT_UNUSED_ARG(allocator_data);
-	munmap((void*)stack->min_start, stack->end - stack->min_start);
+	// munmap((void*)stack->min_start, stack->end - stack->min_start);
 	SLJIT_FREE(stack, allocator_data);
 }
 

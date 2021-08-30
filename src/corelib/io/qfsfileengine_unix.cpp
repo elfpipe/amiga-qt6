@@ -610,7 +610,7 @@ uchar *QFSFileEnginePrivate::map(qint64 offset, qint64 size, QFile::MemoryMapFla
 #elif defined(__amigaos4__)
     int pageSize = 4096;
 #else
-    int pageSize = getpagesize();
+//    int pageSize = getpagesize();
 #endif
     int extra = offset % pageSize;
 
