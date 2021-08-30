@@ -73,6 +73,9 @@
 #define JPEG_NBITS_NONZERO(x)  JPEG_NBITS(x)
 #endif
 
+#ifdef __amigaos4__
+#define SIZEOF_SIZE_T 4
+#endif
 
 /* Expanded entropy encoder object for progressive Huffman encoding. */
 
