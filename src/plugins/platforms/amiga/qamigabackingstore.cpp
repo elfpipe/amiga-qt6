@@ -45,6 +45,15 @@
 #include <qpa/qplatformscreen.h>
 #include <private/qguiapplication_p.h>
 
+#define BOOL short
+#include <proto/Picasso96API.h>
+#include <proto/intuition.h>
+#include <proto/graphics.h>
+
+#include <iostream>
+
+using namespace std;
+
 QT_BEGIN_NAMESPACE
 
 QAmigaBackingStore::QAmigaBackingStore(QWindow *window)
@@ -69,7 +78,6 @@ QPaintDevice *QAmigaBackingStore::paintDevice()
 
 void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPoint &offset)
 {
-    Q_UNUSED(window);
     Q_UNUSED(region);
     Q_UNUSED(offset);
 
@@ -79,6 +87,18 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
         qDebug() << "QAmigaBackingStore::flush() saving contents to" << filename.toLocal8Bit().constData();
         mImage.save(filename);
     }
+
+    QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
+    if(!amigaWindow) {
+        cout << "Not an Amiga window!\n";
+        return;
+    }
+
+    IGraphics->WritePixelArray(mImage.bits(),
+        0, 0,
+        4*mImage.width(), PIXF_A8R8G8B8,
+        amigaWindow->intuitionWindow->RPort, 0, 0,
+        mImage.width(), mImage.height());
 }
 
 void QAmigaBackingStore::resize(const QSize &size, const QRegion &)

@@ -14,4 +14,4 @@ cmake \
 -DQT_FEATURE_dlopen=OFF \
 -DQT_FEATURE_thread=OFF \
 -DQT_FEATURE_network=OFF \
-../amiga-qt6
+../amiga-newlib-qt6

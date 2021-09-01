@@ -53,6 +53,9 @@ class QAmigaWindow : public QObject, public QPlatformWindow
 public:
     explicit QAmigaWindow(QWindow *window);
     virtual ~QAmigaWindow();
+
+public:
+    struct Window *intuitionWindow;
 };
 
 class QAmigaScreen : public QPlatformScreen

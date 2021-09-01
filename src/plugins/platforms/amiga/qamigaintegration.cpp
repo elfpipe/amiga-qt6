@@ -68,13 +68,14 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
 {
     const QRect rect = initialGeometry(window, window->geometry(), 640, 512);
 
-    IIntuition->OpenWindowTags(0,
+    intuitionWindow = IIntuition->OpenWindowTags(0,
         WA_Left, rect.x(),
         WA_Top, rect.y(),
-        WA_Width, rect.width(),
-        WA_Height, rect.height(),
+        WA_InnerWidth, rect.width(),
+        WA_InnerHeight, rect.height(),
         WA_IDCMP, IDCMP_CLOSEWINDOW,
         WA_Flags, WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET | WFLG_ACTIVATE,
+        WA_GimmeZeroZero, TRUE,
         WA_Title, "Qt Analog Clock",
         WA_PubScreenName, "Workbench",
         TAG_DONE );
