@@ -7,7 +7,7 @@ cmake \
 -DCMAKE_MAKE_PROGRAM="make" \
 -DCMAKE_CXX_FLAGS_INIT="-mcrt=newlib -athread=native" \
 -DCMAKE_C_FLAGS_INIT="-mcrt=newlib" \
--DUNIX=1 \
+-DUNIX=1 -DAMIGA=1 \
 -DCMAKE_INSTALL_PREFIX="/qt5-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \

@@ -56,7 +56,7 @@
 #include <QtGui/private/qfontengine_ft_p.h>
 #endif
 
-#include <QtGui/private/qgenericunixeventdispatcher_p.h>
+#include "qamigaeventdispatcher.h"
 
 #define BOOL short
 #include <proto/intuition.h>
@@ -83,6 +83,7 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
 
 QAmigaWindow::~QAmigaWindow()
 {
+    IIntuition->CloseWindow(intuitionWindow);
 }
 
 class QCoreTextFontEngine;
@@ -197,11 +198,7 @@ QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *wi
 
 QAbstractEventDispatcher *QAmigaIntegration::createEventDispatcher() const
 {
-#ifdef Q_OS_WIN
-    return new QEventDispatcherWin32;
-#else
-    return createUnixEventDispatcher();
-#endif
+    return new QAmigaEventDispatcher;
 }
 
 QAmigaIntegration *QAmigaIntegration::instance()

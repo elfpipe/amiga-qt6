@@ -1037,10 +1037,11 @@ qt_internal_extend_target(Gui CONDITION (QT_FEATURE_eglfs OR QT_FEATURE_xcb)
         util/qedidvendortable_p.h
 )
 
-qt_internal_extend_target(Gui
+qt_internal_extend_target(Gui CONDITION AMIGA
     SOURCES
         ../plugins/platforms/amiga/qamigaintegration.cpp
         ../plugins/platforms/amiga/qamigabackingstore.cpp
+        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
 )
 
 qt_internal_create_tracepoints(Gui qtgui.tracepoints)
