@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QAMIGAEVENTDISPATCHER_H
-#define QAMIGAEVENTDISPATCHER_H
+#ifndef QTIMERINFO_UNIX_P_H
+#define QTIMERINFO_UNIX_P_H
 
 //
 //  W A R N I N G
@@ -51,67 +51,66 @@
 // We mean it.
 //
 
-#include "QtCore/qabstracteventdispatcher.h"
-#include "QtCore/qlist.h"
-#include "private/qabstracteventdispatcher_p.h"
-#include "private/qcore_unix_p.h"
-#include "QtCore/qvarlengtharray.h"
-#include "private/qtimerinfo_amiga_p.h"
+#include <QtCore/private/qglobal_p.h>
 
-#include <QtGui/QWindow>
+// #define QTIMERINFO_DEBUG
 
-#include <proto/exec.h>
+#include "qabstracteventdispatcher.h"
+
+#include <sys/time.h> // struct timeval
+
 #include <devices/timer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QAmigaEventDispatcherPrivate;
+// internal timer info
+struct QTimerInfo {
+    int id;           // - timer identifier
+    qint64 interval;     // - timer interval in milliseconds
+    Qt::TimerType timerType; // - timer type
+    struct TimeVal timeout;  // - when to actually fire
+    QObject *obj;     // - object to receive event
+    QTimerInfo **activateRef; // - ref from activateTimers
 
-class Q_CORE_EXPORT QAmigaEventDispatcher : public QAbstractEventDispatcher
-{
-    Q_OBJECT
-    Q_DECLARE_PRIVATE(QAmigaEventDispatcher)
-
-public:
-    explicit QAmigaEventDispatcher(QObject *parent = nullptr);
-    ~QAmigaEventDispatcher();
-
-    bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
-
-    void registerSocketNotifier(QSocketNotifier *notifier) override;
-    void unregisterSocketNotifier(QSocketNotifier *notifier) override;
-
-    void registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject *object) final;
-    bool unregisterTimer(int timerId) final;
-    bool unregisterTimers(QObject *object) final;
-    QList<TimerInfo> registeredTimers(QObject *object) const final;
-
-    int remainingTime(int timerId) final;
-
-    void wakeUp() override;
-    void interrupt() final;
-
-protected:
-    QAmigaEventDispatcher(QAmigaEventDispatcherPrivate &dd, QObject *parent = nullptr);
+#ifdef QTIMERINFO_DEBUG
+    timeval expected; // when timer is expected to fire
+    float cumulativeError;
+    uint count;
+#endif
 };
 
-class Q_CORE_EXPORT QAmigaEventDispatcherPrivate : public QAbstractEventDispatcherPrivate
+class Q_CORE_EXPORT QTimerInfoList : public QList<QTimerInfo*>
 {
-    Q_DECLARE_PUBLIC(QAmigaEventDispatcher)
+    // state variables used by activateTimers()
+    QTimerInfo *firstTimerInfo;
 
 public:
-    QAmigaEventDispatcherPrivate();
-    ~QAmigaEventDispatcherPrivate();
+    QTimerInfoList();
+    ~QTimerInfoList();
+
+    struct TimeVal currentTime;
+    struct TimeVal updateCurrentTime();
+
+    // must call updateCurrentTime() first!
+    void repairTimersIfNeeded();
+
+    bool timerWait(struct TimeVal &);
+    void timerInsert(QTimerInfo *);
+
+    int timerRemainingTime(int timerId);
+
+    void registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject *object);
+    bool unregisterTimer(int timerId);
+    bool unregisterTimers(QObject *object);
+    QList<QAbstractEventDispatcher::TimerInfo> registeredTimers(QObject *object) const;
 
     int activateTimers();
 
-    QTimerInfoList timerList;
-    QAtomicInt interrupt; // bool
-
-    struct MsgPort *timerPort;
+private:
     struct TimeRequest *timerRequest;
+    struct MsgPort *timerPort;
 };
 
 QT_END_NAMESPACE
 
-#endif // QEVENTDISPATCHER_UNIX_P_H
+#endif // QTIMERINFO_UNIX_P_H

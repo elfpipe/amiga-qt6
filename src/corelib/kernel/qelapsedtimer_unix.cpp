@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
  *  see http://pubs.opengroup.org/onlinepubs/9699919799/functions/clock_getres.html
  */
 
-#if !defined(CLOCK_REALTIME)
+#if 1 //!defined(CLOCK_REALTIME)
 #  define CLOCK_REALTIME 0
 static inline void qt_clock_gettime(int, struct timespec *ts)
 {

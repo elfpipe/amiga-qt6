@@ -635,10 +635,21 @@ qt_internal_extend_target(Core CONDITION UNIX
         io/qfsfileengine_unix.cpp
         io/qlockfile_unix.cpp
         kernel/qcore_unix.cpp kernel/qcore_unix_p.h
-        kernel/qeventdispatcher_unix.cpp kernel/qeventdispatcher_unix_p.h
-        kernel/qpoll_p.h
-        kernel/qtimerinfo_unix.cpp kernel/qtimerinfo_unix_p.h
         thread/qthread_unix.cpp
+)
+
+qt_internal_extend_target(Core CONDITION UNIX AND NOT AMIGA
+    SOURCES
+    kernel/qeventdispatcher_unix.cpp kernel/qeventdispatcher_unix_p.h
+    kernel/qtimerinfo_unix.cpp kernel/qtimerinfo_unix_p.h
+    kernel/qpoll_p.h
+)
+
+qt_internal_extend_target(Core CONDITION AMIGA
+    SOURCES
+        ../plugins/platforms/amiga/qamigaeventdispatcher.h
+        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
+        kernel/qtimerinfo_amiga.cpp kernel/qtimerinfo_amiga_p.h
 )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_thread

@@ -76,7 +76,7 @@ QAmigaEventDispatcherPrivate::QAmigaEventDispatcherPrivate()
         qWarning("Failed to allocate message structure for timer.device communication. Exit.\n");
         QCoreApplication::quit();
     }
-    unsigned int error = IExec->OpenDevice("timer.device", UNIT_VBLANK, (struct IORequest *)timerRequest, 0);
+    unsigned int error = IExec->OpenDevice("timer.device", UNIT_MICROHZ, (struct IORequest *)timerRequest, 0);
     if(error) {
         qWarning("Error opening timer.device for communication. Exit.\n");
         QCoreApplication::quit();
@@ -145,7 +145,7 @@ QList<QAmigaEventDispatcher::TimerInfo>
 QAmigaEventDispatcher::registeredTimers(QObject *object) const
 {
     if (!object) {
-        qWarning("QEventDispatcherUNIX:registeredTimers: invalid argument");
+        qWarning("QAmigaEventDispatcher:registeredTimers: invalid argument");
         return QList<TimerInfo>();
     }
 
@@ -183,14 +183,14 @@ bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
     if (d->interrupt.loadRelaxed())
         return false;
 
-    timespec *tm = nullptr;
-    timespec wait_tm = { 0, 0 };
+    struct TimeVal wait_tm = { 0, 0 };
 
     unsigned int listenSignals = 0;
     if (!canWait || (include_timers && d->timerList.timerWait(wait_tm))) {
         d->timerRequest->Request.io_Command = TR_ADDREQUEST;
-        d->timerRequest->Time.Seconds = wait_tm.tv_sec;
-        d->timerRequest->Time.Microseconds = wait_tm.tv_nsec / 1000;
+        d->timerRequest->Time = wait_tm;
+
+        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
 
         IExec->SendIO((struct IORequest *)d->timerRequest);
         listenSignals |= 1 << d->timerPort->mp_SigBit;
@@ -203,9 +203,10 @@ bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
     if(!caughtSignals & 1 << d->timerPort->mp_SigBit)
         IExec->AbortIO((struct IORequest *)d->timerRequest);
 
-    if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit)
+    if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
+        printf("Timer event\n");
         nevents += d->activateTimers();
-
+    }
     // return true if we handled events, false otherwise
     return (nevents > 0);
 }

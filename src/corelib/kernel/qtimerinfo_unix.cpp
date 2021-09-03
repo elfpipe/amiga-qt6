@@ -64,7 +64,7 @@ Q_CORE_EXPORT bool qt_disable_lowpriority_timers=false;
 
 QTimerInfoList::QTimerInfoList()
 {
-#if (_POSIX_MONOTONIC_CLOCK-0 <= 0) && !defined(Q_OS_MAC)
+#if 0 //(_POSIX_MONOTONIC_CLOCK-0 <= 0) && !defined(Q_OS_MAC)
     if (!QElapsedTimer::isMonotonic()) {
         // not using monotonic timers, initialize the timeChanged() machinery
         previousTime = qt_gettime();
@@ -73,7 +73,7 @@ QTimerInfoList::QTimerInfoList()
         previousTicks = times(&unused);
 
 #ifdef __amigaos4__
-        ticksPerSecond = 100;
+        ticksPerSecond = 60;
 #else
         ticksPerSecond = sysconf(_SC_CLK_TCK);
 #endif
@@ -95,7 +95,7 @@ timespec QTimerInfoList::updateCurrentTime()
     return (currentTime = qt_gettime());
 }
 
-#if ((_POSIX_MONOTONIC_CLOCK-0 <= 0) && !defined(Q_OS_MAC) && !defined(Q_OS_INTEGRITY)) || defined(QT_BOOTSTRAPPED)
+#if 0 //((_POSIX_MONOTONIC_CLOCK-0 <= 0) && !defined(Q_OS_MAC) && !defined(Q_OS_INTEGRITY)) || defined(QT_BOOTSTRAPPED)
 
 timespec qAbsTimespec(const timespec &t)
 {
@@ -454,6 +454,9 @@ void QTimerInfoList::registerTimer(int timerId, qint64 interval, Qt::TimerType t
 
     timespec expected = updateCurrentTime() + interval;
 
+#ifdef __amigaos4__
+       t->timeout = expected;
+#else
     switch (timerType) {
     case Qt::PreciseTimer:
         // high precision timer is based on millisecond precision
@@ -492,7 +495,7 @@ void QTimerInfoList::registerTimer(int timerId, qint64 interval, Qt::TimerType t
         if (currentTime.tv_nsec > 500*1000*1000)
             ++t->timeout.tv_sec;
     }
-
+#endif //__amigaos4__
     timerInsert(t);
 
 #ifdef QTIMERINFO_DEBUG

@@ -951,7 +951,7 @@ qt_internal_extend_target(Gui CONDITION WASM
         platform/wasm/qwasmlocalfileaccess.cpp platform/wasm/qwasmlocalfileaccess_p.h
 )
 
-qt_internal_extend_target(Gui CONDITION UNIX
+qt_internal_extend_target(Gui CONDITION UNIX AND NOT AMIGA
     SOURCES
         platform/unix/qgenericunixeventdispatcher.cpp platform/unix/qgenericunixeventdispatcher_p.h
         platform/unix/qunixeventdispatcher.cpp
@@ -1041,7 +1041,7 @@ qt_internal_extend_target(Gui CONDITION AMIGA
     SOURCES
         ../plugins/platforms/amiga/qamigaintegration.cpp
         ../plugins/platforms/amiga/qamigabackingstore.cpp
-        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
+#        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
 )
 
 qt_internal_create_tracepoints(Gui qtgui.tracepoints)
