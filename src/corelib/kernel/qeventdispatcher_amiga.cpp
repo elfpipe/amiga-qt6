@@ -46,10 +46,14 @@
 #include "qthread.h"
 #include "qelapsedtimer.h"
 
-#include "qamigaeventdispatcher.h"
+#include "qeventdispatcher_amiga_p.h"
+#include "platform/amiga/amigaintuitionmessagehandler_p.h"
+
 #include <private/qthread_p.h>
 #include <private/qcoreapplication_p.h>
 #include <private/qcore_unix_p.h>
+
+#include <proto/intuition.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -61,7 +65,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QAmigaEventDispatcherPrivate::QAmigaEventDispatcherPrivate()
+QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 {
     timerPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
     if(timerPort == 0) {
@@ -83,84 +87,94 @@ QAmigaEventDispatcherPrivate::QAmigaEventDispatcherPrivate()
     }
 }
 
-QAmigaEventDispatcherPrivate::~QAmigaEventDispatcherPrivate()
+QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
     // cleanup timers
     qDeleteAll(timerList);
 }
 
-int QAmigaEventDispatcherPrivate::activateTimers()
+int QEventDispatcherAMIGAPrivate::activateTimers()
 {
     return timerList.activateTimers();
 }
 
 
-QAmigaEventDispatcher::QAmigaEventDispatcher(QObject *parent)
-    : QAbstractEventDispatcher(*new QAmigaEventDispatcherPrivate, parent)
+QEventDispatcherAMIGA::QEventDispatcherAMIGA(QObject *parent)
+    : QAbstractEventDispatcher(*new QEventDispatcherAMIGAPrivate, parent)
 { }
 
-QAmigaEventDispatcher::QAmigaEventDispatcher(QAmigaEventDispatcherPrivate &dd, QObject *parent)
+QEventDispatcherAMIGA::QEventDispatcherAMIGA(QEventDispatcherAMIGAPrivate &dd, QObject *parent)
     : QAbstractEventDispatcher(dd, parent)
 { }
 
-QAmigaEventDispatcher::~QAmigaEventDispatcher()
+QEventDispatcherAMIGA::~QEventDispatcherAMIGA()
 { }
 
-void QAmigaEventDispatcher::registerSocketNotifier(QSocketNotifier *notifier) {
+void QEventDispatcherAMIGA::registerIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler) {
+    Q_D(QEventDispatcherAMIGA);
+    d->intuitionHandlers << intuitionHandler;
+}
+
+void QEventDispatcherAMIGA::unregisterIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler) {
+    Q_D(QEventDispatcherAMIGA);
+    d->intuitionHandlers.removeAt(d->intuitionHandlers.indexOf(intuitionHandler));
+}
+
+void QEventDispatcherAMIGA::registerSocketNotifier(QSocketNotifier *notifier) {
     Q_UNUSED(notifier);
 }
 
-void QAmigaEventDispatcher::unregisterSocketNotifier(QSocketNotifier *notifier) {
+void QEventDispatcherAMIGA::unregisterSocketNotifier(QSocketNotifier *notifier) {
     Q_UNUSED(notifier);
 }
 
 /*!
     \internal
 */
-void QAmigaEventDispatcher::registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject *obj)
+void QEventDispatcherAMIGA::registerTimer(int timerId, qint64 interval, Qt::TimerType timerType, QObject *obj)
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     d->timerList.registerTimer(timerId, interval, timerType, obj);
 }
 
 /*!
     \internal
 */
-bool QAmigaEventDispatcher::unregisterTimer(int timerId)
+bool QEventDispatcherAMIGA::unregisterTimer(int timerId)
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     return d->timerList.unregisterTimer(timerId);
 }
 
 /*!
     \internal
 */
-bool QAmigaEventDispatcher::unregisterTimers(QObject *object)
+bool QEventDispatcherAMIGA::unregisterTimers(QObject *object)
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     return d->timerList.unregisterTimers(object);
 }
 
-QList<QAmigaEventDispatcher::TimerInfo>
-QAmigaEventDispatcher::registeredTimers(QObject *object) const
+QList<QEventDispatcherAMIGA::TimerInfo>
+QEventDispatcherAMIGA::registeredTimers(QObject *object) const
 {
     if (!object) {
-        qWarning("QAmigaEventDispatcher:registeredTimers: invalid argument");
+        qWarning("QEventDispatcherAMIGA:registeredTimers: invalid argument");
         return QList<TimerInfo>();
     }
 
-    Q_D(const QAmigaEventDispatcher);
+    Q_D(const QEventDispatcherAMIGA);
     return d->timerList.registeredTimers(object);
 }
 
 /*****************************************************************************
- QEventDispatcher implementations for AMIGAAAAAAAAAA.....!!
+ QEventDispatcherAMIGA implementations for AMIGAAAAAAAAAA.....!!
  *****************************************************************************/
 
 
-bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
+bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     d->interrupt.storeRelaxed(0);
 
     // we are awake, broadcast it
@@ -190,45 +204,65 @@ bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
         d->timerRequest->Request.io_Command = TR_ADDREQUEST;
         d->timerRequest->Time = wait_tm;
 
-        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
+//        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
 
         IExec->SendIO((struct IORequest *)d->timerRequest);
         listenSignals |= 1 << d->timerPort->mp_SigBit;
     }
 
+    AmigaIntuitionMessageHandler *amigaHandler = d->intuitionHandlers.first();
+    if (amigaHandler) {
+        listenSignals |= 1 << amigaHandler->messagePort()->mp_SigBit;
+    } else printf("No amiga.\n");
+
     int nevents = 0;
 
     unsigned int caughtSignals = IExec->Wait(listenSignals);
 
-    if(!caughtSignals & 1 << d->timerPort->mp_SigBit)
+    if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
         IExec->AbortIO((struct IORequest *)d->timerRequest);
 
     if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
-        printf("Timer event\n");
         nevents += d->activateTimers();
     }
+
+    if(amigaHandler) {
+        if (caughtSignals & 1 << amigaHandler->messagePort()->mp_SigBit) {
+            printf("Intuition sent a message.\n");
+            struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(amigaHandler->messagePort());
+            if (message) {
+                for(int i = 0; i < d->intuitionHandlers.size(); i++) {
+                    AmigaIntuitionMessageHandler *current = d->intuitionHandlers.at(i);
+                    if(current && current->intuitionWindow() == message->IDCMPWindow) {
+                        current->processIntuiMessage(message);
+                    }
+                }
+            }
+        }
+    }
+
     // return true if we handled events, false otherwise
     return (nevents > 0);
 }
 
-int QAmigaEventDispatcher::remainingTime(int timerId)
+int QEventDispatcherAMIGA::remainingTime(int timerId)
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     return d->timerList.timerRemainingTime(timerId);
 }
 
-void QAmigaEventDispatcher::wakeUp()
+void QEventDispatcherAMIGA::wakeUp()
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
 }
 
-void QAmigaEventDispatcher::interrupt()
+void QEventDispatcherAMIGA::interrupt()
 {
-    Q_D(QAmigaEventDispatcher);
+    Q_D(QEventDispatcherAMIGA);
     d->interrupt.storeRelaxed(1);
     wakeUp();
 }
 
 QT_END_NAMESPACE
 
-#include "moc_qamigaeventdispatcher.cpp"
+#include "moc_qeventdispatcher_amiga_p.cpp"

@@ -29,6 +29,8 @@ if (QT_FEATURE_gui)
         set(_default_platform "haiku")
     elseif(WASM)
         set(_default_platform "wasm")
+    elseif(AMIGA)
+        set(_default_platform "amiga") # ah-migaaaaaaa......
     else()
        set(_default_platform "xcb")
     endif()
@@ -959,6 +961,12 @@ qt_internal_extend_target(Gui CONDITION UNIX AND NOT AMIGA
         platform/unix/qunixnativeinterface.cpp
 )
 
+qt_internal_extend_target(Gui CONDITION AMIGA
+    SOURCES
+        platform/amiga/qamigaintegration.cpp
+        platform/amiga/qamigabackingstore.cpp
+)
+
 qt_internal_extend_target(Gui CONDITION QT_FEATURE_glib AND UNIX
     SOURCES
         platform/unix/qeventdispatcher_glib.cpp platform/unix/qeventdispatcher_glib_p.h
@@ -1035,13 +1043,6 @@ qt_internal_extend_target(Gui CONDITION (QT_FEATURE_eglfs OR QT_FEATURE_xcb)
     SOURCES
         util/qedidparser.cpp util/qedidparser_p.h
         util/qedidvendortable_p.h
-)
-
-qt_internal_extend_target(Gui CONDITION AMIGA
-    SOURCES
-        ../plugins/platforms/amiga/qamigaintegration.cpp
-        ../plugins/platforms/amiga/qamigabackingstore.cpp
-#        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
 )
 
 qt_internal_create_tracepoints(Gui qtgui.tracepoints)

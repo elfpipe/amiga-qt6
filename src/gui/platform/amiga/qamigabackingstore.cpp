@@ -37,74 +37,77 @@
 **
 ****************************************************************************/
 
-#ifndef QPLATFORMINTEGRATION_MINIMAL_H
-#define QPLATFORMINTEGRATION_MINIMAL_H
 
-#include <qpa/qplatformintegration.h>
+#include "qamigabackingstore_p.h"
+#include "qamigaintegration_p.h"
+
+#include "qscreen.h"
+#include <QtCore/qdebug.h>
 #include <qpa/qplatformscreen.h>
-#include <qpa/qplatformwindow.h>
+#include <private/qguiapplication_p.h>
+
+#define BOOL short
+#include <proto/Picasso96API.h>
+#include <proto/intuition.h>
+#include <proto/graphics.h>
+
+#include <iostream>
+
+using namespace std;
 
 QT_BEGIN_NAMESPACE
 
-class QAmigaWindow : public QObject, public QPlatformWindow
+QAmigaBackingStore::QAmigaBackingStore(QWindow *window)
+    : QPlatformBackingStore(window)
+    , mDebug(QAmigaIntegration::instance()->options() & QAmigaIntegration::DebugBackingStore)
 {
-    Q_OBJECT
+    if (mDebug)
+        qDebug() << "QAmigaBackingStore::QAmigaBackingStore:" << (quintptr)this;
+}
 
-public:
-    explicit QAmigaWindow(QWindow *window);
-    virtual ~QAmigaWindow();
-
-public:
-    struct Window *intuitionWindow;
-};
-
-class QAmigaScreen : public QPlatformScreen
+QAmigaBackingStore::~QAmigaBackingStore()
 {
-public:
-    QAmigaScreen()
-        : mDepth(32), mFormat(QImage::Format_ARGB32_Premultiplied) {}
+}
 
-    QRect geometry() const override { return mGeometry; }
-    int depth() const override { return mDepth; }
-    QImage::Format format() const override { return mFormat; }
-
-public:
-    QRect mGeometry;
-    int mDepth;
-    QImage::Format mFormat;
-    QSize mPhysicalSize;
-};
-
-class QAmigaIntegration : public QPlatformIntegration
+QPaintDevice *QAmigaBackingStore::paintDevice()
 {
-public:
-    enum Options { // Options to be passed on command line or determined from environment
-        DebugBackingStore = 0x1,
-        EnableFonts = 0x2,
-        FreeTypeFontDatabase = 0x4,
-        FontconfigDatabase = 0x8
-    };
+    if (mDebug)
+        qDebug("QAmigaBackingStore::paintDevice");
 
-    explicit QAmigaIntegration(const QStringList &parameters);
-    ~QAmigaIntegration();
+    return &mImage;
+}
 
-    bool hasCapability(QPlatformIntegration::Capability cap) const override;
-    QPlatformFontDatabase *fontDatabase() const override;
+void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPoint &offset)
+{
+    Q_UNUSED(region);
+    Q_UNUSED(offset);
 
-    QPlatformWindow *createPlatformWindow(QWindow *window) const override;
-    QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
-    QAbstractEventDispatcher *createEventDispatcher() const override;
+    if (mDebug) {
+        static int c = 0;
+        QString filename = QString("output%1.png").arg(c++, 4, 10, QLatin1Char('0'));
+        qDebug() << "QAmigaBackingStore::flush() saving contents to" << filename.toLocal8Bit().constData();
+        mImage.save(filename);
+    }
 
-    unsigned options() const { return m_options; }
+    QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
+    if(!amigaWindow) {
+        cout << "Not an Amiga window!\n";
+        return;
+    }
 
-    static QAmigaIntegration *instance();
+    IGraphics->WritePixelArray(mImage.bits(),
+        0, 0,
+        4*mImage.width(), PIXF_A8R8G8B8,
+        amigaWindow->intuitionWindow()->RPort, 0, 0,
+        mImage.width(), mImage.height());
+}
 
-private:
-    mutable QPlatformFontDatabase *m_fontDatabase;
-    QAmigaScreen *m_primaryScreen;
-    unsigned m_options;
-};
+void QAmigaBackingStore::resize(const QSize &size, const QRegion &)
+{
+    printf("Qt resize : size( %d, %d)\n", size.width(), size.height());
+    QImage::Format format = QGuiApplication::primaryScreen()->handle()->format();
+    if (mImage.size() != size)
+        mImage = QImage(size, format);
+}
 
 QT_END_NAMESPACE
-
-#endif

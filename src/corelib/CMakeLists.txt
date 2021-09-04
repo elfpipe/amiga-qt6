@@ -4,7 +4,6 @@
 qt_find_package(Threads PROVIDED_TARGETS Threads::Threads)
 qt_find_package(WrapPCRE2 PROVIDED_TARGETS WrapPCRE2::WrapPCRE2)
 
-
 # compute the reverse relative path from QtCoreConfigExtras to the install prefix
 # this is used in QtCoreConfigExtras to make its install paths relocatable
 if(QT_WILL_INSTALL)
@@ -647,8 +646,8 @@ qt_internal_extend_target(Core CONDITION UNIX AND NOT AMIGA
 
 qt_internal_extend_target(Core CONDITION AMIGA
     SOURCES
-        ../plugins/platforms/amiga/qamigaeventdispatcher.h
-        ../plugins/platforms/amiga/qamigaeventdispatcher.cpp
+        kernel/qeventdispatcher_amiga_p.h
+        kernel/qeventdispatcher_amiga.cpp
         kernel/qtimerinfo_amiga.cpp kernel/qtimerinfo_amiga_p.h
 )
 
@@ -1084,7 +1083,7 @@ qt_internal_extend_target(Core CONDITION WATCHOS
         ${FWWatchKit}
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_poll_select AND UNIX
+qt_internal_extend_target(Core CONDITION QT_FEATURE_poll_select AND UNIX 
     SOURCES
         kernel/qpoll.cpp
 )

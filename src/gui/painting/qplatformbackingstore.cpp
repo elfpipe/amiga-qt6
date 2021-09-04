@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qplatformbackingstore.h"
+#include <qpa/qplatformbackingstore.h>
 #include <qwindow.h>
 #include <qpixmap.h>
 

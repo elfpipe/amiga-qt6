@@ -75,7 +75,7 @@
 #ifdef __amigaos4__
 #define TRUE 1
 #define FALSE 0
-#include "../plugins/platforms/amiga/qamigaeventdispatcher.h"
+#include "kernel/qeventdispatcher_amiga_p.h"
 #endif
 
 #ifdef Q_OS_BSD4
@@ -261,7 +261,7 @@ QAbstractEventDispatcher *QThreadPrivate::createEventDispatcher(QThreadData *dat
     else
         return new QEventDispatcherUNIX;
 #elif defined(__amigaos4__)
-    return new QAmigaEventDispatcher;
+    return new QEventDispatcherAMIGA;
 #elif !defined(QT_NO_GLIB)
     const bool isQtMainThread = data->thread.loadAcquire() == QCoreApplicationPrivate::mainThread();
     if (qEnvironmentVariableIsEmpty("QT_NO_GLIB")

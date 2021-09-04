@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QAMIGAEVENTDISPATCHER_H
-#define QAMIGAEVENTDISPATCHER_H
+#ifndef QEventDispatcherAMIGA_H
+#define QEventDispatcherAMIGA_H
 
 //
 //  W A R N I N G
@@ -58,25 +58,27 @@
 #include "QtCore/qvarlengtharray.h"
 #include "private/qtimerinfo_amiga_p.h"
 
-#include <QtGui/QWindow>
-
 #include <proto/exec.h>
 #include <devices/timer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QAmigaEventDispatcherPrivate;
+class QEventDispatcherAMIGAPrivate;
+class AmigaIntuitionMessageHandler;
 
-class Q_CORE_EXPORT QAmigaEventDispatcher : public QAbstractEventDispatcher
+class Q_CORE_EXPORT QEventDispatcherAMIGA : public QAbstractEventDispatcher
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QAmigaEventDispatcher)
+    Q_DECLARE_PRIVATE(QEventDispatcherAMIGA)
 
 public:
-    explicit QAmigaEventDispatcher(QObject *parent = nullptr);
-    ~QAmigaEventDispatcher();
+    explicit QEventDispatcherAMIGA(QObject *parent = nullptr);
+    ~QEventDispatcherAMIGA();
 
     bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
+
+    void registerIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler);
+    void unregisterIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler);
 
     void registerSocketNotifier(QSocketNotifier *notifier) override;
     void unregisterSocketNotifier(QSocketNotifier *notifier) override;
@@ -92,16 +94,16 @@ public:
     void interrupt() final;
 
 protected:
-    QAmigaEventDispatcher(QAmigaEventDispatcherPrivate &dd, QObject *parent = nullptr);
+    QEventDispatcherAMIGA(QEventDispatcherAMIGAPrivate &dd, QObject *parent = nullptr);
 };
 
-class Q_CORE_EXPORT QAmigaEventDispatcherPrivate : public QAbstractEventDispatcherPrivate
+class Q_CORE_EXPORT QEventDispatcherAMIGAPrivate : public QAbstractEventDispatcherPrivate
 {
-    Q_DECLARE_PUBLIC(QAmigaEventDispatcher)
+    Q_DECLARE_PUBLIC(QEventDispatcherAMIGA)
 
 public:
-    QAmigaEventDispatcherPrivate();
-    ~QAmigaEventDispatcherPrivate();
+    QEventDispatcherAMIGAPrivate();
+    ~QEventDispatcherAMIGAPrivate();
 
     int activateTimers();
 
@@ -110,8 +112,10 @@ public:
 
     struct MsgPort *timerPort;
     struct TimeRequest *timerRequest;
+
+    QList<AmigaIntuitionMessageHandler *> intuitionHandlers;
 };
 
 QT_END_NAMESPACE
 
-#endif // QEVENTDISPATCHER_UNIX_P_H
+#endif // QEventDispatcherAMIGA_UNIX_P_H

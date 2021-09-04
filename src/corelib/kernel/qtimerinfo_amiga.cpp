@@ -99,7 +99,7 @@ struct TimeVal QTimerInfoList::updateCurrentTime()
     timerRequest->Request.io_Command = TR_GETSYSTIME;
     IExec->DoIO((struct IORequest *)timerRequest);
 
-    printf("DoIO request for timer.device returned Seconds : %lu , Microseconds : %lu\n", timerRequest->Time.Seconds, timerRequest->Time.Microseconds);
+//    printf("DoIO request for timer.device returned Seconds : %lu , Microseconds : %lu\n", timerRequest->Time.Seconds, timerRequest->Time.Microseconds);
 
     currentTime = timerRequest->Time;
     return currentTime;
