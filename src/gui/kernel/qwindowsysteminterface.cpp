@@ -82,9 +82,12 @@ extern QPointer<QWindow> qt_last_mouse_receiver;
 template<>
 bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(WindowSystemEvent *ev)
 {
-    windowSystemEventQueue.append(ev);
-    if (QAbstractEventDispatcher *dispatcher = QGuiApplicationPrivate::qt_qpa_core_dispatcher())
-        dispatcher->wakeUp();
+    QGuiApplicationPrivate::processWindowSystemEvent(ev);
+    bool accepted = ev->eventAccepted;
+    delete ev;
+    // windowSystemEventQueue.append(ev);
+    // if (QAbstractEventDispatcher *dispatcher = QGuiApplicationPrivate::qt_qpa_core_dispatcher())
+    //     dispatcher->wakeUp();
     return true;
 }
 
@@ -102,19 +105,24 @@ template<>
 bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterface::SynchronousDelivery>(WindowSystemEvent *ev)
 {
     bool accepted = true;
-    if (QThread::currentThread() == QGuiApplication::instance()->thread()) {
-        // Process the event immediately on the current thread and return the accepted state.
-        QGuiApplicationPrivate::processWindowSystemEvent(ev);
-        accepted = ev->eventAccepted;
-        delete ev;
-    } else {
-        // Post the event on the Qt main thread queue and flush the queue.
-        // This will wake up the Gui thread which will process the event.
-        // Return the accepted state for the last event on the queue,
-        // which is the event posted by this function.
-        handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
-        accepted = QWindowSystemInterface::flushWindowSystemEvents();
-    }
+
+    QGuiApplicationPrivate::processWindowSystemEvent(ev);
+    accepted = ev->eventAccepted;
+    delete ev;
+
+    // if (QThread::currentThread() == QGuiApplication::instance()->thread()) {
+    //     // Process the event immediately on the current thread and return the accepted state.
+    //     QGuiApplicationPrivate::processWindowSystemEvent(ev);
+    //     accepted = ev->eventAccepted;
+    //     delete ev;
+    // } else {
+    //     // Post the event on the Qt main thread queue and flush the queue.
+    //     // This will wake up the Gui thread which will process the event.
+    //     // Return the accepted state for the last event on the queue,
+    //     // which is the event posted by this function.
+    //     handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
+    //     accepted = QWindowSystemInterface::flushWindowSystemEvents();
+    // }
     return accepted;
 }
 
@@ -136,10 +144,10 @@ bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterfa
 template<>
 bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterface::DefaultDelivery>(QWindowSystemInterfacePrivate::WindowSystemEvent *ev)
 {
-    if (synchronousWindowSystemEvents)
+    // if (synchronousWindowSystemEvents)
         return handleWindowSystemEvent<QWindowSystemInterface::SynchronousDelivery>(ev);
-    else
-        return handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
+    // else
+    //     return handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
 }
 
 int QWindowSystemInterfacePrivate::windowSystemEventsQueued()

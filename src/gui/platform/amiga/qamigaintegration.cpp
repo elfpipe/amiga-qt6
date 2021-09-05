@@ -64,10 +64,12 @@
 #include "kernel/qguiapplication.h"
 
 #include "../../../corelib/kernel/qeventdispatcher_amiga_p.h"
+#include "../../../corelib/platform/amiga/qamigaeventdispatcherfactory_p.h"
 
 QT_BEGIN_NAMESPACE
 
 struct MsgPort *QAmigaWindow::m_messagePort = 0;
+QAbstractEventDispatcher *QAmigaIntegration::m_eventDispatcher = 0;
 
 QAmigaWindow::QAmigaWindow(QWindow *window)
     : QPlatformWindow(window)
@@ -91,13 +93,13 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
         WA_UserPort, messagePort(),
         TAG_DONE );
 
-    static_cast<QEventDispatcherAMIGA *>(QGuiApplication::eventDispatcher())->registerIntuitionMessageHandler(this);
+    static_cast<QEventDispatcherAMIGA *>(QAmigaIntegration::eventDispatcher())->registerIntuitionMessageHandler(this);
 }
 
 QAmigaWindow::~QAmigaWindow()
 {
     IIntuition->CloseWindow(m_intuitionWindow);
-    static_cast<QEventDispatcherAMIGA *>(QGuiApplication::eventDispatcher())->unregisterIntuitionMessageHandler(this);
+    static_cast<QEventDispatcherAMIGA *>(QAmigaIntegration::eventDispatcher())->unregisterIntuitionMessageHandler(this);
 }
 
 bool qt_swap_ctrl_and_amiga_keys = false;
@@ -320,7 +322,7 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
         default:
             break;
     }
-    IExec->ReplyMsg((struct Message *)message);
+    //IExec->ReplyMsg((struct Message *)message);
 }
 
 class QCoreTextFontEngine;
@@ -435,7 +437,9 @@ QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *wi
 
 QAbstractEventDispatcher *QAmigaIntegration::createEventDispatcher() const
 {
-    return new QEventDispatcherAMIGA;
+    if(!m_eventDispatcher)
+        m_eventDispatcher = QAmigaEventDispatcherFactory::createAmigaEventDispatcher();
+    return m_eventDispatcher;
 }
 
 QAmigaIntegration *QAmigaIntegration::instance()

@@ -81,6 +81,7 @@ public:
     QSize mPhysicalSize;
 };
 
+class AbstractEventDispatcher;
 class QAmigaIntegration : public QPlatformIntegration
 {
 public:
@@ -104,11 +105,13 @@ public:
     unsigned options() const { return m_options; }
 
     static QAmigaIntegration *instance();
+    static QAbstractEventDispatcher *eventDispatcher() { return m_eventDispatcher; }
 
 private:
     mutable QPlatformFontDatabase *m_fontDatabase;
     QAmigaScreen *m_primaryScreen;
     unsigned m_options;
+    static QAbstractEventDispatcher *m_eventDispatcher;
 };
 
 QT_END_NAMESPACE

@@ -89,6 +89,8 @@ QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 
 QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
+    IExec->FreeSysObject(ASOT_PORT, timerPort);
+    IExec->CloseDevice ((IORequest *)timerRequest);
     // cleanup timers
     qDeleteAll(timerList);
 }
@@ -217,7 +219,10 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
 
     int nevents = 0;
 
-    unsigned int caughtSignals = IExec->Wait(listenSignals);
+    unsigned int caughtSignals;
+    
+    if (listenSignals || wait_tm.Seconds || wait_tm.Microseconds)
+        caughtSignals = IExec->Wait(listenSignals);
 
     if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
         IExec->AbortIO((struct IORequest *)d->timerRequest);
@@ -234,7 +239,9 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
                 for(int i = 0; i < d->intuitionHandlers.size(); i++) {
                     AmigaIntuitionMessageHandler *current = d->intuitionHandlers.at(i);
                     if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                        current->processIntuiMessage(message);
+                        struct IntuiMessage messageCopy = *message;
+                        IExec->ReplyMsg((struct Message *)message);
+                        current->processIntuiMessage(&messageCopy);
                     }
                 }
             }
