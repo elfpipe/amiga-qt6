@@ -209,9 +209,6 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
     int nevents = 0;
 
     unsigned int caughtSignals = IExec->Wait(listenSignals);
-
-    if (caughtSignals & 1 << d->wakeupSignal)
-        printf("WAKE UP!!!!\n");
         
     if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
         IExec->AbortIO((struct IORequest *)d->timerRequest);

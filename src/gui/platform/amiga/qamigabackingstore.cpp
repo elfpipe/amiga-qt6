@@ -104,7 +104,6 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
 
 void QAmigaBackingStore::resize(const QSize &size, const QRegion &)
 {
-    printf("Qt resize : size( %d, %d)\n", size.width(), size.height());
     QImage::Format format = QGuiApplication::primaryScreen()->handle()->format();
     if (mImage.size() != size)
         mImage = QImage(size, format);

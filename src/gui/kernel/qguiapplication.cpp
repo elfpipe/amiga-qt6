@@ -676,10 +676,9 @@ QGuiApplication::~QGuiApplication()
 
     qt_call_post_routines();
 
-#ifndef __amigaos4__
     d->eventDispatcher->closingDown();
+    delete d->eventDispatcher;
     d->eventDispatcher = nullptr;
-#endif
 
 #ifndef QT_NO_CLIPBOARD
     delete QGuiApplicationPrivate::qt_clipboard;
@@ -1736,10 +1735,8 @@ QGuiApplicationPrivate::~QGuiApplicationPrivate()
     }
 #endif
 
-#ifdef __amigaos4__
-    delete platform_integration;
-#else
-    //platform_integration->destroy();
+#ifndef __amigaos4__
+    platform_integration->destroy();
 #endif
 
     delete platform_theme;

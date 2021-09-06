@@ -148,7 +148,6 @@ public:
 
         if(amigaWindow) {
             if (caughtSignals & 1 << amigaWindow->messagePort()->mp_SigBit) { //all Amiga windows use the same UserPort *
-                printf("Intuition sent a message.\n");
                 struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(amigaWindow->messagePort());
                 if (message) {
                     for(int i = 0; i < windows.size(); i++) {
@@ -231,7 +230,6 @@ Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier)
 }
 
 void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
-    printf("Processing IntuiMessage.\n");
     Qt::KeyboardModifiers modifiers = qualifierToModifier(message->Qualifier);
 
     QPoint localPosition(message->MouseX - message->IDCMPWindow->BorderLeft, message->MouseY - message->IDCMPWindow->BorderTop);
@@ -464,7 +462,7 @@ QAmigaIntegration::~QAmigaIntegration()
 {
     QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
     delete m_fontDatabase;
-    if (m_eventDispatcher) delete m_eventDispatcher;
+    // if (m_eventDispatcher) delete m_eventDispatcher;
 }
 
 bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) const
