@@ -77,9 +77,6 @@ public:
 
     bool processEvents(QEventLoop::ProcessEventsFlags flags) override;
 
-    void registerIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler);
-    void unregisterIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler);
-
     void registerSocketNotifier(QSocketNotifier *notifier) override;
     void unregisterSocketNotifier(QSocketNotifier *notifier) override;
 
@@ -112,8 +109,8 @@ public:
 
     struct MsgPort *timerPort;
     struct TimeRequest *timerRequest;
-
-    QList<AmigaIntuitionMessageHandler *> intuitionHandlers;
+    uint8 wakeupSignal;
+    struct Task *me;
 };
 
 QT_END_NAMESPACE

@@ -82,12 +82,9 @@ extern QPointer<QWindow> qt_last_mouse_receiver;
 template<>
 bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(WindowSystemEvent *ev)
 {
-    QGuiApplicationPrivate::processWindowSystemEvent(ev);
-    bool accepted = ev->eventAccepted;
-    delete ev;
-    // windowSystemEventQueue.append(ev);
-    // if (QAbstractEventDispatcher *dispatcher = QGuiApplicationPrivate::qt_qpa_core_dispatcher())
-    //     dispatcher->wakeUp();
+    windowSystemEventQueue.append(ev);
+    if (QAbstractEventDispatcher *dispatcher = QGuiApplicationPrivate::qt_qpa_core_dispatcher())
+        dispatcher->wakeUp();
     return true;
 }
 
@@ -144,10 +141,10 @@ bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterfa
 template<>
 bool QWindowSystemInterfacePrivate::handleWindowSystemEvent<QWindowSystemInterface::DefaultDelivery>(QWindowSystemInterfacePrivate::WindowSystemEvent *ev)
 {
-    // if (synchronousWindowSystemEvents)
+    if (synchronousWindowSystemEvents)
         return handleWindowSystemEvent<QWindowSystemInterface::SynchronousDelivery>(ev);
-    // else
-    //     return handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
+    else
+        return handleWindowSystemEvent<QWindowSystemInterface::AsynchronousDelivery>(ev);
 }
 
 int QWindowSystemInterfacePrivate::windowSystemEventsQueued()

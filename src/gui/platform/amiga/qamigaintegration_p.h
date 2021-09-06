@@ -44,21 +44,17 @@
 #include <qpa/qplatformscreen.h>
 #include <qpa/qplatformwindow.h>
 
-#include "../corelib/platform/amiga/amigaintuitionmessagehandler_p.h"
-
 QT_BEGIN_NAMESPACE
 
-class QAmigaWindow : public QObject, public QPlatformWindow, public AmigaIntuitionMessageHandler
+class QAmigaWindow : public QPlatformWindow
 {
-    Q_OBJECT
-
 public:
     explicit QAmigaWindow(QWindow *window);
     virtual ~QAmigaWindow();
 
-    void processIntuiMessage(struct IntuiMessage *message) override;
-    struct Window *intuitionWindow() override { return m_intuitionWindow; }
-    struct MsgPort *messagePort() override { return m_messagePort; }
+    void processIntuiMessage(struct IntuiMessage *message);
+    struct Window *intuitionWindow() { return m_intuitionWindow; }
+    struct MsgPort *messagePort() { return m_messagePort; }
 private:
     struct Window *m_intuitionWindow;
     static struct MsgPort *m_messagePort;

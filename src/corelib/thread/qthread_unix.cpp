@@ -75,7 +75,7 @@
 #ifdef __amigaos4__
 #define TRUE 1
 #define FALSE 0
-#include "../platform/amiga/qamigaeventdispatcherfactory_p.h"
+#include "kernel/qeventdispatcher_amiga_p.h"
 #endif
 
 #ifdef Q_OS_BSD4
@@ -112,7 +112,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#if 0 //QT_CONFIG(thread)
+#if QT_CONFIG(thread)
 
 static_assert(sizeof(pthread_t) <= sizeof(Qt::HANDLE));
 
@@ -261,7 +261,7 @@ QAbstractEventDispatcher *QThreadPrivate::createEventDispatcher(QThreadData *dat
     else
         return new QEventDispatcherUNIX;
 #elif defined(__amigaos4__)
-    return QAmigaEventDispatcherFactory::createAmigaEventDispatcher();
+    return new QEventDispatcherAMIGA;
 #elif !defined(QT_NO_GLIB)
     const bool isQtMainThread = data->thread.loadAcquire() == QCoreApplicationPrivate::mainThread();
     if (qEnvironmentVariableIsEmpty("QT_NO_GLIB")
@@ -275,7 +275,7 @@ QAbstractEventDispatcher *QThreadPrivate::createEventDispatcher(QThreadData *dat
 #endif
 }
 
-#if 0 //QT_CONFIG(thread)
+#if QT_CONFIG(thread)
 
 #if (defined(Q_OS_LINUX) || defined(Q_OS_MAC) || defined(Q_OS_QNX))
 static void setCurrentThreadName(const char *name)
@@ -540,7 +540,7 @@ void QThread::usleep(unsigned long usecs)
     qt_nanosleep(makeTimespec(usecs / 1000 / 1000, usecs % (1000*1000) * 1000));
 }
 
-#if 0 //QT_CONFIG(thread)
+#if QT_CONFIG(thread)
 
 #ifdef QT_HAS_THREAD_PRIORITY_SCHEDULING
 #if defined(Q_OS_QNX)

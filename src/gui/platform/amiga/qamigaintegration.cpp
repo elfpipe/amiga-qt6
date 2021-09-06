@@ -62,14 +62,113 @@
 #include <proto/exec.h>
 
 #include "kernel/qguiapplication.h"
-
 #include "../../../corelib/kernel/qeventdispatcher_amiga_p.h"
-#include "../../../corelib/platform/amiga/qamigaeventdispatcherfactory_p.h"
 
 QT_BEGIN_NAMESPACE
 
 struct MsgPort *QAmigaWindow::m_messagePort = 0;
 QAbstractEventDispatcher *QAmigaIntegration::m_eventDispatcher = 0;
+
+class QAmigaWindow;
+class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
+{
+    Q_DECLARE_PRIVATE(QEventDispatcherAMIGA)
+
+public:
+    explicit QEventDispatcherAMIGAWindows(QObject *parent = nullptr)
+        : QEventDispatcherAMIGA(parent)
+    {
+    }
+
+    void registerWindow(QAmigaWindow *window) {
+        windows << window;
+    }
+    void unregisterWindow(QAmigaWindow *window) {
+        windows.removeAt(windows.indexOf(window));
+    }
+
+    bool processEvents(QEventLoop::ProcessEventsFlags flags) override
+    {
+        Q_D(QEventDispatcherAMIGA);
+        d->interrupt.storeRelaxed(0);
+
+        // we are awake, broadcast it
+        emit awake();
+
+        auto threadData = d->threadData.loadRelaxed();
+        QCoreApplicationPrivate::sendPostedEvents(nullptr, 0, threadData);
+
+        const bool include_timers = (flags & QEventLoop::X11ExcludeTimers) == 0;
+        const bool include_notifiers = (flags & QEventLoop::ExcludeSocketNotifiers) == 0;
+        const bool wait_for_events = (flags & QEventLoop::WaitForMoreEvents) != 0;
+
+        const bool canWait = (threadData->canWaitLocked()
+                            && !d->interrupt.loadRelaxed()
+                            && wait_for_events);
+
+        if (canWait)
+            emit aboutToBlock();
+
+        if (d->interrupt.loadRelaxed())
+            return false;
+
+        struct TimeVal wait_tm = { 0, 0 };
+
+        unsigned int listenSignals = 0;
+        if (!canWait || (include_timers && d->timerList.timerWait(wait_tm))) {
+            d->timerRequest->Request.io_Command = TR_ADDREQUEST;
+            d->timerRequest->Time = wait_tm;
+
+    //        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
+
+            IExec->SendIO((struct IORequest *)d->timerRequest);
+            listenSignals |= 1 << d->timerPort->mp_SigBit;
+        }
+
+        QAmigaWindow *amigaWindow = windows.first();
+        if (amigaWindow) {
+            listenSignals |= 1 << amigaWindow->messagePort()->mp_SigBit;
+        } else printf("No amiga windows.\n");
+
+        listenSignals |= 1 << d->wakeupSignal;
+
+        int nevents = 0;
+
+        unsigned int caughtSignals = IExec->Wait(listenSignals);
+
+        if (caughtSignals & 1 << d->wakeupSignal)
+            printf("WAKE UP!!!!\n");
+
+        if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
+            IExec->AbortIO((struct IORequest *)d->timerRequest);
+
+        if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
+            nevents += d->activateTimers();
+        }
+
+        if(amigaWindow) {
+            if (caughtSignals & 1 << amigaWindow->messagePort()->mp_SigBit) { //all Amiga windows use the same UserPort *
+                printf("Intuition sent a message.\n");
+                struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(amigaWindow->messagePort());
+                if (message) {
+                    for(int i = 0; i < windows.size(); i++) {
+                        QAmigaWindow *current = windows.at(i);
+                        if(current && current->intuitionWindow() == message->IDCMPWindow) {
+                            struct IntuiMessage messageCopy = *message;
+                            IExec->ReplyMsg((struct Message *)message);
+                            current->processIntuiMessage(&messageCopy);
+                        }
+                    }
+                }
+            }
+        }
+
+        // return true if we handled events, false otherwise
+        return QWindowSystemInterface::sendWindowSystemEvents(flags) || nevents > 0;
+    }
+private:
+    QList<QAmigaWindow *> windows;
+};
 
 QAmigaWindow::QAmigaWindow(QWindow *window)
     : QPlatformWindow(window)
@@ -82,7 +181,7 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
         WA_Left, rect.x(),
         WA_Top, rect.y(),
         WA_InnerWidth, rect.width(),
-        WA_InnerHeight, rect.height(),
+        WA_InnerHeight, rect.height(),  
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
         WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
@@ -93,13 +192,13 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
         WA_UserPort, messagePort(),
         TAG_DONE );
 
-    static_cast<QEventDispatcherAMIGA *>(QAmigaIntegration::eventDispatcher())->registerIntuitionMessageHandler(this);
+    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
 }
 
 QAmigaWindow::~QAmigaWindow()
 {
     IIntuition->CloseWindow(m_intuitionWindow);
-    static_cast<QEventDispatcherAMIGA *>(QAmigaIntegration::eventDispatcher())->unregisterIntuitionMessageHandler(this);
+    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
 }
 
 bool qt_swap_ctrl_and_amiga_keys = false;
@@ -365,6 +464,7 @@ QAmigaIntegration::~QAmigaIntegration()
 {
     QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
     delete m_fontDatabase;
+    if (m_eventDispatcher) delete m_eventDispatcher;
 }
 
 bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) const
@@ -438,7 +538,7 @@ QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *wi
 QAbstractEventDispatcher *QAmigaIntegration::createEventDispatcher() const
 {
     if(!m_eventDispatcher)
-        m_eventDispatcher = QAmigaEventDispatcherFactory::createAmigaEventDispatcher();
+        m_eventDispatcher = new QEventDispatcherAMIGAWindows;
     return m_eventDispatcher;
 }
 

@@ -47,7 +47,6 @@
 #include "qelapsedtimer.h"
 
 #include "qeventdispatcher_amiga_p.h"
-#include "platform/amiga/amigaintuitionmessagehandler_p.h"
 
 #include <private/qthread_p.h>
 #include <private/qcoreapplication_p.h>
@@ -85,12 +84,15 @@ QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
         qWarning("Error opening timer.device for communication. Exit.\n");
         QCoreApplication::quit();
     }
+    wakeupSignal = IExec->AllocSignal(-1);
+    me = IExec->FindTask(0);
 }
 
 QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
     IExec->FreeSysObject(ASOT_PORT, timerPort);
     IExec->CloseDevice ((IORequest *)timerRequest);
+    IExec->FreeSignal(wakeupSignal);
     // cleanup timers
     qDeleteAll(timerList);
 }
@@ -111,16 +113,6 @@ QEventDispatcherAMIGA::QEventDispatcherAMIGA(QEventDispatcherAMIGAPrivate &dd, Q
 
 QEventDispatcherAMIGA::~QEventDispatcherAMIGA()
 { }
-
-void QEventDispatcherAMIGA::registerIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler) {
-    Q_D(QEventDispatcherAMIGA);
-    d->intuitionHandlers << intuitionHandler;
-}
-
-void QEventDispatcherAMIGA::unregisterIntuitionMessageHandler(AmigaIntuitionMessageHandler *intuitionHandler) {
-    Q_D(QEventDispatcherAMIGA);
-    d->intuitionHandlers.removeAt(d->intuitionHandlers.indexOf(intuitionHandler));
-}
 
 void QEventDispatcherAMIGA::registerSocketNotifier(QSocketNotifier *notifier) {
     Q_UNUSED(notifier);
@@ -212,40 +204,20 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
         listenSignals |= 1 << d->timerPort->mp_SigBit;
     }
 
-    AmigaIntuitionMessageHandler *amigaHandler = d->intuitionHandlers.first();
-    if (amigaHandler) {
-        listenSignals |= 1 << amigaHandler->messagePort()->mp_SigBit;
-    } else printf("No amiga.\n");
+    listenSignals |= 1 << d->wakeupSignal;
 
     int nevents = 0;
 
-    unsigned int caughtSignals;
-    
-    if (listenSignals || wait_tm.Seconds || wait_tm.Microseconds)
-        caughtSignals = IExec->Wait(listenSignals);
+    unsigned int caughtSignals = IExec->Wait(listenSignals);
 
+    if (caughtSignals & 1 << d->wakeupSignal)
+        printf("WAKE UP!!!!\n");
+        
     if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
         IExec->AbortIO((struct IORequest *)d->timerRequest);
 
     if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
         nevents += d->activateTimers();
-    }
-
-    if(amigaHandler) {
-        if (caughtSignals & 1 << amigaHandler->messagePort()->mp_SigBit) {
-            printf("Intuition sent a message.\n");
-            struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(amigaHandler->messagePort());
-            if (message) {
-                for(int i = 0; i < d->intuitionHandlers.size(); i++) {
-                    AmigaIntuitionMessageHandler *current = d->intuitionHandlers.at(i);
-                    if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                        struct IntuiMessage messageCopy = *message;
-                        IExec->ReplyMsg((struct Message *)message);
-                        current->processIntuiMessage(&messageCopy);
-                    }
-                }
-            }
-        }
     }
 
     // return true if we handled events, false otherwise
@@ -261,6 +233,7 @@ int QEventDispatcherAMIGA::remainingTime(int timerId)
 void QEventDispatcherAMIGA::wakeUp()
 {
     Q_D(QEventDispatcherAMIGA);
+    IExec->Signal(d->me, 1 << d->wakeupSignal);
 }
 
 void QEventDispatcherAMIGA::interrupt()

@@ -649,7 +649,6 @@ qt_internal_extend_target(Core CONDITION AMIGA
         kernel/qeventdispatcher_amiga_p.h
         kernel/qeventdispatcher_amiga.cpp
         kernel/qtimerinfo_amiga.cpp kernel/qtimerinfo_amiga_p.h
-        platform/amiga/qamigaeventdispatcherfactory.cpp
 )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_thread
