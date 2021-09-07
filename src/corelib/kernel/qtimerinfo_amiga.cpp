@@ -67,6 +67,7 @@ Q_CORE_EXPORT bool qt_disable_lowpriority_timers=false;
 
 QTimerInfoList::QTimerInfoList()
 {
+    printf("Creating TimerInfoList.\n");
     timerPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
     if(timerPort == 0) {
         qWarning("Failed to allocate message port for timer.device communication. Exit.\n");
@@ -90,7 +91,9 @@ QTimerInfoList::QTimerInfoList()
 }
 
 QTimerInfoList::~QTimerInfoList() {
+    printf("Destroying TimerInfoList.\n");
     IExec->CloseDevice ((struct IORequest *)timerRequest);
+    IExec->FreeSysObject (ASOT_IOREQUEST, timerRequest);
     IExec->FreeSysObject (ASOT_PORT, timerPort);
 }
 

@@ -66,6 +66,7 @@ QT_BEGIN_NAMESPACE
 
 QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 {
+    printf("Creating EventDispatcherPrivate.\n");
     timerPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
     if(timerPort == 0) {
         qWarning("Failed to allocate message port for timer.device communication. Exit.\n");
@@ -90,8 +91,10 @@ QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 
 QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
-    IExec->FreeSysObject(ASOT_PORT, timerPort);
+    printf("Destroying EventDispatcherPrivate.\n");
     IExec->CloseDevice ((IORequest *)timerRequest);
+    IExec->FreeSysObject(ASOT_IOREQUEST, timerRequest);
+    IExec->FreeSysObject(ASOT_PORT, timerPort);
     IExec->FreeSignal(wakeupSignal);
     // cleanup timers
     qDeleteAll(timerList);

@@ -66,8 +66,8 @@
 
 QT_BEGIN_NAMESPACE
 
-struct MsgPort *QAmigaWindow::m_messagePort = 0;
 QAbstractEventDispatcher *QAmigaIntegration::m_eventDispatcher = 0;
+struct MsgPort *QAmigaIntegration::m_messagePort = 0;
 
 class QAmigaWindow;
 class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
@@ -125,9 +125,9 @@ public:
             listenSignals |= 1 << d->timerPort->mp_SigBit;
         }
 
-        QAmigaWindow *amigaWindow = windows.first();
-        if (amigaWindow) {
-            listenSignals |= 1 << amigaWindow->messagePort()->mp_SigBit;
+        struct MsgPort *userPort = QAmigaIntegration::messagePort();
+        if (userPort) {
+            listenSignals |= 1 << userPort->mp_SigBit;
         } else printf("No amiga windows.\n");
 
         listenSignals |= 1 << d->wakeupSignal;
@@ -146,16 +146,17 @@ public:
             nevents += d->activateTimers();
         }
 
-        if(amigaWindow) {
-            if (caughtSignals & 1 << amigaWindow->messagePort()->mp_SigBit) { //all Amiga windows use the same UserPort *
-                struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(amigaWindow->messagePort());
-                if (message) {
-                    for(int i = 0; i < windows.size(); i++) {
-                        QAmigaWindow *current = windows.at(i);
-                        if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                            struct IntuiMessage messageCopy = *message;
-                            IExec->ReplyMsg((struct Message *)message);
-                            current->processIntuiMessage(&messageCopy);
+        if(userPort) {
+            if (caughtSignals & 1 << userPort->mp_SigBit) { //all Amiga windows use the same UserPort *
+                while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(userPort)) {
+                    if (message) {
+                        for(int i = 0; i < windows.size(); i++) {
+                            QAmigaWindow *current = windows.at(i);
+                            if(current && current->intuitionWindow() == message->IDCMPWindow) {
+                                struct IntuiMessage messageCopy = *message;
+                                IExec->ReplyMsg((struct Message *)message);
+                                current->processIntuiMessage(&messageCopy);
+                            }
                         }
                     }
                 }
@@ -174,8 +175,6 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
 {
     const QRect rect = initialGeometry(window, window->geometry(), 640, 512);
 
-    if(!m_messagePort) m_messagePort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
-
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
         WA_Left, rect.x(),
         WA_Top, rect.y(),
@@ -188,7 +187,7 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
         WA_GimmeZeroZero, TRUE,
         WA_Title, "Qt Analog Clock",
         WA_PubScreenName, "Workbench",
-        WA_UserPort, messagePort(),
+        WA_UserPort, QAmigaIntegration::messagePort(),
         TAG_DONE );
 
     static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
@@ -462,7 +461,13 @@ QAmigaIntegration::~QAmigaIntegration()
 {
     QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
     delete m_fontDatabase;
-    // if (m_eventDispatcher) delete m_eventDispatcher;
+    // if (m_eventDispatcher) delete m_eventDispatcher; //this crashes. why?
+    if (m_messagePort) IExec->FreeSysObject (ASOT_PORT, m_messagePort);
+}
+
+struct MsgPort *QAmigaIntegration::messagePort() {
+    if(!m_messagePort) m_messagePort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
+    return m_messagePort;
 }
 
 bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) const

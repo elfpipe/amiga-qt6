@@ -54,10 +54,8 @@ public:
 
     void processIntuiMessage(struct IntuiMessage *message);
     struct Window *intuitionWindow() { return m_intuitionWindow; }
-    struct MsgPort *messagePort() { return m_messagePort; }
 private:
     struct Window *m_intuitionWindow;
-    static struct MsgPort *m_messagePort;
 };
 
 class QAmigaScreen : public QPlatformScreen
@@ -102,12 +100,14 @@ public:
 
     static QAmigaIntegration *instance();
     static QAbstractEventDispatcher *eventDispatcher() { return m_eventDispatcher; }
+    static struct MsgPort *messagePort();
 
 private:
     mutable QPlatformFontDatabase *m_fontDatabase;
     QAmigaScreen *m_primaryScreen;
     unsigned m_options;
     static QAbstractEventDispatcher *m_eventDispatcher;
+    static struct MsgPort *m_messagePort;
 };
 
 QT_END_NAMESPACE
