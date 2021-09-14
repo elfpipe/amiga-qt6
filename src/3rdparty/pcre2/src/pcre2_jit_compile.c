@@ -45,8 +45,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "pcre2_internal.h"
 
+#undef SUPPORT_JIT
 #ifdef SUPPORT_JIT
-
+#error jit
 /* All-in-one: Since we use the JIT compiler only from here,
 we just include it. This way we don't need to touch the build
 system files. */

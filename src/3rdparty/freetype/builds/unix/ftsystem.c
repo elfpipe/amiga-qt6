@@ -195,7 +195,7 @@
   FT_CALLBACK_DEF( void )
   ft_close_stream_by_munmap( FT_Stream  stream )
   {
-    munmap( (MUNMAP_ARG_CAST)stream->descriptor.pointer, stream->size );
+    // munmap( (MUNMAP_ARG_CAST)stream->descriptor.pointer, stream->size );
 
     stream->descriptor.pointer = NULL;
     stream->size               = 0;

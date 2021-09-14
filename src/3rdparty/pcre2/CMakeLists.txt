@@ -71,6 +71,11 @@ if (APPLE)
     target_compile_options(BundledPcre2 PRIVATE "SHELL:-Xarch_arm64 -DPCRE2_DISABLE_JIT")
 endif()
 
+if (AMIGA)
+    target_compile_options(BundledPcre2 PRIVATE "-DPCRE2_DISABLE_JIT")
+endif()
+
+
 qt_internal_extend_target(BundledPcre2 CONDITION WIN32
     PUBLIC_DEFINES
         PCRE2_STATIC

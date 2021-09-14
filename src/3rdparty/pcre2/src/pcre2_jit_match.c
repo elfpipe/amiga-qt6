@@ -43,7 +43,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #endif
 
 #ifdef SUPPORT_JIT
-
+#error jit
 static SLJIT_NOINLINE int jit_machine_stack_exec(jit_arguments *arguments, jit_function executable_func)
 {
 sljit_u8 local_space[MACHINE_STACK_SIZE];
@@ -98,7 +98,6 @@ pcre2_jit_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length,
 return PCRE2_ERROR_JIT_BADOPTION;
 
 #else  /* SUPPORT_JIT */
-
 pcre2_real_code *re = (pcre2_real_code *)code;
 executable_functions *functions = (executable_functions *)re->executable_jit;
 pcre2_jit_stack *jit_stack;

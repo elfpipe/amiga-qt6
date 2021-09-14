@@ -46,6 +46,7 @@
 // #include <qpa/qwindowsysteminterface.h>
 
 #include <QtGui/private/qfreetypefontdatabase_p.h>
+#include <QtGui/private/qgenericunixfontdatabase_p.h>
 
 #if QT_CONFIG(fontconfig)
 #  include <QtGui/private/qgenericunixfontdatabase_p.h>
@@ -125,9 +126,9 @@ public:
             listenSignals |= 1 << d->timerPort->mp_SigBit;
         }
 
-        struct MsgPort *userPort = QAmigaIntegration::messagePort();
-        if (userPort) {
-            listenSignals |= 1 << userPort->mp_SigBit;
+        struct MsgPort *intuitionPort = QAmigaIntegration::messagePort();
+        if (intuitionPort) {
+            listenSignals |= 1 << intuitionPort->mp_SigBit;
         } else printf("No amiga windows.\n");
 
         listenSignals |= 1 << d->wakeupSignal;
@@ -146,17 +147,15 @@ public:
             nevents += d->activateTimers();
         }
 
-        if(userPort) {
-            if (caughtSignals & 1 << userPort->mp_SigBit) { //all Amiga windows use the same UserPort *
-                while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(userPort)) {
-                    if (message) {
-                        for(int i = 0; i < windows.size(); i++) {
-                            QAmigaWindow *current = windows.at(i);
-                            if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                                struct IntuiMessage messageCopy = *message;
-                                IExec->ReplyMsg((struct Message *)message);
-                                current->processIntuiMessage(&messageCopy);
-                            }
+        if(intuitionPort) {
+            if (caughtSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
+                while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
+                    for(int i = 0; i < windows.size(); i++) {
+                        QAmigaWindow *current = windows.at(i);
+                        if(current && current->intuitionWindow() == message->IDCMPWindow) {
+                            struct IntuiMessage messageCopy = *message;
+                            IExec->ReplyMsg((struct Message *)message);
+                            current->processIntuiMessage(&messageCopy);
                         }
                     }
                 }
@@ -244,9 +243,6 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
         case IDCMP_CHANGEWINDOW: {
             int x, y, w, h;
             IIntuition->GetWindowAttrs (message->IDCMPWindow, WA_Left, &x, WA_Top, &y, WA_InnerWidth, &w, WA_InnerHeight, &h, TAG_END);
-            QPoint newpos(x, y);
-            QSize newsize(w, h);
-
             const QRect newGeometry(QPoint(x, y), QSize(w, h));
 
             QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
@@ -418,7 +414,6 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
         default:
             break;
     }
-    //IExec->ReplyMsg((struct Message *)message);
 }
 
 class QCoreTextFontEngine;
@@ -461,7 +456,6 @@ QAmigaIntegration::~QAmigaIntegration()
 {
     QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
     delete m_fontDatabase;
-    // if (m_eventDispatcher) delete m_eventDispatcher; //this crashes. why?
     if (m_messagePort) IExec->FreeSysObject (ASOT_PORT, m_messagePort);
 }
 
@@ -480,6 +474,51 @@ bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) cons
     }
 }
 
+static QString themeName() { return QStringLiteral("amiga"); }
+
+QStringList QAmigaIntegration::themeNames() const
+{
+    return QStringList(themeName());
+}
+
+// Restrict the styles to "fusion" to prevent native styles requiring native
+// window handles (eg Windows Vista style) from being used.
+class AmigaTheme : public QPlatformTheme
+{
+public:
+    AmigaTheme() {}
+
+    QVariant themeHint(ThemeHint h) const override
+    {
+        switch (h) {
+        case StyleNames:
+            return QVariant(QStringList(QStringLiteral("Fusion")));
+        default:
+            break;
+        }
+        return QPlatformTheme::themeHint(h);
+    }
+
+    virtual const QFont *font(Font type = SystemFont) const override
+    {
+        static QFont systemFont(QLatin1String("Sans Serif"), 9);
+        static QFont fixedFont(QLatin1String("monospace"), 9);
+        switch (type) {
+        case QPlatformTheme::SystemFont:
+            return &systemFont;
+        case QPlatformTheme::FixedFont:
+            return &fixedFont;
+        default:
+            return nullptr;
+        }
+    }
+};
+
+QPlatformTheme *QAmigaIntegration::createPlatformTheme(const QString &name) const
+{
+    return name == themeName() ? new AmigaTheme() : nullptr;
+}
+
 // Dummy font database that does not scan the fonts directory to be
 // used for command line tools like qmlplugindump that do not create windows
 // unless DebugBackingStore is activated.
@@ -491,35 +530,34 @@ public:
 
 QPlatformFontDatabase *QAmigaIntegration::fontDatabase() const
 {
-    if (!m_fontDatabase && (m_options & EnableFonts)) {
-#if defined(Q_OS_WIN)
-        if (m_options & FreeTypeFontDatabase) {
-#  if QT_CONFIG(freetype)
-            m_fontDatabase = new QWindowsFontDatabaseFT;
-#  endif // freetype
-        } else {
-            m_fontDatabase = new QWindowsFontDatabase;
-        }
-#elif defined(Q_OS_DARWIN)
-        if (!(m_options & FontconfigDatabase)) {
-            if (m_options & FreeTypeFontDatabase) {
-#  if QT_CONFIG(freetype)
-                m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QFontEngineFT>;
-#  endif // freetype
-            } else {
-                m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QCoreTextFontEngine>;
-            }
-        }
-#endif
+    // if (!m_fontDatabase && (m_options & EnableFonts)) {
+//         if (m_options & FreeTypeFontDatabase) {
+// #  if QT_CONFIG(freetype)
+            m_fontDatabase = new QFreeTypeFontDatabase;
+// #  endif // freetype
+//         } else {
+//             m_fontDatabase = new QWindowsFontDatabase;
+//         }
+// #elif defined(Q_OS_DARWIN)
+//         if (!(m_options & FontconfigDatabase)) {
+//             if (m_options & FreeTypeFontDatabase) {
+// #  if QT_CONFIG(freetype)
+//                 m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QFontEngineFT>;
+// #  endif // freetype
+//             } else {
+//                 m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QCoreTextFontEngine>;
+//             }
+//         }
+// #endif
 
-        if (!m_fontDatabase) {
-#if QT_CONFIG(fontconfig)
+//         if (!m_fontDatabase) {
+// #if QT_CONFIG(fontconfig)
             m_fontDatabase = new QGenericUnixFontDatabase;
-#else
-            m_fontDatabase = QPlatformIntegration::fontDatabase();
-#endif
-        }
-    }
+// #else
+//             m_fontDatabase = QPlatformIntegration::fontDatabase();
+// #endif
+//         }
+//     }
     if (!m_fontDatabase)
         m_fontDatabase = new DummyFontDatabase;
     return m_fontDatabase;
@@ -527,7 +565,6 @@ QPlatformFontDatabase *QAmigaIntegration::fontDatabase() const
 
 QPlatformWindow *QAmigaIntegration::createPlatformWindow(QWindow *window) const
 {
-    Q_UNUSED(window);
     QPlatformWindow *w = new QAmigaWindow(window);
     w->requestActivateWindow();
     return w;

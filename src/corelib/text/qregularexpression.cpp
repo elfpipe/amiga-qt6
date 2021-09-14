@@ -1088,13 +1088,13 @@ static int safe_pcre2_match_16(const pcre2_code_16 *code,
     int result = pcre2_match_16(code, subject, length,
                                 startOffset, options, matchData, matchContext);
 
-    if (result == PCRE2_ERROR_JIT_STACKLIMIT && !jitStacks()->hasLocalData()) {
-        QPcreJitStackPointer *p = new QPcreJitStackPointer;
-        jitStacks()->setLocalData(p);
+    // if (result == PCRE2_ERROR_JIT_STACKLIMIT && !jitStacks()->hasLocalData()) {
+    //     QPcreJitStackPointer *p = new QPcreJitStackPointer;
+    //     jitStacks()->setLocalData(p);
 
-        result = pcre2_match_16(code, subject, length,
-                                startOffset, options, matchData, matchContext);
-    }
+    //     result = pcre2_match_16(code, subject, length,
+    //                             startOffset, options, matchData, matchContext);
+    // }
 
     return result;
 }
