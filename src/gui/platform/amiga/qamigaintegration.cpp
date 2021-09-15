@@ -181,11 +181,12 @@ QAmigaWindow::QAmigaWindow(QWindow *window)
         WA_InnerHeight, rect.height(),  
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
-        WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
+        WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
         WA_Flags, WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET | WFLG_ACTIVATE,
         WA_GimmeZeroZero, TRUE,
         WA_Title, "Qt Analog Clock",
         WA_PubScreenName, "Workbench",
+        WA_ReportMouse, TRUE,
         WA_UserPort, QAmigaIntegration::messagePort(),
         TAG_DONE );
 
@@ -227,11 +228,14 @@ Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier)
 	return ret;
 }
 
+static Qt::MouseButtons buttons = Qt::NoButton;
+
 void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
     Qt::KeyboardModifiers modifiers = qualifierToModifier(message->Qualifier);
 
     QPoint localPosition(message->MouseX - message->IDCMPWindow->BorderLeft, message->MouseY - message->IDCMPWindow->BorderTop);
-    QPoint globalPosition(message->IDCMPWindow->LeftEdge + message->MouseX, message->IDCMPWindow->TopEdge + message->MouseY);
+    QPoint globalPosition(message->IDCMPWindow->LeftEdge + message->MouseX,
+                            message->IDCMPWindow->TopEdge + message->MouseY);
 
     switch(message->Class) {
         case IDCMP_CLOSEWINDOW :
@@ -252,45 +256,48 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
         }
         break;
 
-        case IDCMP_MOUSEBUTTONS : {
+        case IDCMP_MOUSEMOVE : {
+            QWindowSystemInterface::handleMouseEvent(window(), localPosition, globalPosition, buttons, Qt::NoButton, QEvent::MouseMove, modifiers, Qt::MouseEventNotSynthesized);
+        }
+        break;
 
+        case IDCMP_MOUSEBUTTONS : {
             Qt::MouseButton button = Qt::NoButton;
-            Qt::MouseButtons buttons = Qt::NoButton;
             QEvent::Type type;
             switch(message->Code) {
-                case SELECTUP:
                 case SELECTDOWN:
                     button = Qt::LeftButton;
-                    buttons = Qt::LeftButton;
-                    break;
-                case MENUDOWN:
-                case MENUUP:
-                    button = Qt::RightButton;
-                    buttons = Qt::RightButton;
-                    break;
-                case MIDDLEDOWN:
-                case MIDDLEUP:
-                    button = Qt::MiddleButton;
-                    buttons = Qt::MiddleButton;
-                    break;
-                default:
-                    break;
-            }
-            switch(message->Code) {
-                case SELECTUP:
-                case MIDDLEUP:
-                case MENUUP:
+                    buttons |= Qt::LeftButton;
                     type = QEvent::MouseButtonPress;
                     break;
-                case MIDDLEDOWN:
-                case SELECTDOWN:
+                case SELECTUP:
+                    button = Qt::LeftButton;
+                    buttons &= ~Qt::LeftButton;
+                    type = QEvent::MouseButtonRelease;
+                    break;
                 case MENUDOWN:
+                    button = Qt::RightButton;
+                    buttons |= Qt::RightButton;
+                    type = QEvent::MouseButtonPress;
+                    break;
+                case MENUUP:
+                    button = Qt::RightButton;
+                    buttons &= ~Qt::RightButton;
+                    type = QEvent::MouseButtonRelease;
+                    break;
+                case MIDDLEDOWN:
+                    button = Qt::MiddleButton;
+                    buttons |= Qt::MiddleButton;
+                    type = QEvent::MouseButtonPress;
+                    break;
+                case MIDDLEUP:
+                    button = Qt::MiddleButton;
+                    buttons &= ~Qt::MiddleButton;
                     type = QEvent::MouseButtonRelease;
                     break;
                 default:
                     break;
             }
-
             QWindowSystemInterface::handleMouseEvent(window(), localPosition, globalPosition, buttons, button, type, modifiers, Qt::MouseEventNotSynthesized);
         }
         break;
