@@ -37,7 +37,7 @@ if(NOT HAVE_STDATOMIC)
 endif()
 
 add_library(WrapAtomic::WrapAtomic INTERFACE IMPORTED)
-if(HAVE_STDATOMIC_WITH_LIB)
+if(HAVE_STDATOMIC_WITH_LIB AND NOT AMIGA)
     target_link_libraries(WrapAtomic::WrapAtomic INTERFACE atomic)
 endif()
 
