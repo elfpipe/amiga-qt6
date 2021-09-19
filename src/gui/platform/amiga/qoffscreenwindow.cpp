@@ -96,9 +96,6 @@ void QOffscreenWindow::openWindow()
                     || window()->type() == Qt::Desktop
                     || window()->type() == Qt::SubWindow;
 
-    printf("window flags : 0x%x\n", window()->flags());
-    printf("window type : 0x%x\n", window()->type());
-
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
         WA_Left, rect.x(),
         WA_Top, rect.y(),
@@ -113,6 +110,7 @@ void QOffscreenWindow::openWindow()
         WA_ScreenTitle, "Qt 6.2.0 - welcome to true happiness... :)",
         WA_PubScreenName, "Workbench",
         WA_Borderless, frameless ? TRUE : FALSE,
+        WA_ToolBox, window()->type() == Qt::ToolTip ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
         WA_UserPort, QOffscreenIntegration::messagePort(),
         TAG_DONE );
