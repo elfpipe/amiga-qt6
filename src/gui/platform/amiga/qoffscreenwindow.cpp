@@ -37,139 +37,23 @@
 **
 ****************************************************************************/
 
-#include "qamigaintegration_p.h"
-#include "qamigabackingstore_p.h"
+#include "qoffscreenwindow_p.h"
+#include "qoffscreencommon_p.h"
+#include "qamigaeventdispatcherwindows_p.h"
 
-#include <QtGui/private/qpixmap_raster_p.h>
-#include <QtGui/private/qguiapplication_p.h>
-// #include <qpa/qplatformwindow.h>
-// #include <qpa/qwindowsysteminterface.h>
+#include <qpa/qplatformscreen.h>
+#include <qpa/qwindowsysteminterface.h>
 
-#include <QtGui/private/qfreetypefontdatabase_p.h>
-#include <QtGui/private/qgenericunixfontdatabase_p.h>
-
-#if QT_CONFIG(fontconfig)
-#  include <QtGui/private/qgenericunixfontdatabase_p.h>
-#  include <qpa/qplatformfontdatabase.h>
-#endif
-
-#if QT_CONFIG(freetype)
-#include <QtGui/private/qfontengine_ft_p.h>
-#endif
+#include <private/qwindow_p.h>
 
 #define BOOL short
 #include <proto/intuition.h>
 #include <proto/keymap.h>
 #include <proto/exec.h>
 
-#include "kernel/qguiapplication.h"
-#include "../../../corelib/kernel/qeventdispatcher_amiga_p.h"
-
 QT_BEGIN_NAMESPACE
 
-QAbstractEventDispatcher *QAmigaIntegration::m_eventDispatcher = 0;
-struct MsgPort *QAmigaIntegration::m_messagePort = 0;
-
-class QAmigaWindow;
-class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
-{
-    Q_DECLARE_PRIVATE(QEventDispatcherAMIGA)
-
-public:
-    explicit QEventDispatcherAMIGAWindows(QObject *parent = nullptr)
-        : QEventDispatcherAMIGA(parent)
-    {
-    }
-
-    void registerWindow(QAmigaWindow *window) {
-        windows << window;
-    }
-    void unregisterWindow(QAmigaWindow *window) {
-        windows.removeAt(windows.indexOf(window));
-    }
-
-    bool processEvents(QEventLoop::ProcessEventsFlags flags) override
-    {
-        Q_D(QEventDispatcherAMIGA);
-        d->interrupt.storeRelaxed(0);
-
-        // we are awake, broadcast it
-        emit awake();
-
-        auto threadData = d->threadData.loadRelaxed();
-        QCoreApplicationPrivate::sendPostedEvents(nullptr, 0, threadData);
-
-        const bool include_timers = (flags & QEventLoop::X11ExcludeTimers) == 0;
-        const bool include_notifiers = (flags & QEventLoop::ExcludeSocketNotifiers) == 0;
-        const bool wait_for_events = (flags & QEventLoop::WaitForMoreEvents) != 0;
-
-        const bool canWait = (threadData->canWaitLocked()
-                            && !d->interrupt.loadRelaxed()
-                            && wait_for_events);
-
-        if (canWait)
-            emit aboutToBlock();
-
-        if (d->interrupt.loadRelaxed())
-            return false;
-
-        struct TimeVal wait_tm = { 0, 0 };
-
-        unsigned int listenSignals = 0;
-        if (!canWait || (include_timers && d->timerList.timerWait(wait_tm))) {
-            d->timerRequest->Request.io_Command = TR_ADDREQUEST;
-            d->timerRequest->Time = wait_tm;
-
-    //        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
-
-            IExec->SendIO((struct IORequest *)d->timerRequest);
-            listenSignals |= 1 << d->timerPort->mp_SigBit;
-        }
-
-        struct MsgPort *intuitionPort = QAmigaIntegration::messagePort();
-        if (intuitionPort) {
-            listenSignals |= 1 << intuitionPort->mp_SigBit;
-        } else printf("No amiga windows.\n");
-
-        listenSignals |= 1 << d->wakeupSignal;
-
-        int nevents = 0;
-
-        unsigned int caughtSignals = IExec->Wait(listenSignals);
-
-        if (caughtSignals & 1 << d->wakeupSignal)
-            printf("WAKE UP!!!!\n");
-
-        if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
-            IExec->AbortIO((struct IORequest *)d->timerRequest);
-
-        if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
-            nevents += d->activateTimers();
-        }
-
-        if(intuitionPort) {
-            if (caughtSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
-                while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
-                    for(int i = 0; i < windows.size(); i++) {
-                        QAmigaWindow *current = windows.at(i);
-                        if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                            struct IntuiMessage messageCopy = *message;
-                            IExec->ReplyMsg((struct Message *)message);
-                            current->processIntuiMessage(&messageCopy);
-                        }
-                    }
-                }
-            }
-        }
-
-        // return true if we handled events, false otherwise
-        return QWindowSystemInterface::sendWindowSystemEvents(flags) || nevents > 0;
-    }
-private:
-    QList<QAmigaWindow *> windows;
-};
-
-QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
+QOffscreenWindow::QOffscreenWindow(QWindow *window, bool frameMarginsEnabled)
     : QPlatformWindow(window)
     , m_positionIncludesFrame(false)
     , m_visible(false)
@@ -177,7 +61,6 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
     , m_frameMarginsRequested(frameMarginsEnabled)
     , m_intuitionWindow(0)
 {
-    //from offscreen platform integration
     if (window->windowState() == Qt::WindowNoState) {
         setGeometry(windowGeometry());
     } else {
@@ -190,7 +73,15 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
     m_windowForWinIdHash[m_winId] = this;
 }
 
-void QAmigaWindow::openWindow()
+QOffscreenWindow::~QOffscreenWindow()
+{
+    if (QOffscreenScreen::windowContainingCursor == this)
+        QOffscreenScreen::windowContainingCursor = nullptr;
+    m_windowForWinIdHash.remove(m_winId);
+    closeWindow();
+}
+
+void QOffscreenWindow::openWindow()
 {
     if(m_intuitionWindow) IIntuition->CloseWindow(m_intuitionWindow);
     m_intuitionWindow = 0;
@@ -212,28 +103,23 @@ void QAmigaWindow::openWindow()
         WA_PubScreenName, "Workbench",
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
-        WA_UserPort, QAmigaIntegration::messagePort(),
+        WA_UserPort, QOffscreenIntegration::messagePort(),
         TAG_DONE );
 
-    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
+    static_cast<QEventDispatcherAMIGAWindows *>(QOffscreenIntegration::eventDispatcher())->registerWindow(this);
 
 }
 
-void QAmigaWindow::closeWindow()
+void QOffscreenWindow::closeWindow()
 {
     if(m_intuitionWindow) {
         IIntuition->CloseWindow(m_intuitionWindow);
-        static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
+        static_cast<QEventDispatcherAMIGAWindows *>(QOffscreenIntegration::eventDispatcher())->unregisterWindow(this);
         m_intuitionWindow = 0;
     }
 }
-QAmigaWindow::~QAmigaWindow()
-{
-    closeWindow();
-    m_windowForWinIdHash.remove(m_winId);
-}
 
-void QAmigaWindow::setGeometry(const QRect &rect)
+void QOffscreenWindow::setGeometry(const QRect &rect)
 {
     if (window()->windowState() != Qt::WindowNoState)
         return;
@@ -252,10 +138,10 @@ void QAmigaWindow::setGeometry(const QRect &rect)
                                 WA_InnerWidth, rect.width(),
                                 WA_InnerHeight, rect.height(),
                                 TAG_DONE);
-    QPlatformWindow::setGeometry(rect);
+
 }
 
-void QAmigaWindow::setGeometryImpl(const QRect &rect)
+void QOffscreenWindow::setGeometryImpl(const QRect &rect)
 {
     QRect adjusted = rect;
     if (adjusted.width() <= 0)
@@ -283,7 +169,7 @@ void QAmigaWindow::setGeometryImpl(const QRect &rect)
     }
 }
 
-void QAmigaWindow::setVisible(bool visible)
+void QOffscreenWindow::setVisible(bool visible)
 {
     if (visible == m_visible)
         return;
@@ -311,23 +197,23 @@ void QAmigaWindow::setVisible(bool visible)
     else closeWindow();
 }
 
-void QAmigaWindow::requestActivateWindow()
+void QOffscreenWindow::requestActivateWindow()
 {
     if (m_visible)
         QWindowSystemInterface::handleWindowActivated(window());
 }
 
-WId QAmigaWindow::winId() const
+WId QOffscreenWindow::winId() const
 {
     return m_winId;
 }
 
-QMargins QAmigaWindow::frameMargins() const
+QMargins QOffscreenWindow::frameMargins() const
 {
     return m_margins;
 }
 
-void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
+void QOffscreenWindow::setFrameMarginsEnabled(bool enabled)
 {
     //first, open dummy window to read dimensions
     struct Window *dummy = IIntuition->OpenWindowTags(0,
@@ -350,7 +236,7 @@ void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
     IIntuition->CloseWindow(dummy);
 }
 
-void QAmigaWindow::setWindowState(Qt::WindowStates state)
+void QOffscreenWindow::setWindowState(Qt::WindowStates state)
 {
     setFrameMarginsEnabled(m_frameMarginsRequested && !(state & Qt::WindowFullScreen));
     m_positionIncludesFrame = false;
@@ -367,12 +253,12 @@ void QAmigaWindow::setWindowState(Qt::WindowStates state)
     QWindowSystemInterface::handleWindowStateChanged(window(), state);
 }
 
-QAmigaWindow *QAmigaWindow::windowForWinId(WId id)
+QOffscreenWindow *QOffscreenWindow::windowForWinId(WId id)
 {
     return m_windowForWinIdHash.value(id, 0);
 }
 
-QHash<WId, QAmigaWindow *> QAmigaWindow::m_windowForWinIdHash;
+QHash<WId, QOffscreenWindow *> QOffscreenWindow::m_windowForWinIdHash;
 
 bool qt_swap_ctrl_and_amiga_keys = false;
 int qt_wheel_sensitivity = 120;
@@ -405,7 +291,7 @@ Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier)
 
 static Qt::MouseButtons buttons = Qt::NoButton;
 
-void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
+void QOffscreenWindow::processIntuiMessage(struct IntuiMessage *message) {
     Qt::KeyboardModifiers modifiers = qualifierToModifier(message->Qualifier);
 
     QPoint localPosition(message->MouseX - message->IDCMPWindow->BorderLeft, message->MouseY - message->IDCMPWindow->BorderTop);
@@ -596,177 +482,6 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
         default:
             break;
     }
-}
-
-class QCoreTextFontEngine;
-
-static const char debugBackingStoreEnvironmentVariable[] = "QT_DEBUG_BACKINGSTORE";
-
-static inline unsigned parseOptions(const QStringList &paramList)
-{
-    unsigned options = 0;
-    for (const QString &param : paramList) {
-        if (param == QLatin1String("enable_fonts"))
-            options |= QAmigaIntegration::EnableFonts;
-        else if (param == QLatin1String("freetype"))
-            options |= QAmigaIntegration::FreeTypeFontDatabase;
-        else if (param == QLatin1String("fontconfig"))
-            options |= QAmigaIntegration::FontconfigDatabase;
-    }
-    return options;
-}
-
-QAmigaIntegration::QAmigaIntegration(const QStringList &parameters)
-    : m_fontDatabase(0)
-    , m_options(parseOptions(parameters))
-{
-    if (qEnvironmentVariableIsSet(debugBackingStoreEnvironmentVariable)
-        && qEnvironmentVariableIntValue(debugBackingStoreEnvironmentVariable) > 0) {
-        m_options |= DebugBackingStore | EnableFonts;
-    }
-
-    m_primaryScreen = new QAmigaScreen();
-
-    m_primaryScreen->mGeometry = QRect(0, 0, 240, 320);
-    m_primaryScreen->mDepth = 32;
-    m_primaryScreen->mFormat = QImage::Format_ARGB32_Premultiplied;
-
-    QWindowSystemInterface::handleScreenAdded(m_primaryScreen);
-}
-
-QAmigaIntegration::~QAmigaIntegration()
-{
-    QWindowSystemInterface::handleScreenRemoved(m_primaryScreen);
-    delete m_fontDatabase;
-    if (m_messagePort) IExec->FreeSysObject (ASOT_PORT, m_messagePort);
-}
-
-struct MsgPort *QAmigaIntegration::messagePort() {
-    if(!m_messagePort) m_messagePort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
-    return m_messagePort;
-}
-
-bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) const
-{
-    switch (cap) {
-    case ThreadedPixmaps: return true;
-    case MultipleWindows: return true;
-    case RhiBasedRendering: return false;
-    default: return QPlatformIntegration::hasCapability(cap);
-    }
-}
-
-static QString themeName() { return QStringLiteral("amiga"); }
-
-QStringList QAmigaIntegration::themeNames() const
-{
-    return QStringList(themeName());
-}
-
-// Restrict the styles to "fusion" to prevent native styles requiring native
-// window handles (eg Windows Vista style) from being used.
-class AmigaTheme : public QPlatformTheme
-{
-public:
-    AmigaTheme() {}
-
-    QVariant themeHint(ThemeHint h) const override
-    {
-        switch (h) {
-        case StyleNames:
-            return QVariant(QStringList(QStringLiteral("Fusion")));
-        default:
-            break;
-        }
-        return QPlatformTheme::themeHint(h);
-    }
-
-    virtual const QFont *font(Font type = SystemFont) const override
-    {
-        static QFont systemFont(QLatin1String("Sans Serif"), 9);
-        static QFont fixedFont(QLatin1String("monospace"), 9);
-        switch (type) {
-        case QPlatformTheme::SystemFont:
-            return &systemFont;
-        case QPlatformTheme::FixedFont:
-            return &fixedFont;
-        default:
-            return nullptr;
-        }
-    }
-};
-
-QPlatformTheme *QAmigaIntegration::createPlatformTheme(const QString &name) const
-{
-    return name == themeName() ? new AmigaTheme() : nullptr;
-}
-
-// Dummy font database that does not scan the fonts directory to be
-// used for command line tools like qmlplugindump that do not create windows
-// unless DebugBackingStore is activated.
-class DummyFontDatabase : public QPlatformFontDatabase
-{
-public:
-    virtual void populateFontDatabase() override {}
-};
-
-QPlatformFontDatabase *QAmigaIntegration::fontDatabase() const
-{
-    // if (!m_fontDatabase && (m_options & EnableFonts)) {
-//         if (m_options & FreeTypeFontDatabase) {
-// #  if QT_CONFIG(freetype)
-            m_fontDatabase = new QFreeTypeFontDatabase;
-// #  endif // freetype
-//         } else {
-//             m_fontDatabase = new QWindowsFontDatabase;
-//         }
-// #elif defined(Q_OS_DARWIN)
-//         if (!(m_options & FontconfigDatabase)) {
-//             if (m_options & FreeTypeFontDatabase) {
-// #  if QT_CONFIG(freetype)
-//                 m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QFontEngineFT>;
-// #  endif // freetype
-//             } else {
-//                 m_fontDatabase = new QCoreTextFontDatabaseEngineFactory<QCoreTextFontEngine>;
-//             }
-//         }
-// #endif
-
-//         if (!m_fontDatabase) {
-// #if QT_CONFIG(fontconfig)
-            m_fontDatabase = new QGenericUnixFontDatabase;
-// #else
-//             m_fontDatabase = QPlatformIntegration::fontDatabase();
-// #endif
-//         }
-//     }
-    if (!m_fontDatabase)
-        m_fontDatabase = new DummyFontDatabase;
-    return m_fontDatabase;
-}
-
-QPlatformWindow *QAmigaIntegration::createPlatformWindow(QWindow *window) const
-{
-    QPlatformWindow *w = new QAmigaWindow(window, true);
-    w->requestActivateWindow();
-    return w;
-}
-
-QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *window) const
-{
-    return new QAmigaBackingStore(window);
-}
-
-QAbstractEventDispatcher *QAmigaIntegration::createEventDispatcher() const
-{
-    if(!m_eventDispatcher)
-        m_eventDispatcher = new QEventDispatcherAMIGAWindows;
-    return m_eventDispatcher;
-}
-
-QAmigaIntegration *QAmigaIntegration::instance()
-{
-    return static_cast<QAmigaIntegration *>(QGuiApplicationPrivate::platformIntegration());
 }
 
 QT_END_NAMESPACE
