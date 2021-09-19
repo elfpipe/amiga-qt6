@@ -142,10 +142,12 @@ void QOffscreenWindow::setGeometry(const QRect &rect)
 
     if(m_intuitionWindow)
         IIntuition->SetWindowAttrs(m_intuitionWindow,
-                                WA_Left, rect.x() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderLeft,
-                                WA_Top, rect.y() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderTop,
-                                WA_InnerWidth, rect.width(),
-                                WA_InnerHeight, rect.height(),
+                                // WA_Left, rect.x() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderLeft,
+                                // WA_Top, rect.y() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderTop,
+                                WA_Left, m_normalGeometry.x(),
+                                WA_Top, m_normalGeometry.y(),
+                                WA_InnerWidth, m_normalGeometry.width(),
+                                WA_InnerHeight, m_normalGeometry.height(),
                                 TAG_DONE);
 
 }
@@ -385,18 +387,15 @@ void QOffscreenWindow::processIntuiMessage(struct IntuiMessage *message) {
             if (message->Code == IMSGCODE_INTUIWHEELDATA) {
                 struct IntuiWheelData *data = (struct IntuiWheelData *)message->IAddress;
 
-                int deltax, deltay;
-                int orientationx, orientationy;
+                int pixeldeltax, pixeldeltay;
+                int angledeltax, angledeltay;
 
-    			if (data->WheelX) {
-                    deltax = -data->WheelX * qt_wheel_sensitivity;
-                    orientationx = 1;
-    			}
-    			if(data->WheelY) {
-                    deltay = -data->WheelY * qt_wheel_sensitivity;
-                    orientationy = 1;
-			    }
-                QWindowSystemInterface::handleWheelEvent(window(), localPosition, globalPosition, QPoint(deltax, deltay), QPoint(orientationx, orientationy), modifiers);
+                pixeldeltax = data->WheelX;
+                pixeldeltay = data->WheelY;
+                angledeltax = data->WheelX * 120;
+                angledeltay = data->WheelY * 120;
+
+                QWindowSystemInterface::handleWheelEvent(window(), localPosition, globalPosition, QPoint(pixeldeltax, pixeldeltay), QPoint(angledeltax, angledeltay), modifiers);
             }
             break;
 
