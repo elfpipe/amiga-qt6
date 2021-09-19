@@ -87,7 +87,17 @@ void QOffscreenWindow::openWindow()
     m_intuitionWindow = 0;
 
     QRect rect = windowFrameGeometry();
-    bool frameless = window()->flags() & Qt::FramelessWindowHint;
+    bool frameless = 
+                    window()->flags() & Qt::FramelessWindowHint
+                    || window()->type() == Qt::Tool
+                    || window()->type() == Qt::Popup
+                    || window()->type() == Qt::ToolTip
+                    || window()->type() == Qt::SplashScreen
+                    || window()->type() == Qt::Desktop
+                    || window()->type() == Qt::SubWindow;
+
+    printf("window flags : 0x%x\n", window()->flags());
+    printf("window type : 0x%x\n", window()->type());
 
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
         WA_Left, rect.x(),
@@ -99,7 +109,8 @@ void QOffscreenWindow::openWindow()
         WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
         WA_Flags, ( frameless ? 0 : WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET ) | WFLG_ACTIVATE,
         WA_GimmeZeroZero, TRUE,
-        WA_Title, frameless ? 0 : "Qt Analog Clock",
+        frameless ? TAG_IGNORE : WA_Title, strdup(window()->title().toLocal8Bit().constData()),
+        WA_ScreenTitle, "Qt 6.2.0 - welcome to true happiness... :)",
         WA_PubScreenName, "Workbench",
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
@@ -226,8 +237,17 @@ void QOffscreenWindow::setFrameMarginsEnabled(bool enabled)
         WA_Hidden, TRUE,
         TAG_DONE);
 
+    bool frameless = 
+            window()->flags() & Qt::FramelessWindowHint
+                    || window()->type() == Qt::Tool
+                    || window()->type() == Qt::Popup
+                    || window()->type() == Qt::ToolTip
+                    || window()->type() == Qt::SplashScreen
+                    || window()->type() == Qt::Desktop
+                    || window()->type() == Qt::SubWindow;
+
     if (enabled
-        && !(window()->flags() & Qt::FramelessWindowHint)
+        && !frameless
         && (parent() == nullptr)) {
         m_margins = QMargins(dummy->BorderLeft, dummy->BorderTop, dummy->BorderRight, dummy->BorderBottom);
     } else {

@@ -104,11 +104,12 @@ QOffscreenIntegration::~QOffscreenIntegration()
 {
     for (auto screen : std::as_const(m_screens))
         QWindowSystemInterface::handleScreenRemoved(screen);
+
+    if (m_messagePort) IExec->FreeSysObject (ASOT_PORT, m_messagePort);
 }
 
 struct MsgPort *QOffscreenIntegration::messagePort() {
-    if(!m_messagePort) m_messagePort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
-    return m_messagePort;
+    return m_messagePort ? m_messagePort : m_messagePort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
 }
 
 /*
