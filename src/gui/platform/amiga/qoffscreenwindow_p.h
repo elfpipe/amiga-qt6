@@ -47,6 +47,9 @@
 
 QT_BEGIN_NAMESPACE
 
+class QOpenGLWindowPrivate;
+class QAmigaOpenGLContext;
+
 class QOffscreenWindow : public QPlatformWindow
 {
 public:
@@ -88,6 +91,10 @@ private:
     WId m_winId;
 
     static QHash<WId, QOffscreenWindow *> m_windowForWinIdHash;
+
+public:
+    friend QOpenGLWindowPrivate;
+    friend QAmigaOpenGLContext;
 };
 
 QT_END_NAMESPACE

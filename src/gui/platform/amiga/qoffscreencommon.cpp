@@ -66,7 +66,11 @@ class QOffscreenCursor : public QPlatformCursor
 public:
     QOffscreenCursor() : m_pos(10, 10) {}
 
-    QPoint pos() const override { return m_pos; }
+    QPoint pos() const override { struct Screen *pubScreen = IIntuition->LockPubScreen(0);
+                                    QPoint mousePoint (pubScreen->MouseX, pubScreen->MouseY);
+                                    IIntuition->UnlockPubScreen(0, pubScreen);
+                                      return m_pos; }
+                                    
     void setPos(const QPoint &pos) override
     {
         m_pos = pos;
@@ -105,10 +109,14 @@ private:
 };
 
 QOffscreenScreen::QOffscreenScreen(const QOffscreenIntegration *integration)
-    : m_geometry(0, 0, 800, 600)
+    : m_geometry(0, 0, 1920, 1080)
     , m_cursor(new QOffscreenCursor)
     , m_integration(integration)
 {
+    if(m_name.length()) {
+
+    }
+
 }
 
 QPixmap QOffscreenScreen::grabWindow(WId id, int x, int y, int width, int height) const

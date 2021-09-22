@@ -50,6 +50,7 @@
 #include <QtOpenGL/QOpenGLTextureBlitter>
 #include <QtOpenGL/QOpenGLPaintDevice>
 
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -227,9 +228,11 @@ void QOpenGLWindowPrivate::initialize()
     if (!q->handle())
         qWarning("Attempted to initialize QOpenGLWindow without a platform window");
 
+   // Create the context
     context.reset(new QOpenGLContext);
     context->setShareContext(shareContext);
     context->setFormat(q->requestedFormat());
+
     if (!context->create())
         qWarning("QOpenGLWindow::beginPaint: Failed to create context");
     if (!context->makeCurrent(q))
@@ -274,7 +277,6 @@ void QOpenGLWindowPrivate::beginPaint(const QRegion &region)
     paintDevice->setSize(QSize(deviceWidth, deviceHeight));
     paintDevice->setDevicePixelRatio(q->devicePixelRatio());
     context->functions()->glViewport(0, 0, deviceWidth, deviceHeight);
-
     context->functions()->glBindFramebuffer(GL_FRAMEBUFFER, context->defaultFramebufferObject());
 
     q->paintUnderGL();

@@ -41,6 +41,7 @@
 #include "qoffscreenwindow_p.h"
 #include "qoffscreencommon_p.h"
 #include "qamigaeventdispatcherwindows_p.h"
+#include "qamigaopenglcontext_p.h"
 
 #if defined(Q_OS_UNIX)
 //#include <QtGui/private/qgenericunixeventdispatcher_p.h>
@@ -66,6 +67,7 @@
 #include <qpa/qplatforminputcontext.h>
 #include <qpa/qplatformtheme.h>
 #include <qpa/qwindowsysteminterface.h>
+#include <qpa/qplatformopenglcontext.h>
 
 #include <qpa/qplatformservices.h>
 
@@ -312,6 +314,11 @@ QPlatformDrag *QOffscreenIntegration::drag() const
 QPlatformServices *QOffscreenIntegration::services() const
 {
     return m_services.data();
+}
+
+QPlatformOpenGLContext *QOffscreenIntegration::createPlatformOpenGLContext(QOpenGLContext *context) const
+{
+    return new QAmigaOpenGLContext(context);
 }
 
 QOffscreenIntegration *QOffscreenIntegration::createOffscreenIntegration(const QStringList& paramList)

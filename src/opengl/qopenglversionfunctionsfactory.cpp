@@ -157,6 +157,7 @@ static QAbstractOpenGLFunctions *createFunctions(const QOpenGLVersionProfile &ve
     return nullptr;
 #else
     Q_UNUSED(versionProfile);
+printf("Initialized opengl functions.\n");
     return new QOpenGLFunctions_ES2;
 #endif
 }

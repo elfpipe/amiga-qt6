@@ -968,6 +968,7 @@ qt_internal_extend_target(Gui CONDITION AMIGA
         platform/amiga/qoffscreencommon.cpp
         platform/amiga/qoffscreenintegration.cpp
         platform/amiga/qoffscreenwindow.cpp
+        platform/amiga/qamigaopenglcontext.cpp
 )
 
 qt_internal_extend_target(Gui CONDITION QT_FEATURE_glib AND UNIX

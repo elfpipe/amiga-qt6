@@ -77,6 +77,7 @@ public:
     QPlatformTheme *createPlatformTheme(const QString &name) const override;
 
     static QOffscreenIntegration *createOffscreenIntegration(const QStringList& paramList);
+    QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
 
     QList<QPlatformScreen *> screens() const;
 protected:
