@@ -78,9 +78,12 @@ QOffscreenWindow::~QOffscreenWindow()
     if (QOffscreenScreen::windowContainingCursor == this)
         QOffscreenScreen::windowContainingCursor = nullptr;
     m_windowForWinIdHash.remove(m_winId);
+#ifdef __amigaos4__
     closeWindow();
+#endif
 }
 
+#ifdef __amigaos4__
 void QOffscreenWindow::openWindow()
 {
     if(m_intuitionWindow) IIntuition->CloseWindow(m_intuitionWindow);
@@ -127,6 +130,7 @@ void QOffscreenWindow::closeWindow()
         m_intuitionWindow = 0;
     }
 }
+#endif
 
 void QOffscreenWindow::setGeometry(const QRect &rect)
 {

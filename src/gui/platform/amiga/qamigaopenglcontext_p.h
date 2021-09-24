@@ -159,26 +159,59 @@ void aglViewport(GLint x, GLint y, GLsizei width, GLsizei height);
 
 class QAmigaOpenGLContext : public QPlatformOpenGLContext
 {
+private:
+    static int noContexts;
+
 public:
-    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext()
+    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), bitmap(0)
     {
         Q_UNUSED(context);
 
         if(!OGLES2Library) OGLES2Library = IExec->OpenLibrary("ogles2.library", 0);
-        if(!IOGLES2) IOGLES2 = (struct OGLES2IFace *) IExec->GetInterface(OGLES2Library, "main", 1, NULL);
+        if(!OGLES2Library) { printf("ogles2.library not found. OpenGL ES2 rendering is not possible on this platform.\n"); return; }
+        else { noContexts++;
+        IOGLES2 = (struct OGLES2IFace *) IExec->GetInterface(OGLES2Library, "main", 1, NULL); }
 
-        ULONG errCode;
-        aglContext = aglCreateContextTags(&errCode,
-            OGLES2_CCT_VSYNC, 0,
+        struct Window *dummy = IIntuition->OpenWindowTags(0,
+            WA_Width, 320,
+            WA_Height, 256,
+            WA_Hidden, TRUE,
             TAG_DONE);
+        bitmap = IGraphics->AllocBitMapTags(320,256,0,
+                                BMATags_Friend, dummy->RPort->BitMap,
+                                BMATags_Displayable, TRUE,
+                                TAG_DONE);
+        IIntuition->CloseWindow(dummy);
+        if(!bitmap) printf("Failed to allocate bitmap.\n");
+
+        if(IOGLES2) {
+            ULONG errCode = 0, disp_width, disp_height;
+            aglContext = aglCreateContextTags(&errCode, 
+                OGLES2_CCT_BITMAP, bitmap,
+				OGLES2_CCT_DEPTH,32,
+				OGLES2_CCT_STENCIL,8,
+				OGLES2_CCT_VSYNC,0,
+				OGLES2_CCT_SINGLE_GET_ERROR_MODE,1,
+				OGLES2_CCT_GET_WIDTH,&disp_width,
+				OGLES2_CCT_GET_HEIGHT,&disp_height,
+                TAG_DONE);
+            if (aglContext == 0 || errCode) {
+                printf("Error opening OpenGL context. Code : %d.\n", errCode);
+            } else aglMakeCurrent(aglContext);
+        }
+        printf("Successfully created context. (0x%x)\n", (void *)aglContext);
     }
     ~QAmigaOpenGLContext()
     {
-        aglDestroyContext(aglContext);
-        if(IOGLES2) IExec->DropInterface((struct Interface *)IOGLES2);
-        if(OGLES2Library) IExec->CloseLibrary(OGLES2Library);
-        IOGLES2 = 0;
-        OGLES2Library = 0;
+        printf("Destroy context.(0x%x)\n",(void *)aglContext);
+        if(aglContext) aglDestroyContext(aglContext);
+        if(bitmap) IGraphics->FreeBitMap(bitmap);
+        if(--noContexts == 0 && OGLES2Library) {
+            printf("Closing ogles2.library.\n");
+            if(IOGLES2) IExec->DropInterface((struct Interface *)IOGLES2);
+            IExec->CloseLibrary(OGLES2Library);
+            OGLES2Library = 0;
+        }
     }
     QSurfaceFormat format() const override
     {
@@ -192,11 +225,14 @@ public:
     void swapBuffers(QPlatformSurface *surface) override
     {
         Q_UNUSED(surface);
-        if(surface->surface()->surfaceClass() == QSurface::Window) {
-            IGraphics->BltBitMapRastPort(
+        if(surface->surface()->surfaceClass() == QSurface::Window && bitmap) {
+            QOffscreenWindow *offscreen = dynamic_cast<QOffscreenWindow *>(surface);
+            if(!offscreen) printf("Failed to find  offscreen window.\n");
+ else if(offscreen->intuitionWindow())
+             IGraphics->BltBitMapRastPort(
             bitmap,
             0, 0,
-            dynamic_cast<QOffscreenWindow *>(surface)->m_intuitionWindow->RPort,
+            offscreen->intuitionWindow()->RPort,
             0, 0,
             surface->surface()->size().width(), surface->surface()->size().height(),
             0xc0);
@@ -205,19 +241,27 @@ public:
     }
     bool makeCurrent(QPlatformSurface *surface) override
     {
-        struct Screen *workbench = IIntuition->LockPubScreen(0);
-        bitmap = IGraphics->AllocBitMapTags(surface->surface()->size().width(),surface->surface()->size().height(),0,
-                                BMATags_Friend, workbench->FirstWindow->RPort->BitMap,
-                                BMATags_Displayable, TRUE,
-                                TAG_DONE);
-        IIntuition->UnlockPubScreen(0, workbench);
-        aglMakeCurrent(aglContext);
-        aglSetBitmap(bitmap);
+        if(!IOGLES2) return false;
+        if(surface->surface()->surfaceClass() == QSurface::Window) {
+            QOffscreenWindow *offscreen = dynamic_cast<QOffscreenWindow *>(surface);
+            if(!offscreen) printf("Failed to find  offscreen window.\n");
+            else if(offscreen->intuitionWindow()) {
+                if(bitmap) IGraphics->FreeBitMap(bitmap);
+                bitmap = 0;
+                bitmap = IGraphics->AllocBitMapTags(surface->surface()->size().width(),surface->surface()->size().height(),0,
+                                    BMATags_Friend, offscreen->intuitionWindow()->RPort->BitMap,
+                                    BMATags_Displayable, TRUE,
+                                    TAG_DONE);
+                if(aglContext) aglMakeCurrent(aglContext);
+                if(bitmap) aglSetBitmap(bitmap);
+            }
+        } else if(aglContext) aglMakeCurrent(aglContext);
         return true;
     }
     void doneCurrent() override
     {
-        IGraphics->FreeBitMap(bitmap);
+        // if(bitmap) IGraphics->FreeBitMap(bitmap);
+        // bitmap = 0;
     }
     QFunctionPointer getProcAddress(const char *procName) override;
 private:

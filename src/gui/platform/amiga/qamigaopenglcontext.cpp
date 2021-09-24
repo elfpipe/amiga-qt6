@@ -1,7 +1,5 @@
 #include <proto/ogles2.h>
 #include <inline4/ogles2.h>
-struct Library *OGLES2Library = 0;
-struct OGLES2IFace *IOGLES2 = 0;
 
 void aglActiveTexture(GLenum texture) {
     glActiveTexture(texture);
@@ -571,6 +569,9 @@ void aglViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
 }
 
 #include "qamigaopenglcontext_p.h"
+int QAmigaOpenGLContext::noContexts = 0;
+struct Library *OGLES2Library;
+struct OGLES2IFace *IOGLES2;
 
 QFunctionPointer QAmigaOpenGLContext::getProcAddress(const char *procName)
 {

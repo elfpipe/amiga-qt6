@@ -111,12 +111,12 @@ static const char fragment_shader150[] =
     "in vec2 uv;"
     "out vec4 fragcolor;"
     "uniform sampler2D textureSampler;"
-    "uniform bool swizzle;"
+    "uniform int swizzle;"
     "uniform float opacity;"
     "void main() {"
     "   vec4 tmpFragColor = texture(textureSampler, uv);"
     "   tmpFragColor.a *= opacity;"
-    "   fragcolor = swizzle ? tmpFragColor.bgra : tmpFragColor;"
+    "   fragcolor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const char vertex_shader[] =
@@ -133,24 +133,24 @@ static const char vertex_shader[] =
 static const char fragment_shader[] =
     "varying highp vec2 uv;"
     "uniform sampler2D textureSampler;"
-    "uniform bool swizzle;"
+    "uniform int swizzle;"
     "uniform highp float opacity;"
     "void main() {"
     "   highp vec4 tmpFragColor = texture2D(textureSampler,uv);"
     "   tmpFragColor.a *= opacity;"
-    "   gl_FragColor = swizzle ? tmpFragColor.bgra : tmpFragColor;"
+    "   gl_FragColor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const char fragment_shader_external_oes[] =
     "#extension GL_OES_EGL_image_external : require\n"
     "varying highp vec2 uv;"
     "uniform samplerExternalOES textureSampler;\n"
-    "uniform bool swizzle;"
+    "uniform int swizzle;"
     "uniform highp float opacity;"
     "void main() {"
     "   highp vec4 tmpFragColor = texture2D(textureSampler, uv);"
     "   tmpFragColor.a *= opacity;"
-    "   gl_FragColor = swizzle ? tmpFragColor.bgra : tmpFragColor;"
+    "   gl_FragColor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const GLfloat vertex_buffer_data[] = {

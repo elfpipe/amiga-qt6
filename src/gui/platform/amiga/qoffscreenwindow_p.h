@@ -57,11 +57,13 @@ public:
     QOffscreenWindow(QWindow *window, bool frameMarginsEnabled);
     ~QOffscreenWindow();
 
+#ifdef __amigaos4__
     void processIntuiMessage(struct IntuiMessage *message);
     struct Window *intuitionWindow() { return m_intuitionWindow; }
 
     void openWindow();
     void closeWindow();
+#endif
 
     void setGeometry(const QRect &rect) override;
     void setWindowState(Qt::WindowStates states) override;
@@ -74,9 +76,6 @@ public:
     WId winId() const override;
 
     static QOffscreenWindow *windowForWinId(WId id);
-
-private:
-    struct Window *m_intuitionWindow;
 
 private:
     void setFrameMarginsEnabled(bool enabled);
@@ -92,9 +91,10 @@ private:
 
     static QHash<WId, QOffscreenWindow *> m_windowForWinIdHash;
 
-public:
-    friend QOpenGLWindowPrivate;
-    friend QAmigaOpenGLContext;
+#ifdef __amigaos4__
+private:
+    struct Window *m_intuitionWindow;
+#endif
 };
 
 QT_END_NAMESPACE
