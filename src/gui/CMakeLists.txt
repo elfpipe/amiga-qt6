@@ -963,11 +963,10 @@ qt_internal_extend_target(Gui CONDITION UNIX AND NOT AMIGA
 
 qt_internal_extend_target(Gui CONDITION AMIGA
     SOURCES
-#        platform/amiga/qamigaintegration.cpp
-#        platform/amiga/qamigabackingstore.cpp
-        platform/amiga/qoffscreencommon.cpp
-        platform/amiga/qoffscreenintegration.cpp
-        platform/amiga/qoffscreenwindow.cpp
+        platform/amiga/qamigaintegration.cpp
+        platform/amiga/qamigacommon.cpp
+        platform/amiga/qamigaintegration.cpp
+        platform/amiga/qamigawindow.cpp
         platform/amiga/qamigaopenglcontext.cpp
 )
 

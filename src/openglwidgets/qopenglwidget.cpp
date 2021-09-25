@@ -495,7 +495,7 @@ class QOpenGLWidgetPaintDevicePrivate : public QOpenGLPaintDevicePrivate
 public:
     explicit QOpenGLWidgetPaintDevicePrivate(QOpenGLWidget *widget)
         : QOpenGLPaintDevicePrivate(QSize()),
-          w(widget) { }
+          w(widget) { printf("QOpenGLWidgetPaintDevicePrivate::constructor\n");}
 
     void beginPaint() override;
     void endPaint() override;
@@ -507,7 +507,7 @@ class QOpenGLWidgetPaintDevice : public QOpenGLPaintDevice
 {
 public:
     explicit QOpenGLWidgetPaintDevice(QOpenGLWidget *widget)
-        : QOpenGLPaintDevice(*new QOpenGLWidgetPaintDevicePrivate(widget)) { }
+        : QOpenGLPaintDevice(*new QOpenGLWidgetPaintDevicePrivate(widget)) {printf("QOpenGLPaintDevice::constructor\n"); }
     void ensureActiveTarget() override;
 };
 
@@ -557,6 +557,7 @@ public:
 
 void QOpenGLWidgetPaintDevicePrivate::beginPaint()
 {
+    printf("QOpenGLWidgetPaintDevicePrivate::beginPaint()\n");
     // NB! autoFillBackground is and must be false by default. Otherwise we would clear on
     // every QPainter begin() which is not desirable. This is only for legacy use cases,
     // like using QOpenGLWidget as the viewport of a graphics view, that expect clearing
@@ -576,6 +577,7 @@ void QOpenGLWidgetPaintDevicePrivate::beginPaint()
 
 void QOpenGLWidgetPaintDevicePrivate::endPaint()
 {
+    printf("QOpenGLWidgetPaintDevicePrivate::endPaint()\n");
     QOpenGLWidgetPrivate *wd = static_cast<QOpenGLWidgetPrivate *>(QWidgetPrivate::get(w));
     if (!wd->initialized)
         return;
@@ -586,6 +588,7 @@ void QOpenGLWidgetPaintDevicePrivate::endPaint()
 
 void QOpenGLWidgetPaintDevice::ensureActiveTarget()
 {
+    printf("QOpenGLWidgetPaintDevice::ensureActiveTarget()\n");
     QOpenGLWidgetPaintDevicePrivate *d = static_cast<QOpenGLWidgetPaintDevicePrivate *>(d_ptr.data());
     QOpenGLWidgetPrivate *wd = static_cast<QOpenGLWidgetPrivate *>(QWidgetPrivate::get(d->w));
     if (!wd->initialized)
@@ -607,6 +610,7 @@ void QOpenGLWidgetPaintDevice::ensureActiveTarget()
 
 GLuint QOpenGLWidgetPrivate::textureId() const
 {
+    printf("QOpenGLWidgetPrivate::textureId()\n");
     return resolvedFbo ? resolvedFbo->texture() : (fbo ? fbo->texture() : 0);
 }
 
@@ -625,6 +629,7 @@ GLuint QOpenGLWidgetPrivate::textureId() const
 
 QPlatformTextureList::Flags QOpenGLWidgetPrivate::textureListFlags()
 {
+    printf("QOpenGLWidgetPrivate::textureListFlags()\n");
     QPlatformTextureList::Flags flags = QWidgetPrivate::textureListFlags();
     switch (textureFormat) {
     case GL_SRGB:
@@ -641,6 +646,7 @@ QPlatformTextureList::Flags QOpenGLWidgetPrivate::textureListFlags()
 
 void QOpenGLWidgetPrivate::reset()
 {
+    printf("QOpenGLWidgetPrivate::reset()\n");
     Q_Q(QOpenGLWidget);
 
     // Destroy the OpenGL resources first. These need the context to be current.
@@ -669,6 +675,7 @@ void QOpenGLWidgetPrivate::reset()
 
 void QOpenGLWidgetPrivate::recreateFbo()
 {
+    printf("QOpenGLWidgetPrivate::recreateFbo()\n");
     Q_Q(QOpenGLWidget);
 
     emit q->aboutToResize();
@@ -710,6 +717,7 @@ void QOpenGLWidgetPrivate::recreateFbo()
 
 void QOpenGLWidgetPrivate::beginCompose()
 {
+    printf("QOpenGLWidgetPrivate::beginCompose()\n");
     Q_Q(QOpenGLWidget);
     if (flushPending) {
         flushPending = false;
@@ -722,12 +730,14 @@ void QOpenGLWidgetPrivate::beginCompose()
 
 void QOpenGLWidgetPrivate::endCompose()
 {
+    printf("QOpenGLWidgetPrivate::endCompose()\n");
     Q_Q(QOpenGLWidget);
     emit q->frameSwapped();
 }
 
 void QOpenGLWidgetPrivate::initialize()
 {
+    printf("QOpenGLWidgetPrivate::initialize()\n");
     Q_Q(QOpenGLWidget);
     if (initialized)
         return;
@@ -801,6 +811,7 @@ void QOpenGLWidgetPrivate::initialize()
 
 void QOpenGLWidgetPrivate::resolveSamples()
 {
+    printf("QOpenGLWidgetPrivate::resolveSamples()\n");
     Q_Q(QOpenGLWidget);
     if (resolvedFbo) {
         q->makeCurrent();
@@ -812,6 +823,7 @@ void QOpenGLWidgetPrivate::resolveSamples()
 
 void QOpenGLWidgetPrivate::invokeUserPaint()
 {
+    printf("QOpenGLWidgetPrivate::invokeUserPaint()\n");
     Q_Q(QOpenGLWidget);
 
     QOpenGLContext *ctx = QOpenGLContext::currentContext();
@@ -831,6 +843,7 @@ void QOpenGLWidgetPrivate::invokeUserPaint()
 
 void QOpenGLWidgetPrivate::render()
 {
+    printf("QOpenGLWidgetPrivate::render()\n");
     Q_Q(QOpenGLWidget);
 
     if (fakeHidden || !initialized)
@@ -848,6 +861,7 @@ void QOpenGLWidgetPrivate::render()
 
 void QOpenGLWidgetPrivate::invalidateFbo()
 {
+    printf("QOpenGLWidgetPrivate::invalidateFbo()\n");
     QOpenGLExtensions *f = static_cast<QOpenGLExtensions *>(QOpenGLContext::currentContext()->functions());
     if (f->hasOpenGLExtension(QOpenGLExtensions::DiscardFramebuffer)) {
         const int gl_color_attachment0 = 0x8CE0;  // GL_COLOR_ATTACHMENT0
@@ -874,6 +888,7 @@ void QOpenGLWidgetPrivate::invalidateFbo()
 
 QImage QOpenGLWidgetPrivate::grabFramebuffer()
 {
+    printf("QOpenGLWidgetPrivate::grabFramebuffer()\n");
     Q_Q(QOpenGLWidget);
 
     initialize();
@@ -908,6 +923,7 @@ QImage QOpenGLWidgetPrivate::grabFramebuffer()
 
 void QOpenGLWidgetPrivate::initializeViewportFramebuffer()
 {
+    printf("QOpenGLWidgetPrivate::initializeViewportFramebuffer()\n");
     Q_Q(QOpenGLWidget);
     // Legacy behavior for compatibility with QGLWidget when used as a graphics view
     // viewport: enable clearing on each painter begin.
@@ -916,6 +932,7 @@ void QOpenGLWidgetPrivate::initializeViewportFramebuffer()
 
 void QOpenGLWidgetPrivate::resizeViewportFramebuffer()
 {
+    printf("QOpenGLWidgetPrivate::resizeViewportFramebuffer()\n");
     Q_Q(QOpenGLWidget);
     if (!initialized)
         return;
@@ -932,6 +949,7 @@ void QOpenGLWidgetPrivate::resizeViewportFramebuffer()
 QOpenGLWidget::QOpenGLWidget(QWidget *parent, Qt::WindowFlags f)
     : QWidget(*(new QOpenGLWidgetPrivate), parent, f)
 {
+    printf("QOpenGLWidget::constructor\n");
     Q_D(QOpenGLWidget);
     if (Q_UNLIKELY(!QGuiApplicationPrivate::platformIntegration()->hasCapability(QPlatformIntegration::RasterGLSurface)))
         qWarning("QOpenGLWidget is not supported on this platform.");
@@ -958,6 +976,7 @@ QOpenGLWidget::QOpenGLWidget(QWidget *parent, Qt::WindowFlags f)
 */
 QOpenGLWidget::~QOpenGLWidget()
 {
+    printf("QOpenGLWidget::destructor\n");
     Q_D(QOpenGLWidget);
     d->reset();
 }
@@ -968,6 +987,7 @@ QOpenGLWidget::~QOpenGLWidget()
 */
 void QOpenGLWidget::setUpdateBehavior(UpdateBehavior updateBehavior)
 {
+    printf("QOpenGLWidget::setUpdateBehavior()\n");
     Q_D(QOpenGLWidget);
     d->updateBehavior = updateBehavior;
 }
@@ -978,6 +998,7 @@ void QOpenGLWidget::setUpdateBehavior(UpdateBehavior updateBehavior)
 */
 QOpenGLWidget::UpdateBehavior QOpenGLWidget::updateBehavior() const
 {
+    printf("QOpenGLWidget::updateBehavior()\n");
     Q_D(const QOpenGLWidget);
     return d->updateBehavior;
 }
@@ -1001,6 +1022,7 @@ QOpenGLWidget::UpdateBehavior QOpenGLWidget::updateBehavior() const
  */
 void QOpenGLWidget::setFormat(const QSurfaceFormat &format)
 {
+    printf("QOpenGLWidget::setFormat()\n");
     Q_D(QOpenGLWidget);
     if (Q_UNLIKELY(d->initialized)) {
         qWarning("QOpenGLWidget: Already initialized, setting the format has no effect");
@@ -1028,6 +1050,7 @@ void QOpenGLWidget::setFormat(const QSurfaceFormat &format)
  */
 QSurfaceFormat QOpenGLWidget::format() const
 {
+    printf("QOpenGLWidget::format()\n");
     Q_D(const QOpenGLWidget);
     return d->initialized ? d->context->format() : d->requestedFormat;
 }
@@ -1050,6 +1073,7 @@ QSurfaceFormat QOpenGLWidget::format() const
  */
 void QOpenGLWidget::setTextureFormat(GLenum texFormat)
 {
+    printf("QOpenGLWidget::setTextureFormat()\n");
     Q_D(QOpenGLWidget);
     if (Q_UNLIKELY(d->initialized)) {
         qWarning("QOpenGLWidget: Already initialized, setting the internal texture format has no effect");
@@ -1069,6 +1093,7 @@ void QOpenGLWidget::setTextureFormat(GLenum texFormat)
  */
 GLenum QOpenGLWidget::textureFormat() const
 {
+    printf("QOpenGLWidget::textureFormat()\n");
     Q_D(const QOpenGLWidget);
     return d->textureFormat;
 }
@@ -1080,6 +1105,7 @@ GLenum QOpenGLWidget::textureFormat() const
 */
 bool QOpenGLWidget::isValid() const
 {
+    printf("QOpenGLWidget::isValid()\n");
     Q_D(const QOpenGLWidget);
     return d->initialized && d->context->isValid();
 }
@@ -1096,6 +1122,7 @@ bool QOpenGLWidget::isValid() const
  */
 void QOpenGLWidget::makeCurrent()
 {
+    printf("QOpenGLWidget::makeCurrent()\n");
     Q_D(QOpenGLWidget);
     if (!d->initialized)
         return;
@@ -1115,6 +1142,7 @@ void QOpenGLWidget::makeCurrent()
  */
 void QOpenGLWidget::doneCurrent()
 {
+    printf("QOpenGLWidget::doneCurrent()\n");
     Q_D(QOpenGLWidget);
     if (!d->initialized)
         return;
@@ -1132,6 +1160,7 @@ void QOpenGLWidget::doneCurrent()
  */
 QOpenGLContext *QOpenGLWidget::context() const
 {
+    printf("QOpenGLWidget::context()\n");
     Q_D(const QOpenGLWidget);
     return d->context;
 }
@@ -1150,6 +1179,7 @@ QOpenGLContext *QOpenGLWidget::context() const
  */
 GLuint QOpenGLWidget::defaultFramebufferObject() const
 {
+    printf("QOpenGLWidget::defaultFramebufferObject()\n");
     Q_D(const QOpenGLWidget);
     return d->fbo ? d->fbo->handle() : 0;
 }
@@ -1169,6 +1199,7 @@ GLuint QOpenGLWidget::defaultFramebufferObject() const
 */
 void QOpenGLWidget::initializeGL()
 {
+    printf("QOpenGLWidget::initializeGL()\n");
 }
 
 /*!
@@ -1184,6 +1215,7 @@ void QOpenGLWidget::initializeGL()
 */
 void QOpenGLWidget::resizeGL(int w, int h)
 {
+    printf("QOpenGLWidget::resizeGL()\n");
     Q_UNUSED(w);
     Q_UNUSED(h);
 }
@@ -1204,6 +1236,7 @@ void QOpenGLWidget::resizeGL(int w, int h)
 */
 void QOpenGLWidget::paintGL()
 {
+    printf("QOpenGLWidget::paintGL()\n");
 }
 
 /*!
@@ -1217,6 +1250,7 @@ void QOpenGLWidget::paintGL()
 */
 void QOpenGLWidget::resizeEvent(QResizeEvent *e)
 {
+    printf("QOpenGLWidget::resizeEvent()\n");
     Q_D(QOpenGLWidget);
 
     if (e->size().isEmpty()) {
@@ -1247,6 +1281,7 @@ void QOpenGLWidget::resizeEvent(QResizeEvent *e)
 */
 void QOpenGLWidget::paintEvent(QPaintEvent *e)
 {
+    printf("QOpenGLWidget::paintEvent()\n");
     Q_UNUSED(e);
     Q_D(QOpenGLWidget);
     if (!d->initialized)
@@ -1264,6 +1299,7 @@ void QOpenGLWidget::paintEvent(QPaintEvent *e)
 */
 QImage QOpenGLWidget::grabFramebuffer()
 {
+    printf("QOpenGLWidget::grabFramebuffer()\n");
     Q_D(QOpenGLWidget);
     return d->grabFramebuffer();
 }
@@ -1273,6 +1309,7 @@ QImage QOpenGLWidget::grabFramebuffer()
 */
 int QOpenGLWidget::metric(QPaintDevice::PaintDeviceMetric metric) const
 {
+    printf("QOpenGLWidget::metric()\n");
     Q_D(const QOpenGLWidget);
     if (d->inBackingStorePaint)
         return QWidget::metric(metric);
@@ -1343,6 +1380,7 @@ int QOpenGLWidget::metric(QPaintDevice::PaintDeviceMetric metric) const
 */
 QPaintDevice *QOpenGLWidget::redirected(QPoint *p) const
 {
+    printf("QOpenGLWidget::redirected()\n");
     Q_D(const QOpenGLWidget);
     if (d->inBackingStorePaint)
         return QWidget::redirected(p);
@@ -1355,6 +1393,7 @@ QPaintDevice *QOpenGLWidget::redirected(QPoint *p) const
 */
 QPaintEngine *QOpenGLWidget::paintEngine() const
 {
+    printf("QOpenGLWidget::paintEngine()\n");
     Q_D(const QOpenGLWidget);
     // QWidget needs to "punch a hole" into the backingstore. This needs the
     // normal paint engine and device, not the GL one. So in this mode, behave
@@ -1373,6 +1412,7 @@ QPaintEngine *QOpenGLWidget::paintEngine() const
 */
 bool QOpenGLWidget::event(QEvent *e)
 {
+    printf("QOpenGLWidget::event()\n");
     Q_D(QOpenGLWidget);
     switch (e->type()) {
     case QEvent::WindowChangeInternal:

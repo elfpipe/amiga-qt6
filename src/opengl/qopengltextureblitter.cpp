@@ -116,7 +116,7 @@ static const char fragment_shader150[] =
     "void main() {"
     "   vec4 tmpFragColor = texture(textureSampler, uv);"
     "   tmpFragColor.a *= opacity;"
-    "   fragcolor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
+    "   fragcolor = swizzle != 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const char vertex_shader[] =
@@ -138,7 +138,7 @@ static const char fragment_shader[] =
     "void main() {"
     "   highp vec4 tmpFragColor = texture2D(textureSampler,uv);"
     "   tmpFragColor.a *= opacity;"
-    "   gl_FragColor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
+    "   gl_FragColor = swizzle != 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const char fragment_shader_external_oes[] =
@@ -150,7 +150,7 @@ static const char fragment_shader_external_oes[] =
     "void main() {"
     "   highp vec4 tmpFragColor = texture2D(textureSampler, uv);"
     "   tmpFragColor.a *= opacity;"
-    "   gl_FragColor = swizzle > 0 ? tmpFragColor.bgra : tmpFragColor;"
+    "   gl_FragColor = swizzle != 0 ? tmpFragColor.bgra : tmpFragColor;"
     "}";
 
 static const GLfloat vertex_buffer_data[] = {

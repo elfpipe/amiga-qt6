@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QOFFSCREENWINDOW_H
-#define QOFFSCREENWINDOW_H
+#ifndef QAmigaWINDOW_H
+#define QAmigaWINDOW_H
 
 #include <qpa/qplatformbackingstore.h>
 #include <qpa/qplatformwindow.h>
@@ -50,12 +50,12 @@ QT_BEGIN_NAMESPACE
 class QOpenGLWindowPrivate;
 class QAmigaOpenGLContext;
 
-class QOffscreenWindow : public QPlatformWindow
+class QAmigaWindow : public QPlatformWindow
 {
 public:
 
-    QOffscreenWindow(QWindow *window, bool frameMarginsEnabled);
-    ~QOffscreenWindow();
+    QAmigaWindow(QWindow *window, bool frameMarginsEnabled);
+    ~QAmigaWindow();
 
 #ifdef __amigaos4__
     void processIntuiMessage(struct IntuiMessage *message);
@@ -75,7 +75,7 @@ public:
 
     WId winId() const override;
 
-    static QOffscreenWindow *windowForWinId(WId id);
+    static QAmigaWindow *windowForWinId(WId id);
 
 private:
     void setFrameMarginsEnabled(bool enabled);
@@ -89,7 +89,7 @@ private:
     bool m_frameMarginsRequested;
     WId m_winId;
 
-    static QHash<WId, QOffscreenWindow *> m_windowForWinIdHash;
+    static QHash<WId, QAmigaWindow *> m_windowForWinIdHash;
 
 #ifdef __amigaos4__
 private:

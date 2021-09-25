@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QOFFSCREENCOMMON_H
-#define QOFFSCREENCOMMON_H
+#ifndef QAmigaCOMMON_H
+#define QAmigaCOMMON_H
 
 #include <qpa/qplatformbackingstore.h>
 #if QT_CONFIG(draganddrop)
@@ -55,11 +55,11 @@
 
 QT_BEGIN_NAMESPACE
 
-class QOffscreenIntegration;
-class QOffscreenScreen : public QPlatformScreen
+class QAmigaIntegration;
+class QAmigaScreen : public QPlatformScreen
 {
 public:
-    QOffscreenScreen(const QOffscreenIntegration *integration);
+    QAmigaScreen(const QAmigaIntegration *integration);
 
     QRect geometry() const override { return m_geometry; }
     int depth() const override { return 32; }
@@ -82,22 +82,22 @@ public:
     int m_logicalBaseDpi= 96;
     qreal m_dpr = 1;
     QScopedPointer<QPlatformCursor> m_cursor;
-    const QOffscreenIntegration *m_integration;
+    const QAmigaIntegration *m_integration;
 };
 
 #if QT_CONFIG(draganddrop)
-class QOffscreenDrag : public QPlatformDrag
+class QAmigaDrag : public QPlatformDrag
 {
 public:
     Qt::DropAction drag(QDrag *) override { return Qt::IgnoreAction; }
 };
 #endif
 
-class QOffscreenBackingStore : public QPlatformBackingStore
+class QAmigaBackingStore : public QPlatformBackingStore
 {
 public:
-    QOffscreenBackingStore(QWindow *window);
-    ~QOffscreenBackingStore();
+    QAmigaBackingStore(QWindow *window);
+    ~QAmigaBackingStore();
 
     QPaintDevice *paintDevice() override;
     void flush(QWindow *window, const QRegion &region, const QPoint &offset) override;
@@ -106,7 +106,7 @@ public:
 
     QPixmap grabWindow(WId window, const QRect &rect) const;
 
-    static QOffscreenBackingStore *backingStoreForWinId(WId id);
+    static QAmigaBackingStore *backingStoreForWinId(WId id);
 
 private:
     void clearHash();
@@ -114,13 +114,13 @@ private:
     QImage m_image;
     QHash<WId, QRect> m_windowAreaHash;
 
-    static QHash<WId, QOffscreenBackingStore *> m_backingStoreForWinIdHash;
+    static QHash<WId, QAmigaBackingStore *> m_backingStoreForWinIdHash;
 };
 
-class QOffscreenPlatformNativeInterface : public QPlatformNativeInterface
+class QAmigaPlatformNativeInterface : public QPlatformNativeInterface
 {
 public:
-    ~QOffscreenPlatformNativeInterface();
+    ~QAmigaPlatformNativeInterface();
 };
 
 QT_END_NAMESPACE

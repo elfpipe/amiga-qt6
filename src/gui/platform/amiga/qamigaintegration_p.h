@@ -37,111 +37,64 @@
 **
 ****************************************************************************/
 
-#ifndef QPLATFORMINTEGRATION_AMIGA_H
-#define QPLATFORMINTEGRATION_AMIGA_H
+#ifndef QAmigaINTEGRATION_H
+#define QAmigaINTEGRATION_H
 
 #include <qpa/qplatformintegration.h>
-#include <qpa/qplatformscreen.h>
-#include <qpa/qplatformwindow.h>
-#include <qpa/qplatformtheme.h>
+#include <qpa/qplatformnativeinterface.h>
 
-#include <private/qwindow_p.h>
+#include <qscopedpointer.h>
 
 QT_BEGIN_NAMESPACE
 
-class QAmigaWindow : public QPlatformWindow
-{
-public:
-    explicit QAmigaWindow(QWindow *window, bool frameMarginEnabled);
-    virtual ~QAmigaWindow();
+class QAmigaBackendData;
 
-    void processIntuiMessage(struct IntuiMessage *message);
-    struct Window *intuitionWindow() { return m_intuitionWindow; }
-
-    void openWindow();
-    void closeWindow();
-
-    void setGeometry(const QRect &rect) override;
-    void setWindowState(Qt::WindowStates states) override;
-
-    QMargins frameMargins() const override;
-
-    void setVisible(bool visible) override;
-    void requestActivateWindow() override;
-
-    WId winId() const override;
-
-    static QAmigaWindow *windowForWinId(WId id);
-
-private:
-    struct Window *m_intuitionWindow;
-
-private:
-    void setFrameMarginsEnabled(bool enabled);
-    void setGeometryImpl(const QRect &rect);
-
-    QRect m_normalGeometry;
-    QMargins m_margins;
-    bool m_positionIncludesFrame;
-    bool m_visible;
-    bool m_pendingGeometryChangeOnShow;
-    bool m_frameMarginsRequested;
-    WId m_winId;
-
-    static QHash<WId, QAmigaWindow *> m_windowForWinIdHash;
-};
-
-class QAmigaScreen : public QPlatformScreen
-{
-public:
-    QAmigaScreen()
-        : mDepth(32), mFormat(QImage::Format_ARGB32_Premultiplied) {}
-
-    QRect geometry() const override { return mGeometry; }
-    int depth() const override { return mDepth; }
-    QImage::Format format() const override { return mFormat; }
-
-public:
-    QRect mGeometry;
-    int mDepth;
-    QImage::Format mFormat;
-    QSize mPhysicalSize;
-};
-
-class AbstractEventDispatcher;
 class QAmigaIntegration : public QPlatformIntegration
 {
 public:
-    enum Options { // Options to be passed on command line or determined from environment
-        DebugBackingStore = 0x1,
-        EnableFonts = 0x2,
-        FreeTypeFontDatabase = 0x4,
-        FontconfigDatabase = 0x8
-    };
-
-    explicit QAmigaIntegration(const QStringList &parameters);
+    QAmigaIntegration();
     ~QAmigaIntegration();
 
+    void configure(const QStringList& paramList);
+    void initialize() override;
     bool hasCapability(QPlatformIntegration::Capability cap) const override;
+
+    QPlatformWindow *createPlatformWindow(QWindow *window) const override;
+    QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
+#if QT_CONFIG(draganddrop)
+    QPlatformDrag *drag() const override;
+#endif
+
+    QPlatformInputContext *inputContext() const override;
+    QPlatformServices *services() const override;
+
     QPlatformFontDatabase *fontDatabase() const override;
+    QAbstractEventDispatcher *createEventDispatcher() const override;
+
+    QPlatformNativeInterface *nativeInterface() const override;
 
     QStringList themeNames() const override;
     QPlatformTheme *createPlatformTheme(const QString &name) const override;
 
-    QPlatformWindow *createPlatformWindow(QWindow *window) const override;
-    QPlatformBackingStore *createPlatformBackingStore(QWindow *window) const override;
-    QAbstractEventDispatcher *createEventDispatcher() const override;
+    static QAmigaIntegration *createAmigaIntegration(const QStringList& paramList);
+    QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
 
-    unsigned options() const { return m_options; }
+    QList<QPlatformScreen *> screens() const;
+protected:
+    QScopedPointer<QPlatformFontDatabase> m_fontDatabase;
+#if QT_CONFIG(draganddrop)
+    QScopedPointer<QPlatformDrag> m_drag;
+#endif
+    QScopedPointer<QPlatformInputContext> m_inputContext;
+    QScopedPointer<QPlatformServices> m_services;
+    mutable QScopedPointer<QPlatformNativeInterface> m_nativeInterface;
+    QList<QPlatformScreen *> m_screens;
+    bool m_windowFrameMarginsEnabled = true;
 
-    static QAmigaIntegration *instance();
-    static QAbstractEventDispatcher *eventDispatcher() { return m_eventDispatcher; }
+public:
     static struct MsgPort *messagePort();
-
+    static QAbstractEventDispatcher *eventDispatcher() { return m_eventDispatcher; }
 private:
-    mutable QPlatformFontDatabase *m_fontDatabase;
-    QAmigaScreen *m_primaryScreen;
-    unsigned m_options;
     static QAbstractEventDispatcher *m_eventDispatcher;
     static struct MsgPort *m_messagePort;
 };

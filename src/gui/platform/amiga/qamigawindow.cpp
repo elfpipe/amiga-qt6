@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#include "qoffscreenwindow_p.h"
-#include "qoffscreencommon_p.h"
+#include "qamigawindow_p.h"
+#include "qamigacommon_p.h"
 #include "qamigaeventdispatcherwindows_p.h"
 
 #include <qpa/qplatformscreen.h>
@@ -53,7 +53,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QOffscreenWindow::QOffscreenWindow(QWindow *window, bool frameMarginsEnabled)
+QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
     : QPlatformWindow(window)
     , m_positionIncludesFrame(false)
     , m_visible(false)
@@ -73,10 +73,10 @@ QOffscreenWindow::QOffscreenWindow(QWindow *window, bool frameMarginsEnabled)
     m_windowForWinIdHash[m_winId] = this;
 }
 
-QOffscreenWindow::~QOffscreenWindow()
+QAmigaWindow::~QAmigaWindow()
 {
-    if (QOffscreenScreen::windowContainingCursor == this)
-        QOffscreenScreen::windowContainingCursor = nullptr;
+    if (QAmigaScreen::windowContainingCursor == this)
+        QAmigaScreen::windowContainingCursor = nullptr;
     m_windowForWinIdHash.remove(m_winId);
 #ifdef __amigaos4__
     closeWindow();
@@ -84,10 +84,12 @@ QOffscreenWindow::~QOffscreenWindow()
 }
 
 #ifdef __amigaos4__
-void QOffscreenWindow::openWindow()
+void QAmigaWindow::openWindow()
 {
     if(m_intuitionWindow) IIntuition->CloseWindow(m_intuitionWindow);
     m_intuitionWindow = 0;
+
+    //if(window()->surfaceType() == QSurface::Offscreen) return;
 
     QRect rect = windowFrameGeometry();
     bool frameless = 
@@ -115,24 +117,24 @@ void QOffscreenWindow::openWindow()
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ToolBox, window()->type() == Qt::ToolTip ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
-        WA_UserPort, QOffscreenIntegration::messagePort(),
+        WA_UserPort, QAmigaIntegration::messagePort(),
         TAG_DONE );
 
-    static_cast<QEventDispatcherAMIGAWindows *>(QOffscreenIntegration::eventDispatcher())->registerWindow(this);
+    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
 
 }
 
-void QOffscreenWindow::closeWindow()
+void QAmigaWindow::closeWindow()
 {
     if(m_intuitionWindow) {
         IIntuition->CloseWindow(m_intuitionWindow);
-        static_cast<QEventDispatcherAMIGAWindows *>(QOffscreenIntegration::eventDispatcher())->unregisterWindow(this);
+        static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
         m_intuitionWindow = 0;
     }
 }
 #endif
 
-void QOffscreenWindow::setGeometry(const QRect &rect)
+void QAmigaWindow::setGeometry(const QRect &rect)
 {
     if (window()->windowState() != Qt::WindowNoState)
         return;
@@ -156,7 +158,7 @@ void QOffscreenWindow::setGeometry(const QRect &rect)
 
 }
 
-void QOffscreenWindow::setGeometryImpl(const QRect &rect)
+void QAmigaWindow::setGeometryImpl(const QRect &rect)
 {
     QRect adjusted = rect;
     if (adjusted.width() <= 0)
@@ -184,7 +186,7 @@ void QOffscreenWindow::setGeometryImpl(const QRect &rect)
     }
 }
 
-void QOffscreenWindow::setVisible(bool visible)
+void QAmigaWindow::setVisible(bool visible)
 {
     if (visible == m_visible)
         return;
@@ -212,23 +214,23 @@ void QOffscreenWindow::setVisible(bool visible)
     else closeWindow();
 }
 
-void QOffscreenWindow::requestActivateWindow()
+void QAmigaWindow::requestActivateWindow()
 {
     if (m_visible)
         QWindowSystemInterface::handleWindowActivated(window());
 }
 
-WId QOffscreenWindow::winId() const
+WId QAmigaWindow::winId() const
 {
     return m_winId;
 }
 
-QMargins QOffscreenWindow::frameMargins() const
+QMargins QAmigaWindow::frameMargins() const
 {
     return m_margins;
 }
 
-void QOffscreenWindow::setFrameMarginsEnabled(bool enabled)
+void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
 {
     //first, open dummy window to read dimensions
     struct Window *dummy = IIntuition->OpenWindowTags(0,
@@ -260,7 +262,7 @@ void QOffscreenWindow::setFrameMarginsEnabled(bool enabled)
     IIntuition->CloseWindow(dummy);
 }
 
-void QOffscreenWindow::setWindowState(Qt::WindowStates state)
+void QAmigaWindow::setWindowState(Qt::WindowStates state)
 {
     setFrameMarginsEnabled(m_frameMarginsRequested && !(state & Qt::WindowFullScreen));
     m_positionIncludesFrame = false;
@@ -277,12 +279,12 @@ void QOffscreenWindow::setWindowState(Qt::WindowStates state)
     QWindowSystemInterface::handleWindowStateChanged(window(), state);
 }
 
-QOffscreenWindow *QOffscreenWindow::windowForWinId(WId id)
+QAmigaWindow *QAmigaWindow::windowForWinId(WId id)
 {
     return m_windowForWinIdHash.value(id, 0);
 }
 
-QHash<WId, QOffscreenWindow *> QOffscreenWindow::m_windowForWinIdHash;
+QHash<WId, QAmigaWindow *> QAmigaWindow::m_windowForWinIdHash;
 
 bool qt_swap_ctrl_and_amiga_keys = false;
 int qt_wheel_sensitivity = 120;
@@ -315,7 +317,7 @@ Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier)
 
 static Qt::MouseButtons buttons = Qt::NoButton;
 
-void QOffscreenWindow::processIntuiMessage(struct IntuiMessage *message) {
+void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
     Qt::KeyboardModifiers modifiers = qualifierToModifier(message->Qualifier);
 
     QPoint localPosition(message->MouseX - message->IDCMPWindow->BorderLeft, message->MouseY - message->IDCMPWindow->BorderTop);

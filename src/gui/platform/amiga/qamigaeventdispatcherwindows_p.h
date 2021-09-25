@@ -1,9 +1,9 @@
 #ifndef QAMIGAEVENTDISPATCHERWINDOWS_p_h
 #define QAMIGAEVENTDISPTACHERWINDOWS_p_h
 
-#include "qoffscreenintegration_p.h"
-#include "qoffscreenwindow_p.h"
-#include "qoffscreencommon_p.h"
+#include "qamigaintegration_p.h"
+#include "qamigawindow_p.h"
+#include "qamigacommon_p.h"
 
 #include "../../../corelib/kernel/qeventdispatcher_amiga_p.h"
 
@@ -12,7 +12,7 @@
 
 #include <proto/intuition.h>
 
-class QOffscreenWindow;
+class QAmigaWindow;
 class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
 {
     Q_DECLARE_PRIVATE(QEventDispatcherAMIGA)
@@ -23,10 +23,10 @@ public:
     {
     }
 
-    void registerWindow(QOffscreenWindow *window) {
+    void registerWindow(QAmigaWindow *window) {
         windows << window;
     }
-    void unregisterWindow(QOffscreenWindow *window) {
+    void unregisterWindow(QAmigaWindow *window) {
         windows.removeAt(windows.indexOf(window));
     }
 
@@ -68,7 +68,7 @@ public:
             listenSignals |= 1 << d->timerPort->mp_SigBit;
         }
 
-        struct MsgPort *intuitionPort = QOffscreenIntegration::messagePort();
+        struct MsgPort *intuitionPort = QAmigaIntegration::messagePort();
         if (intuitionPort) {
             listenSignals |= 1 << intuitionPort->mp_SigBit;
         } else printf("No amiga windows.\n");
@@ -93,7 +93,7 @@ public:
             if (caughtSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
                 while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
                     for(int i = 0; i < windows.size(); i++) {
-                        QOffscreenWindow *current = windows.at(i);
+                        QAmigaWindow *current = windows.at(i);
                         if(current && current->intuitionWindow() == message->IDCMPWindow) {
                             struct IntuiMessage messageCopy = *message;
                             IExec->ReplyMsg((struct Message *)message);
@@ -108,7 +108,7 @@ public:
         return QWindowSystemInterface::sendWindowSystemEvents(flags) || nevents > 0;
     }
 private:
-    QList<QOffscreenWindow *> windows;
+    QList<QAmigaWindow *> windows;
 };
 
 #endif

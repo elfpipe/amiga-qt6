@@ -415,6 +415,7 @@ bool QOpenGLFramebufferObjectFormat::operator!=(const QOpenGLFramebufferObjectFo
     return !(*this == other);
 }
 
+#include <iostream>
 bool QOpenGLFramebufferObjectPrivate::checkFramebufferStatus(QOpenGLContext *ctx) const
 {
     if (!ctx)
@@ -425,46 +426,46 @@ bool QOpenGLFramebufferObjectPrivate::checkFramebufferStatus(QOpenGLContext *ctx
     case GL_FRAMEBUFFER_COMPLETE:
         return true;
     case GL_FRAMEBUFFER_UNSUPPORTED:
-        qDebug("QOpenGLFramebufferObject: Unsupported framebuffer format.");
+        qWarning("QOpenGLFramebufferObject: Unsupported framebuffer format.");
         break;
     case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete attachment.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete attachment.");
         break;
     case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, missing attachment.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, missing attachment.");
         break;
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_DUPLICATE_ATTACHMENT
     case GL_FRAMEBUFFER_INCOMPLETE_DUPLICATE_ATTACHMENT:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, duplicate attachment.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, duplicate attachment.");
         break;
 #endif
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS
     case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, attached images must have same dimensions.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, attached images must have same dimensions.");
         break;
 #endif
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_FORMATS
     case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, attached images must have same format.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, attached images must have same format.");
         break;
 #endif
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER
     case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, missing draw buffer.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, missing draw buffer.");
         break;
 #endif
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER
     case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, missing read buffer.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, missing read buffer.");
         break;
 #endif
 #ifdef GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE
     case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
-        qDebug("QOpenGLFramebufferObject: Framebuffer incomplete, attachments must have same number of samples per pixel.");
+        qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, attachments must have same number of samples per pixel.");
         break;
 #endif
     default:
-        qDebug() <<"QOpenGLFramebufferObject: An undefined error has occurred: "<< status;
+        std::cout <<"QOpenGLFramebufferObject: An undefined error has occurred: "<< (int)status;
         break;
     }
     return false;
@@ -500,8 +501,10 @@ void QOpenGLFramebufferObjectPrivate::init(QOpenGLFramebufferObject *qfbo, const
 
     funcs.initializeOpenGLFunctions();
 
-    if (!funcs.hasOpenGLFeature(QOpenGLFunctions::Framebuffers))
+    if (!funcs.hasOpenGLFeature(QOpenGLFunctions::Framebuffers)) {
+        printf("No feature : Framebuffers\n");
         return;
+    }
 
     // Fall back to using a normal non-msaa FBO if we don't have support for MSAA
     if (!funcs.hasOpenGLExtension(QOpenGLExtensions::FramebufferMultisample)

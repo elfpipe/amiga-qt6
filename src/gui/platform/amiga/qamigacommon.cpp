@@ -37,9 +37,9 @@
 **
 ****************************************************************************/
 
-#include "qoffscreencommon_p.h"
-#include "qoffscreenintegration_p.h"
-#include "qoffscreenwindow_p.h"
+#include "qamigacommon_p.h"
+#include "qamigaintegration_p.h"
+#include "qamigawindow_p.h"
 
 
 #include <QtGui/private/qpixmap_raster_p.h>
@@ -53,18 +53,18 @@
 
 QT_BEGIN_NAMESPACE
 
-QPlatformWindow *QOffscreenScreen::windowContainingCursor = nullptr;
+QPlatformWindow *QAmigaScreen::windowContainingCursor = nullptr;
 
 
-QList<QPlatformScreen *> QOffscreenScreen::virtualSiblings() const
+QList<QPlatformScreen *> QAmigaScreen::virtualSiblings() const
 {
     return m_integration->screens();
 }
 
-class QOffscreenCursor : public QPlatformCursor
+class QAmigaCursor : public QPlatformCursor
 {
 public:
-    QOffscreenCursor() : m_pos(10, 10) {}
+    QAmigaCursor() : m_pos(10, 10) {}
 
     QPoint pos() const override { struct Screen *pubScreen = IIntuition->LockPubScreen(0);
                                     QPoint mousePoint (pubScreen->MouseX, pubScreen->MouseY);
@@ -87,7 +87,7 @@ public:
         if (containing)
             local -= containing->position();
 
-        QWindow *previous = QOffscreenScreen::windowContainingCursor ? QOffscreenScreen::windowContainingCursor->window() : nullptr;
+        QWindow *previous = QAmigaScreen::windowContainingCursor ? QAmigaScreen::windowContainingCursor->window() : nullptr;
 
         if (containing != previous)
             QWindowSystemInterface::handleEnterLeaveEvent(containing, previous, local, pos);
@@ -95,7 +95,7 @@ public:
         QWindowSystemInterface::handleMouseEvent(containing, local, pos, QGuiApplication::mouseButtons(), Qt::NoButton,
                                                  QEvent::MouseMove, QGuiApplication::keyboardModifiers(), Qt::MouseEventSynthesizedByQt);
 
-        QOffscreenScreen::windowContainingCursor = containing ? containing->handle() : nullptr;
+        QAmigaScreen::windowContainingCursor = containing ? containing->handle() : nullptr;
     }
 #ifndef QT_NO_CURSOR
     void changeCursor(QCursor *windowCursor, QWindow *window) override
@@ -108,9 +108,9 @@ private:
     QPoint m_pos;
 };
 
-QOffscreenScreen::QOffscreenScreen(const QOffscreenIntegration *integration)
+QAmigaScreen::QAmigaScreen(const QAmigaIntegration *integration)
     : m_geometry(0, 0, 1920, 1080)
-    , m_cursor(new QOffscreenCursor)
+    , m_cursor(new QAmigaCursor)
     , m_integration(integration)
 {
     if(m_name.length()) {
@@ -119,11 +119,11 @@ QOffscreenScreen::QOffscreenScreen(const QOffscreenIntegration *integration)
 
 }
 
-QPixmap QOffscreenScreen::grabWindow(WId id, int x, int y, int width, int height) const
+QPixmap QAmigaScreen::grabWindow(WId id, int x, int y, int width, int height) const
 {
     QRect rect(x, y, width, height);
 
-    QOffscreenWindow *window = QOffscreenWindow::windowForWinId(id);
+    QAmigaWindow *window = QAmigaWindow::windowForWinId(id);
     if (!window || window->window()->type() == Qt::Desktop) {
         const QWindowList wl = QGuiApplication::topLevelWindows();
         QWindow *containing = nullptr;
@@ -141,28 +141,28 @@ QPixmap QOffscreenScreen::grabWindow(WId id, int x, int y, int width, int height
         rect = rect.translated(-containing->geometry().topLeft());
     }
 
-    QOffscreenBackingStore *store = QOffscreenBackingStore::backingStoreForWinId(id);
+    QAmigaBackingStore *store = QAmigaBackingStore::backingStoreForWinId(id);
     if (store)
         return store->grabWindow(id, rect);
     return QPixmap();
 }
 
-QOffscreenBackingStore::QOffscreenBackingStore(QWindow *window)
+QAmigaBackingStore::QAmigaBackingStore(QWindow *window)
     : QPlatformBackingStore(window)
 {
 }
 
-QOffscreenBackingStore::~QOffscreenBackingStore()
+QAmigaBackingStore::~QAmigaBackingStore()
 {
     clearHash();
 }
 
-QPaintDevice *QOffscreenBackingStore::paintDevice()
+QPaintDevice *QAmigaBackingStore::paintDevice()
 {
     return &m_image;
 }
 
-void QOffscreenBackingStore::flush(QWindow *window, const QRegion &region, const QPoint &offset)
+void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPoint &offset)
 {
     Q_UNUSED(region);
 
@@ -184,7 +184,8 @@ void QOffscreenBackingStore::flush(QWindow *window, const QRegion &region, const
     m_windowAreaHash[id] = bounds;
     m_backingStoreForWinIdHash[id] = this;
 
-    QOffscreenWindow *amigaWindow = dynamic_cast<QOffscreenWindow *>(window->handle());
+#if 0 //def __amigaos4__
+    QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
     if(!amigaWindow) {
         printf("Not an Amiga window!\n");
         return;
@@ -195,10 +196,10 @@ void QOffscreenBackingStore::flush(QWindow *window, const QRegion &region, const
         4*m_image.width(), PIXF_A8R8G8B8,
         amigaWindow->intuitionWindow()->RPort, 0, 0,
         m_image.width(), m_image.height());
-
+#endif
 }
 
-void QOffscreenBackingStore::resize(const QSize &size, const QRegion &)
+void QAmigaBackingStore::resize(const QSize &size, const QRegion &)
 {
     QImage::Format format = QGuiApplication::primaryScreen()->handle()->format();
     if (m_image.size() != size)
@@ -208,7 +209,7 @@ void QOffscreenBackingStore::resize(const QSize &size, const QRegion &)
 
 extern void qt_scrollRectInImage(QImage &img, const QRect &rect, const QPoint &offset);
 
-bool QOffscreenBackingStore::scroll(const QRegion &area, int dx, int dy)
+bool QAmigaBackingStore::scroll(const QRegion &area, int dx, int dy)
 {
     if (m_image.isNull())
         return false;
@@ -219,7 +220,7 @@ bool QOffscreenBackingStore::scroll(const QRegion &area, int dx, int dy)
     return true;
 }
 
-QPixmap QOffscreenBackingStore::grabWindow(WId window, const QRect &rect) const
+QPixmap QAmigaBackingStore::grabWindow(WId window, const QRect &rect) const
 {
     QRect area = m_windowAreaHash.value(window, QRect());
     if (area.isNull())
@@ -239,12 +240,12 @@ QPixmap QOffscreenBackingStore::grabWindow(WId window, const QRect &rect) const
     return QPixmap::fromImage(m_image.copy(adjusted));
 }
 
-QOffscreenBackingStore *QOffscreenBackingStore::backingStoreForWinId(WId id)
+QAmigaBackingStore *QAmigaBackingStore::backingStoreForWinId(WId id)
 {
     return m_backingStoreForWinIdHash.value(id, 0);
 }
 
-void QOffscreenBackingStore::clearHash()
+void QAmigaBackingStore::clearHash()
 {
     for (auto it = m_windowAreaHash.cbegin(), end = m_windowAreaHash.cend(); it != end; ++it) {
         const auto it2 = qAsConst(m_backingStoreForWinIdHash).find(it.key());
@@ -254,8 +255,8 @@ void QOffscreenBackingStore::clearHash()
     m_windowAreaHash.clear();
 }
 
-QHash<WId, QOffscreenBackingStore *> QOffscreenBackingStore::m_backingStoreForWinIdHash;
+QHash<WId, QAmigaBackingStore *> QAmigaBackingStore::m_backingStoreForWinIdHash;
 
-QOffscreenPlatformNativeInterface::~QOffscreenPlatformNativeInterface() = default;
+QAmigaPlatformNativeInterface::~QAmigaPlatformNativeInterface() = default;
 
 QT_END_NAMESPACE
