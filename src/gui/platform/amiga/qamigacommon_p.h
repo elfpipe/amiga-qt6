@@ -105,6 +105,7 @@ public:
     bool scroll(const QRegion &area, int dx, int dy) override;
 
     QPixmap grabWindow(WId window, const QRect &rect) const;
+    QImage toImage() const override { return m_image; }
 
     static QAmigaBackingStore *backingStoreForWinId(WId id);
 

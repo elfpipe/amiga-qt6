@@ -52,6 +52,7 @@
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOffscreenSurface>
 
+#include "../gui/platform/amiga/qamigaopenglcontext_p.h"
 #ifndef GL_TEXTURE_BASE_LEVEL
 #define GL_TEXTURE_BASE_LEVEL             0x813C
 #endif
@@ -312,11 +313,13 @@ void QPlatformBackingStoreOpenGLSupport::composeAndFlush(QWindow *window, const 
     funcs->glDisable(GL_BLEND);
     blitter->release();
 
+    // static_cast<QAmigaOpenGLContext *>(context->handle())->update(window->handle(), region);
     context->swapBuffers(window);
 }
 
 GLuint QPlatformBackingStoreOpenGLSupport::toTexture(const QRegion &dirtyRegion, QSize *textureSize, QPlatformBackingStore::TextureFlags *flags) const
 {
+    printf("toTexture().\n");
     Q_ASSERT(textureSize);
     Q_ASSERT(flags);
 
@@ -447,7 +450,7 @@ GLuint QPlatformBackingStoreOpenGLSupport::toTexture(const QRegion &dirtyRegion,
 
     if (hasUnpackRowLength)
         funcs->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-
+printf("Return textureId.\n");
     return textureId;
 }
 

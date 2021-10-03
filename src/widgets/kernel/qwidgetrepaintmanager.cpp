@@ -1111,6 +1111,12 @@ void QWidgetRepaintManager::flush()
 
     \a region is the region to be updated in \a widget coordinates.
  */
+// template<typename Base, typename T>
+// inline bool instanceof(const T*) {
+//    return std::is_base_of<Base, T>::value;
+// }
+#include "../openglwidgets/qopenglwidget.h"
+#include "../gui/platform/amiga/qamigaopenglcontext_p.h"
 void QWidgetRepaintManager::flush(QWidget *widget, const QRegion &region, QPlatformTextureList *widgetTextures)
 {
 #ifdef QT_NO_OPENGL

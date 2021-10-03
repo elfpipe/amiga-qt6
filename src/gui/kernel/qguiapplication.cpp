@@ -1648,6 +1648,7 @@ void QGuiApplicationPrivate::init()
     // set a global share context when enabled unless there is already one
 #ifndef QT_NO_OPENGL
     if (qApp->testAttribute(Qt::AA_ShareOpenGLContexts) && !qt_gl_global_share_context()) {
+printf("Share OpenGLContext.\n");
         QOpenGLContext *ctx = new QOpenGLContext;
         ctx->setFormat(QSurfaceFormat::defaultFormat());
         ctx->create();

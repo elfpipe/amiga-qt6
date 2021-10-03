@@ -181,7 +181,7 @@ public:
         if(!OGLES2Library) { printf("ogles2.library not found. OpenGL ES2 rendering is not possible on this platform.\n"); return; }
         noContexts++;
 
-        QSurface *surface = shareContext ? shareContext->surface () : context->surface();
+        QSurface *surface = 0; //shareContext ? shareContext->surface () : context->surface();
 
         width = surface ? surface->size().width() : 320;
         height = surface ? surface->size().height() : 240;
@@ -207,8 +207,6 @@ public:
 		// 						WA_MaxHeight,			2048,
 		// 						WA_BackFill, 			LAYERS_NOBACKFILL,
 		// 						TAG_DONE);
-
-        if(shareContext) { printf("Creating a shared context.\n"); return; }
 
         bitmap = IGraphics->AllocBitMapTags(width, height, 32,
                                 BMATags_PixelFormat, PIXF_A8R8G8B8,
@@ -261,53 +259,32 @@ public:
     }
     void swapBuffers(QPlatformSurface *platformSurface) override
     {
-        printf("swapBuffers()\n");
-        if(!IOGLES2) return;
-        QAmigaOpenGLContext *share = this;
-        if(shareContext)
-            share = static_cast<QAmigaOpenGLContext *>(shareContext->handle());
-        if(share && share->aglContext) { aglMakeCurrent(share->aglContext); }
-#if 1
-        QSurface *surface = /*shareContext ? shareContext->surface () :*/ platformSurface ? platformSurface->surface() : 0;
-        // platformSurface = shareContext && surface ? surface->surfaceHandle() : platformSurface;
+        QSurface *surface = platformSurface ? platformSurface->surface() : 0;
         QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(platformSurface);
-        if(!amigaWindow) printf("swapBuffers : Failed to find  amiga window.\n");
 
-        width = surface ? surface->size().width() : width;
-        height = surface ? surface->size().height() : height;
+        QAmigaOpenGLContext *share = this;
+        if(shareContext) share = static_cast<QAmigaOpenGLContext *>(shareContext->handle());
 
-        if(amigaWindow && amigaWindow->intuitionWindow() && share->bitmap) {
-            printf("=========== BLIT ===========.\n");
+        if(amigaWindow && amigaWindow->intuitionWindow() && bitmap) {
             IGraphics->BltBitMapRastPort(
-            share->bitmap,
+            bitmap,
             0, 0,
             amigaWindow->intuitionWindow()->RPort,
             0, 0,
             width, height,
             0xc0);
         }
-#endif
         aglSwapBuffers();
     }
     bool makeCurrent(QPlatformSurface *platformSurface) override
     {
-        printf("makeCurrent()\n");
-        if(!IOGLES2) return false;
         QAmigaOpenGLContext *share = this;
         if(shareContext) {
             share = static_cast<QAmigaOpenGLContext *>(shareContext->handle());
-            if(!share) printf("ERRRORRRR !!!!!!!!!!!!!!!!!!!!!!!! ===================.\n");
         }
-        if(share && share->aglContext) { aglMakeCurrent(share->aglContext); } else printf("Errrorrr!!\n");
+        if(aglContext) { printf("MakeCurrent.\n"); aglMakeCurrent(aglContext); }
 
-        // aglMakeCurrent(aglContext);
-        
-#if 1
-        QSurface *surface = /*shareContext ? shareContext->surface () :*/ platformSurface ? platformSurface->surface() : 0;
-        if(!surface) printf("ERROR AGAIN!!!!!!!!\n");
-//        platformSurface = shareContext && surface ? surface->surfaceHandle() : platformSurface;
-        // QAmigaWindow *amigawindow = dynamic_cast<QAmigaWindow *>(platformSurface);
-        // if(!amigaWindow) printf("swapBuffers : Failed to find  amiga window.\n");
+        QSurface *surface = platformSurface ? platformSurface->surface() : 0;
 
         int newWidth = surface ? surface->size().width() : width;
         int newHeight = surface ? surface->size().height() : height;
@@ -322,26 +299,11 @@ public:
         width = newWidth;
         height = newHeight;
 
-        if(bitmap) aglSetBitmap(bitmap); else printf("BIIIIIIG ERRROR!!!!\n");
-#endif
+        if(bitmap) aglSetBitmap(bitmap);
         return true;
-
-
-        // QSurface *surface = shareContext ? shareContext->surface () : platformSurface->surface();
-        // platformSurface = shareContext ? surface->surfaceHandle() : platformSurface;
-        // QamigaWindow *amiga = 0;
-        // amiga = dynamic_cast<QamigaWindow *>(platformSurface);
- 
-        // if(!amiga) printf("Failed to find  amiga window.\n");
-
-        // if(bitmap) IGraphics->FreeBitMap(bitmap);
-        // bitmap = 0;
-        // if(surface)
     }
     void doneCurrent() override
     {
-        // if(bitmap) IGraphics->FreeBitMap(bitmap);
-        // bitmap = 0;
     }
     QFunctionPointer getProcAddress(const char *procName) override;
 };

@@ -184,7 +184,7 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
     m_windowAreaHash[id] = bounds;
     m_backingStoreForWinIdHash[id] = this;
 
-#if 0 //def __amigaos4__
+#ifdef __amigaos4__
     QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
     if(!amigaWindow) {
         printf("Not an Amiga window!\n");
