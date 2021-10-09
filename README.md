@@ -30,6 +30,10 @@ This will give you an almost full install in /qt5-amiga. There are a few files, 
 
 If you succeed in building Qt6, please send me a note. :)
 
+
+-
+
+
 HOW TO BUILD A Qt6 PROJECT:
 
 cd into the directory containing the .pro file. Then do:
