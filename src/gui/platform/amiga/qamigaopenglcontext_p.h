@@ -174,8 +174,6 @@ private:
 public:
     QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), bitmap(0), shareContext(0), window(0)
     {
-        // shareContext = context->shareContext();
-
         if(!OGLES2Library) { OGLES2Library = IExec->OpenLibrary("ogles2.library", 0);
             if(OGLES2Library) IOGLES2 = (struct OGLES2IFace *) IExec->GetInterface(OGLES2Library, "main", 1, NULL); }
         if(!OGLES2Library) { printf("ogles2.library not found. OpenGL ES2 rendering is not possible on this platform.\n"); return; }
