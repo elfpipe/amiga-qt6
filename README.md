@@ -18,10 +18,15 @@ Notes: Qt 6 builds with GCC 11 and a slightly modified minimal SDK. Both are con
 Configure and build:
 
 > git clone https://github.com/alfkil/amiga-qt6.git
+> 
 > mkdir qt6-amiga-build
+> 
 > cd qt6-amiga-build
+> 
 > ../amiga-qt6/configure-amiga.sh
+> 
 > make
+> 
 > sudo make install
 
 This will give you an almost full install in /qt5-amiga. There are a few files, that are not copied automatically, so you need to
