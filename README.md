@@ -29,3 +29,12 @@ This will give you an almost full install in /qt5-amiga. There are a few files, 
 > sudo cp lib/* /qt5-amiga/lib
 
 If you succeed in building Qt6, please send me a note. :)
+
+HOW TO BUILD A Qt6 PROJECT:
+
+cd into the directory containing the .pro file. Then do:
+
+> /qt5-amiga/bin/qmake
+> make
+
+Transfer your files to the amiga and test. Good luck :).
