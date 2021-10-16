@@ -83,7 +83,7 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID)
+#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID) && !defined(__amigaos4__)
 #  include <sys/ipc.h>
 #endif
 

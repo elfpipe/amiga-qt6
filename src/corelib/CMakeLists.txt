@@ -1088,7 +1088,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_poll_select AND UNIX
         kernel/qpoll.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_glib AND UNIX
+qt_internal_extend_target(Core CONDITION QT_FEATURE_glib AND UNIX AND NOT AMIGA
     SOURCES
         kernel/qeventdispatcher_glib.cpp kernel/qeventdispatcher_glib_p.h
     LIBRARIES

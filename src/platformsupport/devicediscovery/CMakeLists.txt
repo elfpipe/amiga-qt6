@@ -23,19 +23,19 @@ qt_internal_add_module(DeviceDiscoverySupportPrivate
 ## Scopes:
 #####################################################################
 
-qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION QT_FEATURE_libudev
+qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION QT_FEATURE_libudev AND NOT AMIGA
     SOURCES
         qdevicediscovery_udev.cpp qdevicediscovery_udev_p.h
     LIBRARIES
         PkgConfig::Libudev
 )
 
-qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION QT_FEATURE_evdev AND NOT QT_FEATURE_libudev
+qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION QT_FEATURE_evdev AND NOT QT_FEATURE_libudev AND NOT AMIGA
     SOURCES
         qdevicediscovery_static.cpp qdevicediscovery_static_p.h
 )
 
-qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION NOT QT_FEATURE_evdev AND NOT QT_FEATURE_libudev
+qt_internal_extend_target(DeviceDiscoverySupportPrivate CONDITION NOT QT_FEATURE_evdev AND NOT QT_FEATURE_libudev OR AMIGA
     SOURCES
         qdevicediscovery_dummy.cpp qdevicediscovery_dummy_p.h
 )

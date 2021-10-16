@@ -7,6 +7,7 @@
 qt_internal_add_3rdparty_library(BundledHarfbuzz
     QMAKE_LIB_NAME harfbuzz
     STATIC
+    INSTALL
     SKIP_AUTOMOC # special case
     SOURCES
         hb-dummy.cc

@@ -572,7 +572,7 @@ qt_feature("getentropy" PRIVATE
 )
 qt_feature("glib" PUBLIC PRIVATE
     LABEL "GLib"
-    AUTODETECT NOT WIN32
+    AUTODETECT NOT WIN32 NOT AMIGA
     CONDITION GLIB2_FOUND
 )
 qt_feature_definition("glib" "QT_NO_GLIB" NEGATE VALUE "1")

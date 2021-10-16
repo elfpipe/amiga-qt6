@@ -1,4 +1,8 @@
 cmake \
+-DCMAKE_PREFIX_PATH="/qt5-amiga" \
+-DCMAKE_FIND_ROOT_PATH="/opt/adtools" \
+-DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+-DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
 -DCMAKE_SYSTEM_NAME="Generic" \
 -DCMAKE_SYSTEM_PROCESSOR="PowerPC" \
 -DCMAKE_C_COMPILER="ppc-amigaos-gcc" \
@@ -11,7 +15,9 @@ cmake \
 -DCMAKE_INSTALL_PREFIX="/qt5-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \
--DQT_FEATURE_dlopen=OFF \
 -DQT_FEATURE_thread=OFF \
 -DQT_FEATURE_network=OFF \
-../amiga-newlib-qt6
+-DQT_FEATURE_glib=OFF \
+-DQT_FEATURE_libudev=OFF \
+-DQT_FEATURE_evdev=OFF \
+../amiga-test-qt6
