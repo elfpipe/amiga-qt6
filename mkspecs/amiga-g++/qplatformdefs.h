@@ -51,7 +51,7 @@
 
 void *qReallocAligned(void *oldptr, size_t newsize, size_t oldsize, size_t alignment);
 
-#include "../../src/corelib/global/qglobal.h"
+//#include "../../src/corelib/global/qglobal.h"
 
 #include <sys/types.h>
 #include <dirent.h>

@@ -493,7 +493,7 @@ QMakeEvaluator::writeFile(const QString &ctx, const QString &fn, QIODevice::Open
     return ReturnTrue;
 }
 
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
 void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
 {
     proc->setWorkingDirectory(currentDirectory());
@@ -514,7 +514,7 @@ void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
 QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) const
 {
     QByteArray out;
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
     QProcess proc;
     runProcess(&proc, args);
     *exitCode = (proc.exitStatus() == QProcess::NormalExit) ? proc.exitCode() : -1;
@@ -1412,7 +1412,9 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::testFunc_cache(const ProStringList &
     QMakeVfs::VfsFlags flags = (m_cumulative ? QMakeVfs::VfsCumulative : QMakeVfs::VfsExact);
     if (target == TargetSuper) {
         if (m_superfile.isEmpty()) {
+            printf("m_superfile : m_outputDir : %s\n", m_outputDir.toLocal8Bit().constData());
             m_superfile = QDir::cleanPath(m_outputDir + QLatin1String("/.qmake.super"));
+            printf("m_superfile : %s\n", m_superfile.toLocal8Bit().constData());
             printf("Info: creating super cache file %s\n", qPrintable(QDir::toNativeSeparators(m_superfile)));
             valuesRef(ProKey("_QMAKE_SUPER_CACHE_")) << ProString(m_superfile);
         }
@@ -1822,7 +1824,7 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinConditional(
 #ifdef PROEVALUATOR_FULL
         if (m_cumulative) // Anything else would be insanity
             return ReturnFalse;
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
         QProcess proc;
         proc.setProcessChannelMode(QProcess::ForwardedChannels);
         runProcess(&proc, args.at(0).toQString());

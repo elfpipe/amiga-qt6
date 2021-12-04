@@ -1118,8 +1118,10 @@ bool QMakeEvaluator::prepareProject(const QString &inDir)
             if (m_outputDir.isEmpty())
                 goto no_cache;
             superdir = m_outputDir;
+            printf("superdir : %s\n", superdir.toLocal8Bit().constData());
             forever {
                 QString superfile = superdir + QLatin1String("/.qmake.super");
+                printf("superfile : %s\n", superfile.toLocal8Bit().constData());
                 if (m_vfs->exists(superfile, flags)) {
                     m_superfile = QDir::cleanPath(superfile);
                     break;

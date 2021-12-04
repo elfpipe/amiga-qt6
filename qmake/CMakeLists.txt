@@ -98,6 +98,9 @@ qt_internal_add_tool(${target_name}
         QtLibraryInfo
 )
 
+qt_internal_extend_target(${target_name} CONDITION AMIGA
+    PUBLIC_LIBRARIES auto)
+
 # Add QMAKE_VERSION_STR only if qmake is part of the build.
 target_compile_definitions(QtLibraryInfo PUBLIC
         QMAKE_VERSION_STR="3.1"

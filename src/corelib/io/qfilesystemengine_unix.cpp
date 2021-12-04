@@ -1650,9 +1650,17 @@ bool QFileSystemEngine::setFileTime(int fd, const QDateTime &newDate, QAbstractF
 
 QString QFileSystemEngine::homePath()
 {
+#if defined(__amigaos4__)
+	QString home = QFile::decodeName(qgetenv("QT_HOME"));
+	char *h = getenv("QT_HOME");
+	QDir dir(home);
+	if (!h || !dir.exists())
+		home = QString::fromLatin1("/qt5-amiga");
+#else
     QString home = QFile::decodeName(qgetenv("HOME"));
     if (home.isEmpty())
         home = rootPath();
+#endif
     return QDir::cleanPath(home);
 }
 
@@ -1691,7 +1699,7 @@ bool QFileSystemEngine::setCurrentPath(const QFileSystemEntry &path)
 QFileSystemEntry QFileSystemEngine::currentPath()
 {
     QFileSystemEntry result;
-#if defined(__GLIBC__) && !defined(PATH_MAX)
+#if defined(__GLIBC__) && !defined(PATH_MAX) && !defined(__amigaos4__)
     char *currentName = ::get_current_dir_name();
     if (currentName) {
         result = QFileSystemEntry(QByteArray(currentName), QFileSystemEntry::FromNativePath());

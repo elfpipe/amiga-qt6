@@ -654,6 +654,7 @@ QGuiApplication::QGuiApplication(int &argc, char **argv, int flags)
 #endif
     : QCoreApplication(*new QGuiApplicationPrivate(argc, argv, flags))
 {
+    printf("===================================================hey\n");
     d_func()->init();
 
     QCoreApplicationPrivate::eventDispatcher->startingUp();

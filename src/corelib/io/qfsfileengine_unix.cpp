@@ -61,6 +61,9 @@
 #if defined(Q_OS_MACOS)
 # include <private/qcore_mac_p.h>
 #endif
+#ifdef __amigaos4__
+# include <proto/dos.h>
+#endif
 
 QT_BEGIN_NAMESPACE
 
@@ -336,7 +339,17 @@ QString QFSFileEngine::currentPath(const QString &)
 QFileInfoList QFSFileEngine::drives()
 {
     QFileInfoList ret;
+#if defined(__amigaos4__)
+	struct DosList *dl = IDOS->LockDosList(LDF_VOLUMES/*|LDF_ASSIGNS*/|LDF_READ);
+	while((dl = IDOS->FindDosEntry(dl, NULL, LDF_VOLUMES)))
+	{
+		ret.append(QFileInfo(QLatin1String("/") + QLatin1String((const char *)BADDR(dl->dol_Name)+1)));
+		dl = IDOS->NextDosEntry(dl, LDF_VOLUMES);
+	}
+	IDOS->UnLockDosList(LDF_VOLUMES);
+#else
     ret.append(QFileInfo(rootPath()));
+#endif
     return ret;
 }
 

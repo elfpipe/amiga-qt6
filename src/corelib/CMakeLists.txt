@@ -696,7 +696,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_future
         thread/qresultstore.cpp thread/qresultstore.h
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_std_atomic64
+qt_internal_extend_target(Core CONDITION QT_FEATURE_std_atomic64 OR AMIGA
     PUBLIC_LIBRARIES
         WrapAtomic::WrapAtomic
 )
@@ -927,7 +927,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_filesystemwatcher AND UNIX A
         io/qfilesystemwatcher_kqueue.cpp io/qfilesystemwatcher_kqueue_p.h
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment
+qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND NOT AMIGA
     SOURCES
         io/qprocess.cpp io/qprocess.h io/qprocess_p.h
 )
@@ -937,7 +937,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND WIN32
         io/qprocess_win.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND UNIX
+qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND UNIX AND NOT AMIGA
     SOURCES
         io/qprocess_unix.cpp
 )
@@ -967,7 +967,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_filesystemiterator AND WIN32
         io/qfilesystemiterator_win.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_process AND UNIX
+qt_internal_extend_target(Core CONDITION QT_FEATURE_process AND UNIX AND NOT AMIGA
     SOURCES
         ../3rdparty/forkfd/forkfd.h
         io/forkfd_qt.cpp
@@ -1135,6 +1135,12 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_mimetype
         mimetypes/qmimetype.cpp mimetypes/qmimetype.h mimetypes/qmimetype_p.h
         mimetypes/qmimetypeparser.cpp mimetypes/qmimetypeparser_p.h
 )
+
+qt_internal_extend_target(Core CONDITION AMIGA
+    LIBRARIES atomic dl unix
+)
+
+# set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--allow-shlib-undefined")
 
 #### Keys ignored in scope 171:.:mimetypes:mimetypes/mimetypes.pri:QT_FEATURE_mimetype:
 # MIME_DATABASE = "mimetypes/mime/packages/freedesktop.org.xml"

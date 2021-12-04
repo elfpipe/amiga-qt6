@@ -6018,7 +6018,7 @@ int QRhi::ubufAligned(int v) const
  */
 int QRhi::mipLevelsForSize(const QSize &size) const
 {
-    return qFloor(log2(qMax(size.width(), size.height()))) + 1;
+    return qFloor(std::log2(qMax(size.width(), size.height()))) + 1;
 }
 
 /*!

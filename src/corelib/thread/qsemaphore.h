@@ -60,9 +60,11 @@ public:
     void acquire(int n = 1);
     bool tryAcquire(int n = 1);
     bool tryAcquire(int n, int timeout);
+#if __has_include(<chrono>)
     template <typename Rep, typename Period>
     bool tryAcquire(int n, std::chrono::duration<Rep, Period> timeout)
     { return tryAcquire(n, QtPrivate::convertToMilliseconds(timeout)); }
+#endif
 
     void release(int n = 1);
 
@@ -70,6 +72,7 @@ public:
 
     // std::counting_semaphore compatibility:
     bool try_acquire() noexcept { return tryAcquire(); }
+#if __has_include(<chrono>)
     template <typename Rep, typename Period>
     bool try_acquire_for(const std::chrono::duration<Rep, Period> &timeout)
     { return tryAcquire(1, timeout); }
@@ -78,6 +81,7 @@ public:
     {
         return try_acquire_for(tp - Clock::now());
     }
+#endif
 private:
     Q_DISABLE_COPY(QSemaphore)
 

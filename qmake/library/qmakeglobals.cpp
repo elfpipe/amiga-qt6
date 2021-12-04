@@ -277,7 +277,7 @@ QStringList QMakeGlobals::splitPathList(const QString &val) const
 
 QString QMakeGlobals::getEnv(const QString &var) const
 {
-#ifdef PROEVALUATOR_SETENV
+#if defined(PROEVALUATOR_SETENV) && !defined(__amigaos4__)
     return environment.value(var);
 #else
     return QString::fromLocal8Bit(qgetenv(var.toLocal8Bit().constData()));
@@ -318,7 +318,7 @@ QString QMakeGlobals::expandEnvVars(const QString &str) const
 bool QMakeGlobals::initProperties()
 {
     QByteArray data;
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
     QProcess proc;
     proc.start(qmake_abslocation, QStringList() << QLatin1String("-query"));
     if (!proc.waitForFinished())

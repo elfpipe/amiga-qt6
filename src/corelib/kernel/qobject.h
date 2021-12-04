@@ -252,7 +252,8 @@ public:
                            receiver, reinterpret_cast<void **>(&slot),
                            new QtPrivate::QSlotObject<Func2, typename QtPrivate::List_Left<typename SignalType::Arguments, SlotType::ArgumentCount>::Value,
                                            typename SignalType::ReturnType>(slot),
-                            type, types, &SignalType::Object::staticMetaObject);
+                            type, types,
+                            &SignalType::Object::staticMetaObject);
     }
 
     //connect to a function pointer  (not a member)
@@ -292,7 +293,8 @@ public:
                            new QtPrivate::QStaticSlotObject<Func2,
                                                  typename QtPrivate::List_Left<typename SignalType::Arguments, SlotType::ArgumentCount>::Value,
                                                  typename SignalType::ReturnType>(slot),
-                           type, types, &SignalType::Object::staticMetaObject);
+                           type, types,
+                            &SignalType::Object::staticMetaObject);
     }
 
     //connect to a functor
@@ -329,6 +331,7 @@ public:
         static_assert(QtPrivate::HasQ_OBJECT_Macro<typename SignalType::Object>::Value,
                           "No Q_OBJECT in the class with the signal");
 
+
         const int *types = nullptr;
         if (type == Qt::QueuedConnection || type == Qt::BlockingQueuedConnection)
             types = QtPrivate::ConnectionTypes<typename SignalType::Arguments>::types();
@@ -337,7 +340,8 @@ public:
                            new QtPrivate::QFunctorSlotObject<Func2, SlotArgumentCount,
                                 typename QtPrivate::List_Left<typename SignalType::Arguments, SlotArgumentCount>::Value,
                                 typename SignalType::ReturnType>(std::move(slot)),
-                           type, types, &SignalType::Object::staticMetaObject);
+                           type, types,
+                            &SignalType::Object::staticMetaObject);
     }
 #endif //Q_CLANG_QDOC
 

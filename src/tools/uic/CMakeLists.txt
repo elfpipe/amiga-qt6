@@ -37,10 +37,14 @@ qt_internal_add_tool(${target_name}
         cpp
         python
         shared
-    #PUBLIC_LIBRARIES # special case remove
+    PUBLIC_LIBRARIES # special case remove
+        auto
         #Qt::Gui # special case remove
 )
 
+# qt_internal_extend_target(${target_name}
+#     LIBRARIES auto)
+    
 #### Keys ignored in scope 1:.:.:uic.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Qt User Interface Compiler"
 # _OPTION = "host_build"

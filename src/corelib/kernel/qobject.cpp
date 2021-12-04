@@ -5194,6 +5194,7 @@ QMetaObject::Connection QObjectPrivate::connect(const QObject *sender, int signa
         return QMetaObject::Connection();
     }
     const QMetaObject *senderMetaObject = sender->metaObject();
+    printf("::connect() : sender (0x%x), senderMetaObject(0x%x)\n", (void *)sender, (void*)senderMetaObject);
     signal_index = methodIndexToSignalIndex(&senderMetaObject, signal_index);
 
     return QObjectPrivate::connectImpl(sender, signal_index, receiver, /*slot*/ nullptr, slotObj,

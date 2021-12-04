@@ -15,6 +15,9 @@ qt_internal_add_tool(${target_name}
         Qt::Core # special case
 )
 
+qt_internal_extend_target(${target_name} CONDITION AMIGA
+    PUBLIC_LIBRARIES auto)
+
 #### Keys ignored in scope 1:.:.:qvkgen.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Qt Vulkan Header Generator"
 # _OPTION = "host_build"
