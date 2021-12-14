@@ -51,8 +51,10 @@
 
 #ifndef QT_NO_SHAREDMEMORY
 #include <sys/types.h>
+#ifndef __amigaos4__ //amigaos4 will be a stub
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#endif
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -70,6 +72,9 @@ QT_BEGIN_NAMESPACE
 */
 key_t QSharedMemoryPrivate::handle()
 {
+#ifdef __amigaos4__
+    return 0;
+#else
     // already made
     if (unix_key)
         return unix_key;
@@ -95,6 +100,7 @@ key_t QSharedMemoryPrivate::handle()
         unix_key = 0;
     }
     return unix_key;
+#endif
 }
 
 #endif // QT_NO_SHAREDMEMORY
@@ -134,6 +140,7 @@ bool QSharedMemoryPrivate::cleanHandle()
 
 bool QSharedMemoryPrivate::create(qsizetype size)
 {
+#ifndef __amigaos4__
     // build file if needed
     bool createdFile = false;
     int built = createUnixKeyFile(nativeKey);
@@ -168,12 +175,13 @@ bool QSharedMemoryPrivate::create(qsizetype size)
             QFile::remove(nativeKey);
         return false;
     }
-
+#endif
     return true;
 }
 
 bool QSharedMemoryPrivate::attach(QSharedMemory::AccessMode mode)
 {
+#ifndef __amigaos4__
     // grab the shared memory segment id
     int id = shmget(unix_key, 0, (mode == QSharedMemory::ReadOnly ? 0400 : 0600));
     if (-1 == id) {
@@ -197,12 +205,13 @@ bool QSharedMemoryPrivate::attach(QSharedMemory::AccessMode mode)
         setErrorString(QLatin1String("QSharedMemory::attach (shmctl)"));
         return false;
     }
-
+#endif
     return true;
 }
 
 bool QSharedMemoryPrivate::detach()
 {
+#ifndef __amigaos4__
     // detach from the memory segment
     if (-1 == shmdt(memory)) {
         const QLatin1String function("QSharedMemory::detach");
@@ -249,6 +258,7 @@ bool QSharedMemoryPrivate::detach()
         if (!QFile::remove(nativeKey))
             return false;
     }
+#endif
     return true;
 }
 

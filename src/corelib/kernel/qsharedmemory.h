@@ -39,9 +39,6 @@
 
 #ifndef QSHAREDMEMORY_H
 #define QSHAREDMEMORY_H
-#if defined(__amigaos4__) && !defined(QT_NO_SHAREDMEMORY)
-#define QT_NO_SHAREDMEMORY
-#endif
 
 #include <QtCore/qglobal.h>
 #ifndef QT_NO_QOBJECT

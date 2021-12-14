@@ -72,7 +72,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
 #include <forkfd.h>
 #endif
 
@@ -485,6 +485,7 @@ void QProcessPrivate::startProcess()
         workingDirPtr = encodedWorkingDirectory.constData();
     }
 
+#ifndef __amigaos4__ //stub
     int ffdflags = FFD_CLOEXEC;
 
     // QTBUG-86285
@@ -513,9 +514,9 @@ void QProcessPrivate::startProcess()
         execChild(workingDirPtr, argv.pointers.get(), envp.pointers.get());
         ::_exit(-1);
     }
-
     pid = qint64(childPid);
     Q_ASSERT(pid > 0);
+#endif //amiga
 
     // parent
     // close the ends we don't use and make all pipes non-blocking
@@ -912,6 +913,7 @@ void QProcessPrivate::waitForDeadChild()
 {
     Q_ASSERT(forkfd != -1);
 
+#ifndef __amigaos4__ //stub
     // read the process information from our fd
     forkfd_info info;
     int ret;
@@ -925,7 +927,7 @@ void QProcessPrivate::waitForDeadChild()
 
     EINTR_LOOP(ret, forkfd_close(forkfd));
     forkfd = -1; // Child is dead, don't try to kill it anymore
-
+#endif //amiga
 #if defined QPROCESS_DEBUG
     qDebug() << "QProcessPrivate::waitForDeadChild() dead with exitCode"
              << exitCode << ", crashed?" << crashed;

@@ -48,12 +48,14 @@
 
 #ifndef QT_NO_SHAREDMEMORY
 #include <sys/types.h>
-#ifndef QT_POSIX_IPC
+#ifndef __amigaos4__
+#if !defined QT_POSIX_IPC
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #else
 #include <sys/mman.h>
 #endif
+#endif //amiga
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>

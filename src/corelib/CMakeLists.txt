@@ -927,7 +927,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_filesystemwatcher AND UNIX A
         io/qfilesystemwatcher_kqueue.cpp io/qfilesystemwatcher_kqueue_p.h
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND NOT AMIGA
+qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment
     SOURCES
         io/qprocess.cpp io/qprocess.h io/qprocess_p.h
 )
@@ -940,6 +940,11 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND WIN32
 qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND UNIX AND NOT AMIGA
     SOURCES
         io/qprocess_unix.cpp
+)
+
+qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND AMIGA
+    SOURCES
+        io/qprocess_amiga.cpp
 )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_settings
@@ -1100,7 +1105,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_clock_gettime AND UNIX
         WrapRt::WrapRt
 )
 
-qt_internal_extend_target(Core CONDITION UNIX AND NOT ANDROID
+qt_internal_extend_target(Core CONDITION UNIX AND NOT ANDROID AND NOT AMIGA
     SOURCES
         kernel/qsharedmemory_posix.cpp
         kernel/qsharedmemory_systemv.cpp
@@ -1108,6 +1113,12 @@ qt_internal_extend_target(Core CONDITION UNIX AND NOT ANDROID
         kernel/qsystemsemaphore_posix.cpp
         kernel/qsystemsemaphore_systemv.cpp
         kernel/qsystemsemaphore_unix.cpp
+)
+
+qt_internal_extend_target(Core CONDITION AMIGA
+    SOURCES
+        kernel/qsharedmemory_amiga.cpp
+        kernel/qsystemsemaphore_amiga.cpp
 )
 
 qt_internal_extend_target(Core CONDITION VXWORKS

@@ -40,10 +40,6 @@
 #ifndef QSYSTEMSEMAPHORE_H
 #define QSYSTEMSEMAPHORE_H
 
-#if defined(__amigaos4__) && !defined(QT_NO_SYSTEMSEMAPHORE)
-#define QT_NO_SYSTEMSEMAPHORE
-#endif
-
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qscopedpointer.h>

@@ -78,8 +78,20 @@ QT_END_NAMESPACE
 # include "private/qobject_p.h"
 #endif
 
-#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID) && !defined(Q_OS_INTEGRITY) && !defined(Q_OS_RTEMS)
+#if !defined(Q_OS_WIN) && !defined(Q_OS_ANDROID) && !defined(Q_OS_INTEGRITY) && !defined(Q_OS_RTEMS) && !defined(__amigaos4__)
 #  include <sys/sem.h>
+#endif
+
+#if defined __amigaos4__
+#include <exec/types.h>
+#endif
+
+#ifdef Q_OS_AMIGA
+struct amiga_key_struct
+{
+	uint32 size;
+	uint32 count;
+};
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -144,6 +156,8 @@ public:
             const QString &prefix = QLatin1String("qipc_sharedmemory_"));
 #ifdef Q_OS_WIN
     Qt::HANDLE handle();
+#elif defined(Q_OS_AMIGA)
+	STRPTR handle();
 #elif defined(QT_POSIX_IPC)
     int handle();
 #else
@@ -171,6 +185,9 @@ public:
 private:
 #ifdef Q_OS_WIN
     Qt::HANDLE hand;
+#elif defined(Q_OS_AMIGA)
+	STRPTR amiga_key;
+	struct amiga_key_struct *aks;
 #elif defined(QT_POSIX_IPC)
     int hand;
 #else

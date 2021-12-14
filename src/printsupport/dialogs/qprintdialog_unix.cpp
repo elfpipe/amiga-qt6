@@ -121,7 +121,7 @@ Print dialog class declarations
 
 static void initResources()
 {
-    Q_INIT_RESOURCE(qprintdialog);
+//    Q_INIT_RESOURCE(qprintdialog);
 }
 
 QT_BEGIN_NAMESPACE
@@ -1055,7 +1055,7 @@ void QPrintDialog::accept()
 
 */
 
-#if defined (Q_OS_UNIX)
+#if defined (Q_OS_UNIX) || defined(__amigaos4__)
 
 /*! \internal
 */

@@ -62,6 +62,10 @@
 #   include <semaphore.h>
 #endif
 
+#ifdef Q_OS_AMIGA
+struct AmigaSemaphore;
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QSystemSemaphorePrivate
@@ -83,6 +87,9 @@ public:
 #ifdef Q_OS_WIN
     Qt::HANDLE handle(QSystemSemaphore::AccessMode mode = QSystemSemaphore::Open);
     void setErrorString(const QString &function);
+#elif defined(Q_OS_AMIGA)
+	struct AmigaSemaphore *handle(QSystemSemaphore::AccessMode mode = QSystemSemaphore::Open);
+	void setErrorString(const QString &function);
 #elif defined(QT_POSIX_IPC)
     bool handle(QSystemSemaphore::AccessMode mode = QSystemSemaphore::Open);
     void setErrorString(const QString &function);
@@ -99,6 +106,9 @@ public:
 #ifdef Q_OS_WIN
     Qt::HANDLE semaphore;
     Qt::HANDLE semaphoreLock;
+#elif defined(Q_OS_AMIGA)
+	struct AmigaSemaphore *amiga_sem;
+	bool createdSemaphore;
 #elif defined(QT_POSIX_IPC)
     sem_t *semaphore;
     bool createdSemaphore;
