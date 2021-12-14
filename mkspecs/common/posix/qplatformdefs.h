@@ -47,6 +47,7 @@
 #  include <sys/socket.h>
 #endif
 #include <sys/stat.h>
+#include <dirent.h>
 
 #if defined(QT_USE_XOPEN_LFS_EXTENSIONS) && defined(QT_LARGEFILE_SUPPORT)
 

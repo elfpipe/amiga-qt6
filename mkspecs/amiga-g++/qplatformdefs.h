@@ -40,24 +40,9 @@
 #ifndef QPLATFORMDEFS_H
 #define QPLATFORMDEFS_H
 
-#include <unistd.h>
 #include "../common/posix/qplatformdefs.h"
 
 #undef QT_OPEN_LARGEFILE
 #define QT_OPEN_LARGEFILE       0
-
-#define QT_BEGIN_NAMESPACE
-#define QT_END_NAMESPACE
-
-void *qReallocAligned(void *oldptr, size_t newsize, size_t oldsize, size_t alignment);
-
-//#include "../../src/corelib/global/qglobal.h"
-
-#include <sys/types.h>
-#include <dirent.h>
-#include <fcntl.h>
-
-#include <sys/time.h>
-#include <grp.h>
 
 #endif // QPLATFORMDEFS_H

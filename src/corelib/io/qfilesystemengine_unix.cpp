@@ -58,6 +58,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <errno.h>
+#include <grp.h>
 
 #if __has_include(<paths.h>)
 # include <paths.h>
