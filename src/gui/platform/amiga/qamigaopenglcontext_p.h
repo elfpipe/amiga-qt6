@@ -9,10 +9,14 @@
 #include <proto/exec.h>
 #include <proto/ogles2.h>
 #include <inline4/ogles2.h>
-extern struct Library *OGLES2Library;
 
 #include <proto/graphics.h>
 #include <proto/intuition.h>
+
+QT_BEGIN_NAMESPACE
+
+extern struct Library *OGLES2Library;
+extern struct OGLES2IFace *IOGLES2;
 
 void Q_GUI_EXPORT aglActiveTexture(GLenum texture);
 void Q_GUI_EXPORT aglAttachShader(GLuint program, GLuint shader);
@@ -305,4 +309,7 @@ public:
     }
     QFunctionPointer getProcAddress(const char *procName) override;
 };
+
+QT_END_NAMESPACE
+
 #endif

@@ -43,18 +43,7 @@
 #include "qamigaeventdispatcherwindows_p.h"
 #include "qamigaopenglcontext_p.h"
 
-#if defined(Q_OS_UNIX)
-//#include <QtGui/private/qgenericunixeventdispatcher_p.h>
-#if defined(Q_OS_MAC)
-#include <qpa/qplatformfontdatabase.h>
-#include <QtGui/private/qcoretextfontdatabase_p.h>
-#else
-#include <QtGui/private/qgenericunixfontdatabase_p.h>
-#endif
-#elif defined(Q_OS_WIN)
 #include <QtGui/private/qfreetypefontdatabase_p.h>
-#include <QtCore/private/qeventdispatcher_win_p.h>
-#endif
 
 #include <QtCore/qfile.h>
 #include <QtCore/qjsonarray.h>
@@ -86,15 +75,7 @@ struct MsgPort *QAmigaIntegration::m_messagePort = 0;
 
 QAmigaIntegration::QAmigaIntegration()
 {
-#if defined(Q_OS_UNIX)
-#if defined(Q_OS_MAC)
-    m_fontDatabase.reset(new QCoreTextFontDatabaseEngineFactory<QCoreTextFontEngine>);
-#else
-    m_fontDatabase.reset(new QGenericUnixFontDatabase());
-#endif
-#elif defined(Q_OS_WIN)
     m_fontDatabase.reset(new QFreeTypeFontDatabase());
-#endif
 
 #if QT_CONFIG(draganddrop)
     m_drag.reset(new QAmigaDrag);

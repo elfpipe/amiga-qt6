@@ -45,6 +45,8 @@
 
 #include <qhash.h>
 
+#include <proto/intuition.h>
+
 QT_BEGIN_NAMESPACE
 
 class QOpenGLWindowPrivate;

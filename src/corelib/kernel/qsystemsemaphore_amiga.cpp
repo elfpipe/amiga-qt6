@@ -46,20 +46,9 @@
 
 #ifndef QT_NO_SYSTEMSEMAPHORE
 
-#include <exec/types.h>
-#include <proto/exec.h>
-
 #include <string.h>
 
 QT_BEGIN_NAMESPACE
-
-struct AmigaSemaphore
-{
-	struct SignalSemaphore semaphore;
-	int qtKey;
-	int initialValue;
-	int currentValue;
-};
 
 QSystemSemaphorePrivate::QSystemSemaphorePrivate() :
         amiga_sem(0), createdSemaphore(false), error(QSystemSemaphore::NoError)

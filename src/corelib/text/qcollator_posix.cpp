@@ -44,6 +44,12 @@
 #include <cstring>
 #include <cwchar>
 
+#ifdef __amigaos4__
+namespace std {
+typedef basic_string<wchar_t>    wstring;
+}
+#endif
+
 QT_BEGIN_NAMESPACE
 
 void QCollatorPrivate::init()
@@ -120,12 +126,6 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
 #endif
     return QCollatorSortKey(new QCollatorSortKeyPrivate(std::move(result)));
 }
-
-#ifdef __amigaos4__
-namespace std {
-typedef basic_string<wchar_t>    wstring;
-}
-#endif
 
 int QCollatorSortKey::compare(const QCollatorSortKey &otherKey) const
 {

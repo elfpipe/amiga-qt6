@@ -1,5 +1,9 @@
+#include "qamigaopenglcontext_p.h"
+
 #include <proto/ogles2.h>
 #include <inline4/ogles2.h>
+
+QT_BEGIN_NAMESPACE
 
 void aglActiveTexture(GLenum texture) {
     glActiveTexture(texture);
@@ -568,7 +572,6 @@ void aglViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
     glViewport(x, y, width, height);
 }
 
-#include "qamigaopenglcontext_p.h"
 int QAmigaOpenGLContext::noContexts = 0;
 struct Library *OGLES2Library;
 struct OGLES2IFace *IOGLES2;
@@ -720,3 +723,5 @@ QFunctionPointer QAmigaOpenGLContext::getProcAddress(const char *procName)
     functions["glViewport"] = QFunctionPointer(aglViewport);
     return functions.value(procName);
 }
+
+QT_END_NAMESPACE

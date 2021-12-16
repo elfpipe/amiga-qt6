@@ -63,10 +63,21 @@
 #endif
 
 #ifdef Q_OS_AMIGA
-struct AmigaSemaphore;
+#include <exec/types.h>
+#include <proto/exec.h>
 #endif
 
 QT_BEGIN_NAMESPACE
+
+#ifdef Q_OS_AMIGA
+struct AmigaSemaphore
+{
+	struct SignalSemaphore semaphore;
+	int qtKey;
+	int initialValue;
+	int currentValue;
+};
+#endif
 
 class QSystemSemaphorePrivate
 {

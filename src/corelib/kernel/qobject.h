@@ -253,7 +253,8 @@ public:
                            new QtPrivate::QSlotObject<Func2, typename QtPrivate::List_Left<typename SignalType::Arguments, SlotType::ArgumentCount>::Value,
                                            typename SignalType::ReturnType>(slot),
                             type, types,
-                            &SignalType::Object::staticMetaObject);
+                            &(sender->staticMetaObject));
+                            //&SignalType::Object::staticMetaObject);
     }
 
     //connect to a function pointer  (not a member)

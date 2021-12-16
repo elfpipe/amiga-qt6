@@ -12,6 +12,8 @@
 
 #include <proto/intuition.h>
 
+QT_BEGIN_NAMESPACE
+
 class QAmigaWindow;
 class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
 {
@@ -110,5 +112,7 @@ public:
 private:
     QList<QAmigaWindow *> windows;
 };
+
+QT_END_NAMESPACE
 
 #endif

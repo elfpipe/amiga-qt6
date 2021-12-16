@@ -58,10 +58,14 @@
 #endif
 
 #ifdef Q_OS_AMIGA
-extern QString qt_unix_to_amiga_path_name(const QString &);
+#include <QString>
 #endif
 
 QT_BEGIN_NAMESPACE
+
+#ifdef Q_OS_AMIGA
+extern QString qt_unix_to_amiga_path_name(const QString &);
+#endif
 
 static QString qdlerror()
 {

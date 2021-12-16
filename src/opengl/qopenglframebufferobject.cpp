@@ -415,7 +415,6 @@ bool QOpenGLFramebufferObjectFormat::operator!=(const QOpenGLFramebufferObjectFo
     return !(*this == other);
 }
 
-#include <iostream>
 bool QOpenGLFramebufferObjectPrivate::checkFramebufferStatus(QOpenGLContext *ctx) const
 {
     if (!ctx)
@@ -464,9 +463,6 @@ bool QOpenGLFramebufferObjectPrivate::checkFramebufferStatus(QOpenGLContext *ctx
         qWarning("QOpenGLFramebufferObject: Framebuffer incomplete, attachments must have same number of samples per pixel.");
         break;
 #endif
-    default:
-        std::cout <<"QOpenGLFramebufferObject: An undefined error has occurred: "<< (int)status;
-        break;
     }
     return false;
 }
