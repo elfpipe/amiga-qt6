@@ -5,7 +5,7 @@ Build instructions:
 
 First of all : Do not try to build on AmigaOS. Get Ubuntu and download this toolchain:
 
-https://drive.google.com/file/d/16DZ1GGv6vHmHtu1Mh3Doj2ptnDOZ2jF2/view?usp=sharing
+https://drive.google.com/file/d/1cG6MiXR9F8HzWlyAtZu_nsZ2kfmATK6u/view?usp=sharing
 
 Extract to /opt/adtools and do
 
