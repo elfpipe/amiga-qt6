@@ -1,5 +1,5 @@
 # amiga-qt6
-Qt 6.2.0 for AmigaOS 4.1 Final Edition (with optional support for OpenGLES2)
+Qt 6.2.0 for AmigaOS 4.1 Final Edition - with optional support for OpenGLES2
 
 Build instructions:
 
