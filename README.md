@@ -38,12 +38,19 @@ If you succeed in building Qt6, please send me a note. :)
 
 -
 
+Note : To run Qt6 apps on OS4.1, you need to copy the following files from the SDK to SYS:sobjs/
+
+libatomic.so
+libgcc.so
+libstdc++.so
+
 
 HOW TO BUILD A Qt6 PROJECT:
 
 cd into the directory containing the .pro file. Then do:
 
 > /qt5-amiga/bin/qmake
+>
 > make
 
 Transfer your files to the amiga and test. Good luck :).
