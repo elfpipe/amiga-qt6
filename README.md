@@ -44,6 +44,7 @@ libatomic.so
 libgcc.so
 libstdc++.so
 
+-
 
 HOW TO BUILD A Qt6 PROJECT:
 
