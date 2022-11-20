@@ -22,7 +22,7 @@
 # -DQT_FEATURE_evdev=OFF \
 # ../amiga-test-qt6
 
-cmake -DCMAKE_PREFIX_PATH="/qt5-amiga" \
+cmake -DCMAKE_PREFIX_PATH="/qt6-amiga" \
 -DCMAKE_FIND_ROOT_PATH="/opt/adtools" \
 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
 -DCMAKE_FIND_ROOT_PATH_MODE_LIBRARY=ONLY \
@@ -36,7 +36,7 @@ cmake -DCMAKE_PREFIX_PATH="/qt5-amiga" \
 -DCMAKE_C_FLAGS_INIT="-mcrt=newlib" \
 -DCMAKE_CXX_STANDARD_LIBRARIES="-lunix -lauto" \
 -DUNIX=1 -DAMIGA=1 \
--DCMAKE_INSTALL_PREFIX="/qt5-amiga" \
+-DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \
 -DQT_FEATURE_thread=ON \
@@ -52,7 +52,7 @@ cmake -DCMAKE_PREFIX_PATH="/qt5-amiga" \
 -DQT_FEATURE_systemsemaphore=ON \
 -DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=false \
 -DCMAKE_EXE_LINKER_FLAGS="-use-dynld -athread=native" \
-../amiga-test-qt6/
+../amiga-qt6/
 
 # cmake \
 # -DCMAKE_PREFIX_PATH="/usr/local/Qt-6.2.0" \
