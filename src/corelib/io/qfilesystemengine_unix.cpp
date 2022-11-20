@@ -1656,7 +1656,7 @@ QString QFileSystemEngine::homePath()
 	char *h = getenv("QT_HOME");
 	QDir dir(home);
 	if (!h || !dir.exists())
-		home = QString::fromLatin1("/qt5-amiga");
+		home = QString::fromLatin1("/qt6-amiga");
 #else
     QString home = QFile::decodeName(qgetenv("HOME"));
     if (home.isEmpty())

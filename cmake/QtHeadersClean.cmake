@@ -105,7 +105,7 @@ function(qt_internal_add_headers_clean_target
             -Wnon-virtual-dtor -Wpointer-arith -Wformat-security -Wno-long-long -Wno-variadic-macros
             -pedantic-errors)
 
-        if(QT_FEATURE_reduce_relocations AND UNIX)
+        if(QT_FEATURE_reduce_relocations AND (UNIX OR AMIGA))
             list(APPEND hcleanFLAGS -fPIC)
         endif()
 
