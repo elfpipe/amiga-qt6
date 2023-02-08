@@ -64,7 +64,7 @@ bool QWindowSystemInterfacePrivate::TabletEvent::platformSynthesizesMouse = true
 QWaitCondition QWindowSystemInterfacePrivate::eventsFlushed;
 QMutex QWindowSystemInterfacePrivate::flushEventMutex;
 QAtomicInt QWindowSystemInterfacePrivate::eventAccepted;
-QWindowSystemEventHandler *QWindowSystemInterfacePrivate::eventHandler;
+QWindowSystemEventHandler *QWindowSystemInterfacePrivate::eventHandler = nullptr;
 QWindowSystemInterfacePrivate::WindowSystemEventList QWindowSystemInterfacePrivate::windowSystemEventQueue;
 
 extern QPointer<QWindow> qt_last_mouse_receiver;

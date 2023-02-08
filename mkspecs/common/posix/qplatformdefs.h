@@ -49,6 +49,10 @@
 #include <sys/stat.h>
 #include <dirent.h>
 
+#ifdef __amigaos4__
+#include <unistd.h>
+#endif
+
 #if defined(QT_USE_XOPEN_LFS_EXTENSIONS) && defined(QT_LARGEFILE_SUPPORT)
 
 #define QT_STATBUF              struct stat64
@@ -86,7 +90,11 @@
 
 // File I/O
 #define QT_OPEN                 ::open
+#ifdef __amigaos4__
+#define QT_LSEEK                lseek
+#else
 #define QT_LSEEK                ::lseek
+#endif
 #define QT_FSTAT                ::fstat
 #define QT_FTRUNCATE            ::ftruncate
 

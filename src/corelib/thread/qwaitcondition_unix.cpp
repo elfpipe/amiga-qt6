@@ -172,17 +172,21 @@ public:
 
 QWaitCondition::QWaitCondition()
 {
+    printf("QWaitCondition : 0x%x\n", (void *)this);
     d = new QWaitConditionPrivate;
     report_error(pthread_mutex_init(&d->mutex, nullptr), "QWaitCondition", "mutex init");
     qt_initialize_pthread_cond(&d->cond, "QWaitCondition");
     d->waiters = d->wakeups = 0;
+    printf("QWaitCondition : Done\n");
 }
 
 QWaitCondition::~QWaitCondition()
 {
+    printf("~QWaitCondition : 0x%x\n", (void *)this);
     report_error(pthread_cond_destroy(&d->cond), "QWaitCondition", "cv destroy");
     report_error(pthread_mutex_destroy(&d->mutex), "QWaitCondition", "mutex destroy");
     delete d;
+    printf("~QWaitCondition : Done\n");
 }
 
 void QWaitCondition::wakeOne()

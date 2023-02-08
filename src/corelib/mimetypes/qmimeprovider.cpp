@@ -771,7 +771,7 @@ bool QMimeXMLProvider::load(const QString &fileName, QString *errorMessage)
     if (errorMessage)
         errorMessage->clear();
 
-    QMimeTypeParser parser(*this);
+    QMimeTypeParser parser(this);
     return parser.parse(&file, fileName, errorMessage);
 }
 
@@ -782,7 +782,7 @@ void QMimeXMLProvider::load(const char *data, qsizetype len)
     buffer.setData(QByteArray::fromRawData(data, len));
     buffer.open(QIODevice::ReadOnly);
     QString errorMessage;
-    QMimeTypeParser parser(*this);
+    QMimeTypeParser parser(this);
     if (!parser.parse(&buffer, internalMimeFileName(), &errorMessage))
         qWarning("QMimeDatabase: Error loading internal MIME data\n%s", qPrintable(errorMessage));
 }

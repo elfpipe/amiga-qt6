@@ -115,8 +115,10 @@ QMutexPrivate::QMutexPrivate()
 
 QMutexPrivate::~QMutexPrivate()
 {
+    printf("~QMutexPrivate : 0x%x\n", (void *)this);
     report_error(pthread_cond_destroy(&cond), "QMutex", "cv destroy");
     report_error(pthread_mutex_destroy(&mutex), "QMutex", "mutex destroy");
+    printf("~QMutexPrivate : Done\n");
 }
 
 bool QMutexPrivate::wait(int timeout)

@@ -372,6 +372,7 @@ void QThreadPrivate::finish(void *arg)
         QThread *thr = reinterpret_cast<QThread *>(arg);
         QThreadPrivate *d = thr->d_func();
 
+        printf("QThreadPrivate::finish() d == 0x%x\n", (void *)d);
         QMutexLocker locker(&d->mutex);
 
         d->isInFinish = true;

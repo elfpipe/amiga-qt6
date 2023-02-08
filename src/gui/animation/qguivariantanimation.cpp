@@ -63,6 +63,7 @@ template<> Q_INLINE_TEMPLATE QQuaternion _q_interpolate(const QQuaternion &f,con
 
 void qRegisterGuiGetInterpolator()
 {
+    printf("qRegisterGuiGetInterpolator\n");
     qRegisterAnimationInterpolator<QColor>(_q_interpolateVariant<QColor>);
     qRegisterAnimationInterpolator<QVector2D>(_q_interpolateVariant<QVector2D>);
     qRegisterAnimationInterpolator<QVector3D>(_q_interpolateVariant<QVector3D>);

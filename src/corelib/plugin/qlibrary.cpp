@@ -663,6 +663,7 @@ QtPluginInstanceFunction QLibraryPrivate::loadPlugin()
  */
 bool QLibrary::isLibrary(const QString &fileName)
 {
+    qInfo() << "isLibrary() " << fileName << "\n";
 #if defined(Q_OS_WIN)
     return fileName.endsWith(QLatin1String(".dll"), Qt::CaseInsensitive);
 #else // Generic Unix
@@ -672,6 +673,7 @@ bool QLibrary::isLibrary(const QString &fileName)
         return true;
 # endif
     QString completeSuffix = QFileInfo(fileName).completeSuffix();
+    qInfo() << "completeSuffix : " << completeSuffix;
     if (completeSuffix.isEmpty())
         return false;
 
@@ -696,9 +698,13 @@ bool QLibrary::isLibrary(const QString &fileName)
             QLatin1String("bundle"),
 # elif defined(Q_OS_UNIX)
             QLatin1String("so"),
+# elif defined(Q_OS_AMIGA)
+            QLatin1String("so"),
 # endif
         }; // candidates
-        return std::find(std::begin(candidates), std::end(candidates), s) != std::end(candidates);
+        bool result = std::find(std::begin(candidates), std::end(candidates), s) != std::end(candidates);
+        qInfo() << "result : " << result << "\n";
+        return result;
     };
 
     // Examples of valid library names:

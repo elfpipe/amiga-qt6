@@ -2145,6 +2145,7 @@ QImage::Format QImage::format() const
     \sa convertTo(), {Image Formats}
 */
 
+#include <stdio.h>
 /*!
     \internal
 */
@@ -2153,11 +2154,14 @@ QImage QImage::convertToFormat_helper(Format format, Qt::ImageConversionFlags fl
     if (!d || d->format == format)
         return *this;
 
+    printf("convertFormat_helper() format == 0x%x , d->format == 0x%x\n", format, d->format);
+
     if (d->format == Format_Invalid || format <= Format_Invalid || format >= NImageFormats)
         return QImage();
 
     const QPixelLayout *destLayout = &qPixelLayouts[format];
     Image_Converter converter = qimage_converter_map[d->format][format];
+    printf("Converter : 0x%x\n", converter);
     if (!converter && format > QImage::Format_Indexed8 && d->format > QImage::Format_Indexed8) {
         if (qt_highColorPrecision(d->format, !destLayout->hasAlphaChannel)
                 && qt_highColorPrecision(format, !hasAlphaChannel())) {
@@ -2171,6 +2175,7 @@ QImage QImage::convertToFormat_helper(Format format, Qt::ImageConversionFlags fl
             converter = convert_generic;
     }
     if (converter) {
+        printf("Converter!\n");
         QImage image(d->width, d->height, format);
 
         QIMAGE_SANITYCHECK_MEMORY(image);

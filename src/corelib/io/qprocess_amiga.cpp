@@ -102,6 +102,7 @@ QT_END_NAMESPACE
 
 #include <proto/exec.h>
 #include <proto/dos.h>
+#include <dos/dosextens.h>
 
 #include <QString>
 #include <QList>
@@ -142,7 +143,7 @@ QString qt_unix_to_amiga_path_name (const QString &upath)
 }
 
 QT_BEGIN_INCLUDE_NAMESPACE
-extern char **environ;
+// extern char **environ;
 QT_END_INCLUDE_NAMESPACE
 
 QProcessEnvironment QProcessEnvironment::systemEnvironment()
@@ -230,7 +231,7 @@ QProcessManager::~QProcessManager()
 
 void QProcessManager::run()
 {
-	qt_processPort = IExec->AllocSysObjectTags(ASOT_PORT, TAG_DONE);
+	qt_processPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_DONE);
 
     forever {
 #if defined (QPROCESS_DEBUG)
@@ -328,7 +329,7 @@ int amiga_pipe(BPTR fd[2])
 
 	strlcpy(filename, "PIPE:", sizeof(filename));
 	strlcat(filename, data->Name, sizeof(filename));
-	IDOS->FreeDosObject(DOS_EXAMINEDATA, data);
+	IDOS->FreeDosObject(ACTION_EXAMINEDATA, data);
 
 	strlcpy(filename2, filename, sizeof(filename));
 	//strlcat(filename2, "/NOBLOCK", sizeof(filename2));
@@ -481,7 +482,7 @@ STATIC VOID ASM qt_exitfunc(	REG(D0, LONG return_code),
 STATIC int32 newprocesschildproc(STRPTR *args UNUSED, int32 arglen UNUSED,
 	                       struct ExecBase *sysbase)
 {
-	struct QProcessPrivate *priv = IDOS->GetEntryData();
+	struct QProcessPrivate *priv = (QProcessPrivate *)IDOS->GetEntryData();
 	int ret = IDOS->SystemTags(priv->fullCommand,
 								SYS_Input,			IDOS->Input(),
 								SYS_Output,			IDOS->Output(),
@@ -763,8 +764,8 @@ void QProcessPrivate::terminateProcess()
     qDebug("QProcessPrivate::killProcess()");
 #endif
 	//we can't kill it, only send it a break
-	if (pid)
-		IExec->Signal(pid, SIGBREAKF_CTRL_C);
+	// if (pid)
+	// 	IExec->Signal(pid, SIGBREAKF_CTRL_C);
 }
 
 void QProcessPrivate::killProcess()
@@ -772,8 +773,8 @@ void QProcessPrivate::killProcess()
 #if defined (QPROCESS_DEBUG)
     qDebug("QProcessPrivate::killProcess()");
 #endif
-    if (pid)
-		IExec->Signal(pid, SIGBREAKF_CTRL_C);
+    // if (pid)
+	// 	IExec->Signal(pid, SIGBREAKF_CTRL_C);
         //::kill(pid_t(pid), SIGKILL);
 }
 

@@ -215,7 +215,9 @@ public:
         bool isVisible = false;
     };
 
-    QFileSystemModelPrivate() = default;
+    QFileSystemModelPrivate() {
+            fileInfoGatherer = new QFileInfoGatherer;
+    } //default;
     void init();
     /*
       \internal
@@ -285,9 +287,9 @@ public:
 #if QT_CONFIG(filesystemwatcher)
 #  ifdef Q_OS_WIN
     QStringList unwatchPathsAt(const QModelIndex &);
-    void watchPaths(const QStringList &paths) { fileInfoGatherer.watchPaths(paths); }
+    void watchPaths(const QStringList &paths) { fileInfoGatherer->watchPaths(paths); }
 #  endif // Q_OS_WIN
-    QFileInfoGatherer fileInfoGatherer;
+    QFileInfoGatherer *fileInfoGatherer = nullptr;
 #endif // filesystemwatcher
     QTimer delayedSortTimer;
     QHash<const QFileSystemNode*, bool> bypassFilters;

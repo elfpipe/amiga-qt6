@@ -1,0 +1,11 @@
+#define INFINITY   (__builtin_inff())
+#define NAN    (__builtin_nanf (""))
+
+
+  inline _GLIBCXX_CONSTEXPR long double
+  lround(long double __x)
+  { return __builtin_lround(__x); }
+
+  inline _GLIBCXX_CONSTEXPR long double
+  copysign(long double __x, long double __y)
+  { return __builtin_copysign(__x, __y); }

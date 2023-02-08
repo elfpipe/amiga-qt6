@@ -244,10 +244,12 @@ bool QLibraryPrivate::load_sys()
                 attempt = path + prefixes.at(prefix) + name + suffixes.at(suffix);
             }
 #if defined(Q_OS_AMIGA)
+            qInfo() << "load_sys() attempt == " << attempt << "\n";
 			QString path (qt_unix_to_amiga_path_name (attempt));
+            qInfo() << "load_sys() path == " << path << "\n";
 			char *amigapath = strdup(path.toLocal8Bit().constData());
 
-            pHnd = dlopen(amigapath, dlFlags);
+            hnd = dlopen(amigapath, dlFlags);
 			//qDebug() << "dlopen()" << amigapath << (void *)pHnd << dlFlags;
 			free (amigapath);
 #else

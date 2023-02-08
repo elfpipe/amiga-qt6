@@ -319,7 +319,6 @@ void QPlatformBackingStoreOpenGLSupport::composeAndFlush(QWindow *window, const 
 
 GLuint QPlatformBackingStoreOpenGLSupport::toTexture(const QRegion &dirtyRegion, QSize *textureSize, QPlatformBackingStore::TextureFlags *flags) const
 {
-    printf("toTexture().\n");
     Q_ASSERT(textureSize);
     Q_ASSERT(flags);
 
@@ -450,12 +449,13 @@ GLuint QPlatformBackingStoreOpenGLSupport::toTexture(const QRegion &dirtyRegion,
 
     if (hasUnpackRowLength)
         funcs->glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-printf("Return textureId.\n");
+
     return textureId;
 }
 
 void qt_registerDefaultPlatformBackingStoreOpenGLSupport()
 {
+    printf("qt_registerDefaultPlatformBackingStoreOpenGLSupport\n");
     if (!QPlatformBackingStoreOpenGLSupportBase::factoryFunction()) {
         QPlatformBackingStoreOpenGLSupportBase::setFactoryFunction([]() -> QPlatformBackingStoreOpenGLSupportBase* {
             return new QPlatformBackingStoreOpenGLSupport;

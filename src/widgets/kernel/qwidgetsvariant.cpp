@@ -66,6 +66,7 @@ static const struct : QMetaTypeModuleHelper
 
 void qRegisterWidgetsVariant()
 {
+    printf("qRegisterWidgetsVariant\n");
     qMetaTypeWidgetsHelper = &qVariantWidgetsHelper;
 }
 Q_CONSTRUCTOR_FUNCTION(qRegisterWidgetsVariant)

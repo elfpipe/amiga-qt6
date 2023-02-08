@@ -67,6 +67,7 @@ QThreadData::QThreadData(int initialRefCount)
 
 QThreadData::~QThreadData()
 {
+    printf("~QThreadData : 0x%x\n", (void *)this);
 #if QT_CONFIG(thread)
     Q_ASSERT(_ref.loadRelaxed() == 0);
 #endif
@@ -91,7 +92,10 @@ QThreadData::~QThreadData()
     // negative, but that's acceptable.
     QThread *t = thread.loadAcquire();
     thread.storeRelease(nullptr);
+#ifndef __amigaos4__
+    // FIXME : QThread will always be orphaned on amiga
     delete t;
+#endif
 
     for (int i = 0; i < postEventList.size(); ++i) {
         const QPostEvent &pe = postEventList.at(i);
@@ -195,6 +199,7 @@ QThreadPrivate::QThreadPrivate(QThreadData *d)
 
 QThreadPrivate::~QThreadPrivate()
 {
+    printf("~QThreadPrivate : 0x%x\n", (void *)this);
     data->deref();
 }
 
