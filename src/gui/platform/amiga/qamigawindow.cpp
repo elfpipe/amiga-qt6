@@ -94,7 +94,7 @@ void QAmigaWindow::openWindow()
 
     //if(window()->surfaceType() == QSurface::Offscreen) return;
 
-    m_normalGeometry = windowFrameGeometry();
+    QRect rect = windowFrameGeometry();
 
     bool frameless = 
                     window()->flags() & Qt::FramelessWindowHint
@@ -106,10 +106,10 @@ void QAmigaWindow::openWindow()
                     || window()->type() == Qt::SubWindow;
 
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
-        WA_Left, m_normalGeometry.x(),
-        WA_Top, m_normalGeometry.y(),
-        WA_Width, m_normalGeometry.width(),
-        WA_Height, m_normalGeometry.height(),  
+        WA_Left, rect.x(),
+        WA_Top, rect.y(),
+        WA_Width, rect.width(),
+        WA_Height, rect.height(),  
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
         WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
@@ -147,14 +147,14 @@ void QAmigaWindow::setGeometry(const QRect &rect)
     setFrameMarginsEnabled(m_frameMarginsRequested);
     setGeometryImpl(rect);
 
-    m_normalGeometry = windowFrameGeometry();
+    QRect realRect = windowFrameGeometry();
 
     if(m_intuitionWindow)
         IIntuition->SetWindowAttrs(m_intuitionWindow,
-                                WA_Left, m_normalGeometry.x(),
-                                WA_Top, m_normalGeometry.y(),
-                                WA_Width, m_normalGeometry.width(),
-                                WA_Height, m_normalGeometry.height(),
+                                WA_Left, realRect.x(),
+                                WA_Top, realRect.y(),
+                                WA_Width, realRect.width(),
+                                WA_Height, realRect.height(),
                                 TAG_DONE);
 }
 
@@ -244,13 +244,13 @@ void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
         TAG_DONE);
 
     bool frameless = 
-            window()->flags() & Qt::FramelessWindowHint
-                    || window()->type() == Qt::Tool
-                    || window()->type() == Qt::Popup
-                    || window()->type() == Qt::ToolTip
-                    || window()->type() == Qt::SplashScreen
-                    || window()->type() == Qt::Desktop
-                    || window()->type() == Qt::SubWindow;
+               window()->flags() & Qt::FramelessWindowHint
+            || window()->type() == Qt::Tool
+            || window()->type() == Qt::Popup
+            || window()->type() == Qt::ToolTip
+            || window()->type() == Qt::SplashScreen
+            || window()->type() == Qt::Desktop
+            || window()->type() == Qt::SubWindow;
 
     if (enabled
         && !frameless
