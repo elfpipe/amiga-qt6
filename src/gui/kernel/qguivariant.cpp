@@ -181,7 +181,6 @@ static const struct : QMetaTypeModuleHelper
 
 void qRegisterGuiVariant()
 {
-    printf("qRegisterGuiVariant\n");
     qMetaTypeGuiHelper = &qVariantGuiHelper;
 }
 Q_CONSTRUCTOR_FUNCTION(qRegisterGuiVariant)

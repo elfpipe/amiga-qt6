@@ -2499,7 +2499,6 @@ InPlace_Image_Converter qimage_inplace_converter_map[QImage::NImageFormats][QIma
 
 static void qInitImageConversions()
 {
-    printf("qInitImageConversions\n");
     // Some conversions can not be generic, other are just hard to make as fast in the generic converter.
 
     // All conversions to and from indexed formats can not be generic and needs to go over RGB32 or ARGB32

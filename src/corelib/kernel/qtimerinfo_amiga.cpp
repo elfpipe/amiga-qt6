@@ -91,7 +91,6 @@ QTimerInfoList::QTimerInfoList()
 }
 
 QTimerInfoList::~QTimerInfoList() {
-    printf("Destroying TimerInfoList.\n");
     IExec->CloseDevice ((struct IORequest *)timerRequest);
     IExec->FreeSysObject (ASOT_IOREQUEST, timerRequest);
     IExec->FreeSysObject (ASOT_PORT, timerPort);

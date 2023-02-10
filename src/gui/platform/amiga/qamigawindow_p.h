@@ -68,6 +68,8 @@ public:
 #endif
 
     void setGeometry(const QRect &rect) override;
+    // QRect geometry() const override { return m_normalGeometry; }
+    // QRect normalGeometry() const override { return m_normalGeometry; }
     void setWindowState(Qt::WindowStates states) override;
 
     QMargins frameMargins() const override;

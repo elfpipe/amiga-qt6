@@ -678,7 +678,6 @@ QGuiApplication::~QGuiApplication()
     qt_call_post_routines();
 
     d->eventDispatcher->closingDown();
-    printf("Delete eventDispatcher.\n");
     delete d->eventDispatcher;
     d->eventDispatcher = nullptr;
 

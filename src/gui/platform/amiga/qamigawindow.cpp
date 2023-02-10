@@ -61,10 +61,15 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
     , m_frameMarginsRequested(frameMarginsEnabled)
     , m_intuitionWindow(0)
 {
+    QRect rect = initialGeometry(window, window->geometry(), 320, 240);
+
     if (window->windowState() == Qt::WindowNoState) {
         setGeometry(windowGeometry());
     } else {
         setWindowState(window->windowStates());
+
+        setVisible(true);
+        setGeometry(rect);
     }
 
     static WId counter = 0;
@@ -78,12 +83,10 @@ QAmigaWindow::~QAmigaWindow()
     if (QAmigaScreen::windowContainingCursor == this)
         QAmigaScreen::windowContainingCursor = nullptr;
     m_windowForWinIdHash.remove(m_winId);
-#ifdef __amigaos4__
+
     closeWindow();
-#endif
 }
 
-#ifdef __amigaos4__
 void QAmigaWindow::openWindow()
 {
     if(m_intuitionWindow) IIntuition->CloseWindow(m_intuitionWindow);
@@ -91,7 +94,8 @@ void QAmigaWindow::openWindow()
 
     //if(window()->surfaceType() == QSurface::Offscreen) return;
 
-    QRect rect = windowFrameGeometry();
+    m_normalGeometry = windowFrameGeometry();
+
     bool frameless = 
                     window()->flags() & Qt::FramelessWindowHint
                     || window()->type() == Qt::Tool
@@ -102,10 +106,10 @@ void QAmigaWindow::openWindow()
                     || window()->type() == Qt::SubWindow;
 
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
-        WA_Left, rect.x(),
-        WA_Top, rect.y(),
-        WA_Width, rect.width(),
-        WA_Height, rect.height(),  
+        WA_Left, m_normalGeometry.x(),
+        WA_Top, m_normalGeometry.y(),
+        WA_Width, m_normalGeometry.width(),
+        WA_Height, m_normalGeometry.height(),  
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
         WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
@@ -132,7 +136,6 @@ void QAmigaWindow::closeWindow()
         m_intuitionWindow = 0;
     }
 }
-#endif
 
 void QAmigaWindow::setGeometry(const QRect &rect)
 {
@@ -144,16 +147,14 @@ void QAmigaWindow::setGeometry(const QRect &rect)
     setFrameMarginsEnabled(m_frameMarginsRequested);
     setGeometryImpl(rect);
 
-    m_normalGeometry = geometry();
-    
+    m_normalGeometry = windowFrameGeometry();
+
     if(m_intuitionWindow)
         IIntuition->SetWindowAttrs(m_intuitionWindow,
-                                // WA_Left, rect.x() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderLeft,
-                                // WA_Top, rect.y() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderTop,
                                 WA_Left, m_normalGeometry.x(),
                                 WA_Top, m_normalGeometry.y(),
-                                WA_InnerWidth, m_normalGeometry.width(),
-                                WA_InnerHeight, m_normalGeometry.height(),
+                                WA_Width, m_normalGeometry.width(),
+                                WA_Height, m_normalGeometry.height(),
                                 TAG_DONE);
 }
 
@@ -166,7 +167,7 @@ void QAmigaWindow::setGeometryImpl(const QRect &rect)
         adjusted.setHeight(1);
 
     if (m_positionIncludesFrame) {
-        adjusted.translate(m_margins.left(), m_margins.top());
+        adjusted.adjust(-m_margins.left(), -m_margins.top(), m_margins.right(), m_margins.bottom());
     } else {
         // make sure we're not placed off-screen
         if (adjusted.left() < m_margins.left())
@@ -288,7 +289,7 @@ QHash<WId, QAmigaWindow *> QAmigaWindow::m_windowForWinIdHash;
 bool qt_swap_ctrl_and_amiga_keys = false;
 int qt_wheel_sensitivity = 120;
 
-Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier) 
+Qt::KeyboardModifiers qualifiersToModifiers(UWORD qualifier) 
 {
 	Qt::KeyboardModifiers ret;
 
@@ -317,7 +318,7 @@ Qt::KeyboardModifiers qualifierToModifier(UWORD qualifier)
 static Qt::MouseButtons buttons = Qt::NoButton;
 
 void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
-    Qt::KeyboardModifiers modifiers = qualifierToModifier(message->Qualifier);
+    Qt::KeyboardModifiers modifiers = qualifiersToModifiers(message->Qualifier);
 
     QPoint localPosition(message->MouseX - message->IDCMPWindow->BorderLeft, message->MouseY - message->IDCMPWindow->BorderTop);
     QPoint globalPosition(message->IDCMPWindow->LeftEdge + message->MouseX,
@@ -325,7 +326,6 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
 
     switch(message->Class) {
         case IDCMP_CLOSEWINDOW :
-            printf("Close window.\n");
             QWindowSystemInterface::handleCloseEvent(window());
             break;
 

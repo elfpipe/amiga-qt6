@@ -91,7 +91,6 @@ QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 
 QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
-    printf("Destroying EventDispatcherPrivate.\n");
     IExec->CloseDevice ((IORequest *)timerRequest);
     IExec->FreeSysObject(ASOT_IOREQUEST, timerRequest);
     IExec->FreeSysObject(ASOT_PORT, timerPort);
