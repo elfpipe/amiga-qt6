@@ -92,9 +92,10 @@ QThreadData::~QThreadData()
     // negative, but that's acceptable.
     QThread *t = thread.loadAcquire();
     thread.storeRelease(nullptr);
-#ifndef __amigaos4__
+#if 1 //ndef __amigaos4__
     // FIXME : QThread will always be orphaned on amiga
     delete t;
+#else
 #endif
 
     for (int i = 0; i < postEventList.size(); ++i) {

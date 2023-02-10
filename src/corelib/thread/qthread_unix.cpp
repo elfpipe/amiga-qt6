@@ -136,7 +136,10 @@ static void destroy_current_thread_data(void *p)
         Q_ASSERT(thread);
         QThreadPrivate *thread_p = static_cast<QThreadPrivate *>(QObjectPrivate::get(thread));
         Q_ASSERT(!thread_p->finished);
+#ifndef __amigaos4__
+        //thread private might be invalid at this point + finish will be called more than once
         thread_p->finish(thread);
+#endif
     }
     data->deref();
 
@@ -161,7 +164,7 @@ static void destroy_current_thread_data_key()
     pthread_once_t pthread_once_init = PTHREAD_ONCE_INIT;
     current_thread_data_once = pthread_once_init;
 }
-Q_DESTRUCTOR_FUNCTION(destroy_current_thread_data_key)
+// Q_DESTRUCTOR_FUNCTION(destroy_current_thread_data_key)
 
 
 // Utility functions for getting, setting and clearing thread specific data.

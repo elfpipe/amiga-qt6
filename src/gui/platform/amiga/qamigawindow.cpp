@@ -145,7 +145,7 @@ void QAmigaWindow::setGeometry(const QRect &rect)
     setGeometryImpl(rect);
 
     m_normalGeometry = geometry();
-
+    
     if(m_intuitionWindow)
         IIntuition->SetWindowAttrs(m_intuitionWindow,
                                 // WA_Left, rect.x() - m_positionIncludesFrame ? 0 : m_intuitionWindow->BorderLeft,
@@ -155,7 +155,6 @@ void QAmigaWindow::setGeometry(const QRect &rect)
                                 WA_InnerWidth, m_normalGeometry.width(),
                                 WA_InnerHeight, m_normalGeometry.height(),
                                 TAG_DONE);
-
 }
 
 void QAmigaWindow::setGeometryImpl(const QRect &rect)
