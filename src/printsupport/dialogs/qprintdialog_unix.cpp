@@ -121,7 +121,7 @@ Print dialog class declarations
 
 static void initResources()
 {
-//    Q_INIT_RESOURCE(qprintdialog);
+   Q_INIT_RESOURCE(qprintdialog);
 }
 
 QT_BEGIN_NAMESPACE
