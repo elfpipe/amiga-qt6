@@ -71,7 +71,8 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
         setWindowState(window->windowStates());
     }
 
-    setVisible(true);
+    // setVisible(true);
+    openWindow();
     setGeometry(rect);
 
     static WId counter = 0;
@@ -123,6 +124,7 @@ void QAmigaWindow::openWindow()
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ToolBox, window()->type() == Qt::ToolTip ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
+        WA_Hidden, TRUE,
         WA_UserPort, QAmigaIntegration::messagePort(),
         TAG_DONE );
 
@@ -169,19 +171,19 @@ void QAmigaWindow::setGeometryImpl(const QRect &rect)
     }
 
     QPlatformWindow::setGeometry(adjusted);
-    m_normalGeometry = adjusted;
+    // m_normalGeometry = adjusted;
+
+    QRect realRect = windowFrameGeometry();
+
+    if(m_intuitionWindow)
+        IIntuition->SetWindowAttrs(m_intuitionWindow,
+                                    WA_Left, realRect.x(),
+                                    WA_Top, realRect.y(),
+                                    WA_Width, realRect.width(),
+                                    WA_Height, realRect.height(),
+                                    TAG_DONE);
 
     if (m_visible) {
-        QRect realRect = windowFrameGeometry();
-
-        if(m_intuitionWindow)
-            IIntuition->SetWindowAttrs(m_intuitionWindow,
-                                        WA_Left, realRect.x(),
-                                        WA_Top, realRect.y(),
-                                        WA_Width, realRect.width(),
-                                        WA_Height, realRect.height(),
-                                        TAG_DONE);
-
         QWindowSystemInterface::handleGeometryChange(window(), adjusted);
         QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), adjusted.size()));
     } else {
@@ -213,8 +215,9 @@ void QAmigaWindow::setVisible(bool visible)
 
     m_visible = visible;
 
-    if(visible) openWindow();
-    else closeWindow();
+    IIntuition->SetWindowAttrs(m_intuitionWindow, WA_Hidden, visible ? FALSE : TRUE, TAG_DONE);
+    // if(visible) openWindow();
+    // else closeWindow();
 }
 
 void QAmigaWindow::requestActivateWindow()
