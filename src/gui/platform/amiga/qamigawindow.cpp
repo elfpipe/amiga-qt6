@@ -51,6 +51,8 @@
 #include <proto/keymap.h>
 #include <proto/exec.h>
 
+#include <QDebug>
+
 QT_BEGIN_NAMESPACE
 
 QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
@@ -87,6 +89,8 @@ QAmigaWindow::~QAmigaWindow()
     closeWindow();
 }
 
+#define max(x, y) ((x) > (y) ? (x) : (y))
+
 void QAmigaWindow::openWindow()
 {
     if(m_intuitionWindow) IIntuition->CloseWindow(m_intuitionWindow);
@@ -95,6 +99,11 @@ void QAmigaWindow::openWindow()
     //if(window()->surfaceType() == QSurface::Offscreen) return;
 
     QRect rect = windowFrameGeometry();
+    // if such small dimensions are given, then it is probably just inital and will be adjusted
+    rect.setWidth(max(rect.width(), 64));
+    rect.setHeight(max(rect.height(), 64));
+
+    qInfo() << "QAmigaWindow::openWindow() " << rect << "\n";
 
     bool frameless = isFrameless();
 
