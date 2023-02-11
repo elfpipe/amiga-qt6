@@ -67,10 +67,10 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
         setGeometry(windowGeometry());
     } else {
         setWindowState(window->windowStates());
-
-        setVisible(true);
-        setGeometry(rect);
     }
+
+    setVisible(true);
+    setGeometry(rect);
 
     static WId counter = 0;
     m_winId = ++counter;
@@ -96,14 +96,7 @@ void QAmigaWindow::openWindow()
 
     QRect rect = windowFrameGeometry();
 
-    bool frameless = 
-                    window()->flags() & Qt::FramelessWindowHint
-                    || window()->type() == Qt::Tool
-                    || window()->type() == Qt::Popup
-                    || window()->type() == Qt::ToolTip
-                    || window()->type() == Qt::SplashScreen
-                    || window()->type() == Qt::Desktop
-                    || window()->type() == Qt::SubWindow;
+    bool frameless = isFrameless();
 
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
         WA_Left, rect.x(),
@@ -146,16 +139,6 @@ void QAmigaWindow::setGeometry(const QRect &rect)
 
     setFrameMarginsEnabled(m_frameMarginsRequested);
     setGeometryImpl(rect);
-
-    QRect realRect = windowFrameGeometry();
-
-    if(m_intuitionWindow)
-        IIntuition->SetWindowAttrs(m_intuitionWindow,
-                                WA_Left, realRect.x(),
-                                WA_Top, realRect.y(),
-                                WA_Width, realRect.width(),
-                                WA_Height, realRect.height(),
-                                TAG_DONE);
 }
 
 void QAmigaWindow::setGeometryImpl(const QRect &rect)
@@ -177,8 +160,19 @@ void QAmigaWindow::setGeometryImpl(const QRect &rect)
     }
 
     QPlatformWindow::setGeometry(adjusted);
+    m_normalGeometry = adjusted;
 
     if (m_visible) {
+        QRect realRect = windowFrameGeometry();
+
+        if(m_intuitionWindow)
+            IIntuition->SetWindowAttrs(m_intuitionWindow,
+                                        WA_Left, realRect.x(),
+                                        WA_Top, realRect.y(),
+                                        WA_Width, realRect.width(),
+                                        WA_Height, realRect.height(),
+                                        TAG_DONE);
+
         QWindowSystemInterface::handleGeometryChange(window(), adjusted);
         QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), adjusted.size()));
     } else {
@@ -243,17 +237,8 @@ void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
         WA_Hidden, TRUE,
         TAG_DONE);
 
-    bool frameless = 
-               window()->flags() & Qt::FramelessWindowHint
-            || window()->type() == Qt::Tool
-            || window()->type() == Qt::Popup
-            || window()->type() == Qt::ToolTip
-            || window()->type() == Qt::SplashScreen
-            || window()->type() == Qt::Desktop
-            || window()->type() == Qt::SubWindow;
-
     if (enabled
-        && !frameless
+        && !isFrameless()
         && (parent() == nullptr)) {
         m_margins = QMargins(dummy->BorderLeft, dummy->BorderTop, dummy->BorderRight, dummy->BorderBottom);
     } else {
@@ -277,6 +262,28 @@ void QAmigaWindow::setWindowState(Qt::WindowStates state)
         setGeometryImpl(m_normalGeometry);
 
     QWindowSystemInterface::handleWindowStateChanged(window(), state);
+}
+
+bool QAmigaWindow::isFrameless()
+{
+    bool frameless = 
+               window()->flags() & Qt::FramelessWindowHint
+            || window()->type() == Qt::Tool
+            || window()->type() == Qt::Popup
+            || window()->type() == Qt::ToolTip
+            || window()->type() == Qt::SplashScreen
+            || window()->type() == Qt::Desktop
+            || window()->type() == Qt::SubWindow;
+
+    return frameless;
+}
+
+void QAmigaWindow::setWindowTitle(const QString &title)
+{
+    if(m_intuitionWindow && !isFrameless()) {
+        IIntuition->SetWindowAttrs(m_intuitionWindow, WA_Title, strdup(window()->title().toLocal8Bit().constData()), TAG_DONE);
+    }
+    QPlatformWindow::setWindowTitle(title);
 }
 
 QAmigaWindow *QAmigaWindow::windowForWinId(WId id)

@@ -67,8 +67,12 @@ public:
     void closeWindow();
 #endif
 
+    bool isFrameless();
+    
     void setGeometry(const QRect &rect) override;
     void setWindowState(Qt::WindowStates states) override;
+
+    void setWindowTitle(const QString &title) override;
 
     QMargins frameMargins() const override;
 
@@ -83,6 +87,7 @@ private:
     void setFrameMarginsEnabled(bool enabled);
     void setGeometryImpl(const QRect &rect);
 
+    QRect m_normalGeometry;
     QMargins m_margins;
     bool m_positionIncludesFrame;
     bool m_visible;
