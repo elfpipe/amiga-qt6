@@ -29,7 +29,7 @@ This will install Qt6 into /qt6-amiga (in the root of your linux machine).
 
 You need to copy this entire directory unto your amiga hd and create
 
-> assign qt6-amiga: <yourhd>:<yourpath>
+> assign qt6-amiga: yourhd:yourpath
 
 on the amiga side.
 
