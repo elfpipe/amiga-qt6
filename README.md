@@ -8,6 +8,8 @@ First of all : Do not try to build on AmigaOS. Get Ubuntu and go to this page :
 https://github.com/sba1/adtools
 
 Follow the instructions here to set up the adtools cross toolchain. Qt6 is known to build and work with gcc 9 and 11.
+<br>
+
 
 <h2>Configure and build on linux</h2>
 
@@ -36,9 +38,13 @@ Also you need to copy your truetype fonts from FONTS:_TrueType/ and into
 > qt6-amiga:lib/fonts
 
 Qt6 will warn you of this last step, if you forget.
+<br>
 
-Keep in mind : To run Qt6 apps on OS4.1, you probably need to update the following files from adtools into SYS:sobjs/
+  
+<h2>Shared object dependencies</h2>
 
+To run Qt6 apps on OS4.1, you probably need to update the following files from adtools into SYS:sobjs/
+<br>
 <ul>
 <li>libatomic.so</li>
 <li>libgcc.so</li>
@@ -46,6 +52,8 @@ Keep in mind : To run Qt6 apps on OS4.1, you probably need to update the followi
 <li>libc.so</li>
 </ul>
 
+Remember to backup your files accordingly.
+  
 <br>
 
 <h2>Recommended setup</h2>
