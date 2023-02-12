@@ -19,7 +19,9 @@ In order to cross-build Qt6 for amiga, you need a Qt6 host install. If you are l
 
 will get you, what you need.
 
-If this succeeds, then the following steps will build the amiga version :
+You also need an up-to-date version of cmake. Google 'install cmake ubuntu' to find instructions of that, in case there is not already a working version of cmake on your system.
+
+The following steps will build the amiga version :
 
 > git clone https://github.com/alfkil/amiga-qt6.git
 > 
