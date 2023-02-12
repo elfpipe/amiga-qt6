@@ -13,6 +13,14 @@ Follow the instructions here to set up the adtools cross toolchain. Qt6 is known
 
 <h2>Configure and build on linux</h2>
 
+In order to cross-build Qt6 for amiga, you need a Qt6 host install. If you are lucky then
+
+> sudo apt install qt6-base-dev
+
+will get you, what you need.
+
+If this succeeds, then the following steps will build the amiga version :
+
 > git clone https://github.com/alfkil/amiga-qt6.git
 > 
 > mkdir qt6-amiga-build
