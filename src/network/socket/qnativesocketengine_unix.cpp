@@ -73,6 +73,11 @@
 #include <netinet/sctp.h>
 #endif
 
+#ifdef __amigaos4__
+# include <proto/bsdsocket.h>
+# include <sys/filio.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*
@@ -81,22 +86,24 @@ QT_BEGIN_NAMESPACE
 */
 static inline void qt_socket_getPortAndAddress(const qt_sockaddr *s, quint16 *port, QHostAddress *addr)
 {
-//     if (s->a.sa_family == AF_INET6) {
-//         Q_IPV6ADDR tmp;
-//         memcpy(&tmp, &s->a6.sin6_addr, sizeof(tmp));
-//         if (addr) {
-//             QHostAddress tmpAddress;
-//             tmpAddress.setAddress(tmp);
-//             *addr = tmpAddress;
-// #if QT_CONFIG(networkinterface)
-//             if (s->a6.sin6_scope_id)
-//                 addr->setScopeId(QNetworkInterface::interfaceNameFromIndex(s->a6.sin6_scope_id));
-// #endif
-//         }
-//         if (port)
-//             *port = ntohs(s->a6.sin6_port);
-//         return;
-//     }
+#ifndef __amigaos4__
+    if (s->a.sa_family == AF_INET6) {
+        Q_IPV6ADDR tmp;
+        memcpy(&tmp, &s->a6.sin6_addr, sizeof(tmp));
+        if (addr) {
+            QHostAddress tmpAddress;
+            tmpAddress.setAddress(tmp);
+            *addr = tmpAddress;
+#if QT_CONFIG(networkinterface)
+            if (s->a6.sin6_scope_id)
+                addr->setScopeId(QNetworkInterface::interfaceNameFromIndex(s->a6.sin6_scope_id));
+#endif
+        }
+        if (port)
+            *port = ntohs(s->a6.sin6_port);
+        return;
+    }
+#endif
 
     if (port)
         *port = ntohs(s->a4.sin_port);
@@ -232,9 +239,14 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
     }
     int protocol = 0;
 #endif // QT_NO_SCTP
-    int domain = AF_INET; //(socketProtocol == QAbstractSocket::IPv6Protocol
-                //   || socketProtocol == QAbstractSocket::AnyIPProtocol) ? AF_INET6 : AF_INET;
+#ifdef __amigaos4__
+    int domain = AF_INET;
+    int type = SOCK_STREAM;
+#else
+    int domain = (socketProtocol == QAbstractSocket::IPv6Protocol
+                   || socketProtocol == QAbstractSocket::AnyIPProtocol) ? AF_INET6 : AF_INET;
     int type = (socketType == QAbstractSocket::UdpSocket) ? SOCK_DGRAM : SOCK_STREAM;
+#endif
 
     int socket = qt_safe_socket(domain, type, protocol, O_NONBLOCK);
     if (socket < 0 && socketProtocol == QAbstractSocket::AnyIPProtocol && errno == EAFNOSUPPORT) {
@@ -243,9 +255,16 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
         socketProtocol = QAbstractSocket::IPv4Protocol;
     }
 
+#ifdef __amigaos4__
+	if(socket < 0) {
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error)  {
+#else
     if (socket < 0) {
         int ecopy = errno;
         switch (ecopy) {
+#endif
         case EPROTONOSUPPORT:
         case EAFNOSUPPORT:
         case EINVAL:
@@ -333,7 +352,11 @@ int QNativeSocketEnginePrivate::option(QNativeSocketEngine::SocketOption opt) co
     QT_SOCKOPTLEN_T len = sizeof(v);
 
     convertToLevelAndOption(opt, socketProtocol, level, n);
+#ifdef __amigaos4__
+    if (n != -1 && ISocket->getsockopt(socketDescriptor, level, n, (char *) &v, &len) != -1)
+#else
     if (n != -1 && ::getsockopt(socketDescriptor, level, n, (char *) &v, &len) != -1)
+#endif
         return v;
 
     return -1;
@@ -353,7 +376,20 @@ bool QNativeSocketEnginePrivate::setOption(QNativeSocketEngine::SocketOption opt
     switch (opt) {
     case QNativeSocketEngine::NonBlockingSocketOption: {
         // Make the socket nonblocking.
-#if !defined(Q_OS_VXWORKS)
+#ifdef __amigaos4__
+		int onoff = 1;
+		if(ISocket->IoctlSocket(socketDescriptor, FIONBIO, &onoff) < 0)
+		{
+#ifdef QNATIVESOCKETENGINE_DEBUG
+            perror("QNativeSocketEnginePrivate::setOption(): IoctlSocket(FIONBIO) failed");
+#endif
+			int error = 0;
+			ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+			printf("IoctlSocket() returned an error: %d\n", error);
+			return false;
+		}
+		return true;
+#elif !defined(Q_OS_VXWORKS)
         int flags = ::fcntl(socketDescriptor, F_GETFL, 0);
         if (flags == -1) {
 #ifdef QNATIVESOCKETENGINE_DEBUG
@@ -415,7 +451,11 @@ bool QNativeSocketEnginePrivate::setOption(QNativeSocketEngine::SocketOption opt
 
     if (n == -1)
         return false;
+#ifdef __amigaos4__
+    return ISocket->setsockopt(socketDescriptor, level, n, (char *) &v, sizeof(v)) == 0;
+#else
     return ::setsockopt(socketDescriptor, level, n, (char *) &v, sizeof(v)) == 0;
+#endif
 }
 
 bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16 port)
@@ -428,12 +468,22 @@ bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16
     QT_SOCKLEN_T sockAddrSize;
     setPortAndAddress(port, addr, &aa, &sockAddrSize);
 
+#ifdef __amigaos4__
+    int connectResult = ISocket->connect(socketDescriptor, &aa.a, sockAddrSize);
+#else
     int connectResult = qt_safe_connect(socketDescriptor, &aa.a, sockAddrSize);
+#endif
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     int ecopy = errno;
 #endif
     if (connectResult == -1) {
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch (errno) {
+#endif
         case EISCONN:
             socketState = QAbstractSocket::ConnectedState;
             break;
@@ -514,6 +564,9 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
     }
 #endif
 
+#ifdef __amigaos4__
+    int bindResult = ISocket->bind(socketDescriptor, &aa.a, sockAddrSize);
+#else
     int bindResult = QT_SOCKET_BIND(socketDescriptor, &aa.a, sockAddrSize);
     if (bindResult < 0 && errno == EAFNOSUPPORT && address.protocol() == QAbstractSocket::AnyIPProtocol) {
         // retry with v4
@@ -523,12 +576,19 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
         sockAddrSize = sizeof(aa.a4);
         bindResult = QT_SOCKET_BIND(socketDescriptor, &aa.a, sockAddrSize);
     }
+#endif
 
     if (bindResult < 0) {
 #if defined (QNATIVESOCKETENGINE_DEBUG)
         int ecopy = errno;
 #endif
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch(errno) {
+#endif
         case EADDRINUSE:
             setError(QAbstractSocket::AddressInUseError, AddressInuseErrorString);
             break;
@@ -563,11 +623,21 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
 
 bool QNativeSocketEnginePrivate::nativeListen(int backlog)
 {
+#ifdef __amigaos4__
+	if (ISocket->listen(socketDescriptor, backlog) < 0) {
+#else
     if (qt_safe_listen(socketDescriptor, backlog) < 0) {
+#endif
 #if defined (QNATIVESOCKETENGINE_DEBUG)
         int ecopy = errno;
 #endif
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch (errno) {
+#endif
         case EADDRINUSE:
             setError(QAbstractSocket::AddressInUseError,
                      PortInuseErrorString);
@@ -593,9 +663,19 @@ bool QNativeSocketEnginePrivate::nativeListen(int backlog)
 
 int QNativeSocketEnginePrivate::nativeAccept()
 {
+#ifdef __amigaos4__
+    int acceptedDescriptor = ISocket->accept(socketDescriptor, 0, 0);	
+#else
     int acceptedDescriptor = qt_safe_accept(socketDescriptor, nullptr, nullptr);
+#endif
     if (acceptedDescriptor == -1) {
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch (errno) {
+#endif
         case EBADF:
         case EOPNOTSUPP:
             setError(QAbstractSocket::UnsupportedSocketOperationError, InvalidSocketErrorString);
@@ -654,18 +734,21 @@ static bool multicastMembershipHelper(QNativeSocketEnginePrivate *d,
     int sockArgSize;
 
     ip_mreq mreq4;
-    // ipv6_mreq mreq6;
+#ifndef __amigaos4__
+    ipv6_mreq mreq6;
 
     if (groupAddress.protocol() == QAbstractSocket::IPv6Protocol) {
-        // level = IPPROTO_IPV6;
-        // sockOpt = how6;
-        // sockArg = &mreq6;
-        // sockArgSize = sizeof(mreq6);
-        // memset(&mreq6, 0, sizeof(mreq6));
-        // Q_IPV6ADDR ip6 = groupAddress.toIPv6Address();
-        // memcpy(&mreq6.ipv6mr_multiaddr, &ip6, sizeof(ip6));
-        // mreq6.ipv6mr_interface = interface.index();
-    } else if (groupAddress.protocol() == QAbstractSocket::IPv4Protocol) {
+        level = IPPROTO_IPV6;
+        sockOpt = how6;
+        sockArg = &mreq6;
+        sockArgSize = sizeof(mreq6);
+        memset(&mreq6, 0, sizeof(mreq6));
+        Q_IPV6ADDR ip6 = groupAddress.toIPv6Address();
+        memcpy(&mreq6.ipv6mr_multiaddr, &ip6, sizeof(ip6));
+        mreq6.ipv6mr_interface = interface.index();
+    } else
+#endif
+    if (groupAddress.protocol() == QAbstractSocket::IPv4Protocol) {
         level = IPPROTO_IP;
         sockOpt = how4;
         sockArg = &mreq4;
@@ -723,34 +806,42 @@ static bool multicastMembershipHelper(QNativeSocketEnginePrivate *d,
 bool QNativeSocketEnginePrivate::nativeJoinMulticastGroup(const QHostAddress &groupAddress,
                                                           const QNetworkInterface &interface)
 {
-return false;
-    // return multicastMembershipHelper(this,
-    //                                  IPV6_JOIN_GROUP,
-    //                                  IP_ADD_MEMBERSHIP,
-    //                                  groupAddress,
-    //                                  interface);
+#ifdef __amigaos4__
+    return false;
+#else
+    return multicastMembershipHelper(this,
+                                     IPV6_JOIN_GROUP,
+                                     IP_ADD_MEMBERSHIP,
+                                     groupAddress,
+                                     interface);
+#endif
 }
 
 bool QNativeSocketEnginePrivate::nativeLeaveMulticastGroup(const QHostAddress &groupAddress,
                                                            const QNetworkInterface &interface)
 {
-return false;
-    // return multicastMembershipHelper(this,
-    //                                  IPV6_LEAVE_GROUP,
-    //                                  IP_DROP_MEMBERSHIP,
-    //                                  groupAddress,
-    //                                  interface);
+#ifdef __amigaos4__
+    return false;
+#else
+    return multicastMembershipHelper(this,
+                                     IPV6_LEAVE_GROUP,
+                                     IP_DROP_MEMBERSHIP,
+                                     groupAddress,
+                                     interface);
+#endif
 }
 
 QNetworkInterface QNativeSocketEnginePrivate::nativeMulticastInterface() const
 {
+#ifndef __amigaos4__
     if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-        // uint v;
-        // QT_SOCKOPTLEN_T sizeofv = sizeof(v);
-        // if (::getsockopt(socketDescriptor, IPPROTO_IPV6, IPV6_MULTICAST_IF, &v, &sizeofv) == -1)
-        //     return QNetworkInterface();
-        // return QNetworkInterface::interfaceFromIndex(v);
+        uint v;
+        QT_SOCKOPTLEN_T sizeofv = sizeof(v);
+        if (::getsockopt(socketDescriptor, IPPROTO_IPV6, IPV6_MULTICAST_IF, &v, &sizeofv) == -1)
+            return QNetworkInterface();
+        return QNetworkInterface::interfaceFromIndex(v);
     }
+#endif
 
 #if defined(Q_OS_SOLARIS)
     struct in_addr v = { 0, 0, 0, 0};
@@ -778,10 +869,12 @@ QNetworkInterface QNativeSocketEnginePrivate::nativeMulticastInterface() const
 
 bool QNativeSocketEnginePrivate::nativeSetMulticastInterface(const QNetworkInterface &iface)
 {
+#ifndef __amigaos4__
     if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-        // uint v = iface.index();
-        // return (::setsockopt(socketDescriptor, IPPROTO_IPV6, IPV6_MULTICAST_IF, &v, sizeof(v)) != -1);
+        uint v = iface.index();
+        return (::setsockopt(socketDescriptor, IPPROTO_IPV6, IPV6_MULTICAST_IF, &v, sizeof(v)) != -1);
     }
+#endif
 
     struct in_addr v;
     if (iface.isValid()) {
@@ -819,8 +912,12 @@ qint64 QNativeSocketEnginePrivate::nativeBytesAvailable() const
     }
 #endif
 
-    // if (available == -1 && qt_safe_ioctl(socketDescriptor, FIONREAD, (char *) &nbytes) >= 0)
-    //     available = nbytes;
+#ifdef __amigaos4__
+	if (ISocket->IoctlSocket(socketDescriptor, FIONREAD, (char *) &nbytes) >= 0)	
+#else
+    if (available == -1 && qt_safe_ioctl(socketDescriptor, FIONREAD, (char *) &nbytes) >= 0)
+#endif
+        available = nbytes;
 
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     qDebug("QNativeSocketEnginePrivate::nativeBytesAvailable() == %lli", available);
@@ -832,12 +929,37 @@ bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 {
     // Peek 1 bytes into the next message.
     ssize_t readBytes;
+#ifdef __amigaos4__
+    qt_sockaddr storage;
+    QT_SOCKLEN_T storageSize = sizeof(storage);
+    memset(&storage, 0, storageSize);
+
+	bool done = false;
+	int error = 0;
+    while(!done)
+    {
+        char c;
+        readBytes = ISocket->recvfrom(socketDescriptor, &c, 1, MSG_PEEK, &storage.a, &storageSize);
+        if(readBytes >= 0)
+        	done = true;
+        else
+        {
+        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+        	if(error != EINTR)
+        		done = true;
+       	}
+    }
+#else
     char c;
     EINTR_LOOP(readBytes, ::recv(socketDescriptor, &c, 1, MSG_PEEK));
-
+#endif
     // If there's no error, or if our buffer was too small, there must be a
     // pending datagram.
+#ifdef __amigaos4__
+    bool result = (readBytes != -1) || error == EMSGSIZE;
+#else
     bool result = (readBytes != -1) || errno == EMSGSIZE;
+#endif
 
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     qDebug("QNativeSocketEnginePrivate::nativeHasPendingDatagrams() == %s",
@@ -849,7 +971,7 @@ bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 {
     ssize_t recvResult = -1;
-#ifdef Q_OS_LINUX
+#if defined(Q_OS_LINUX)
     // Linux can return the actual datagram size if we use MSG_TRUNC
     char c;
     EINTR_LOOP(recvResult, ::recv(socketDescriptor, &c, 1, MSG_PEEK | MSG_TRUNC));
@@ -879,9 +1001,20 @@ qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
         // the data written to udpMessagePeekBuffer is discarded, so
         // this function is still reentrant although it might not look
         // so.
-        recvResult = ::recvmsg(socketDescriptor, &msg, MSG_PEEK);
+#ifdef __amigaos4__
+        recvResult = ISocket->recvmsg(socketDescriptor, &msg, MSG_PEEK);
+        if(recvResult == -1)
+        {
+        	int error = 0;
+        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+        	if(error == EINTR)
+        		continue;
+       	}
+#else
+       recvResult = ::recvmsg(socketDescriptor, &msg, MSG_PEEK);
         if (recvResult == -1 && errno == EINTR)
             continue;
+#endif
 
         // was the result truncated?
         if ((msg.msg_flags & MSG_TRUNC) == 0)
@@ -909,266 +1042,291 @@ qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxSize, QIpPacketHeader *header,
                                                          QAbstractSocketEngine::PacketHeaderOptions options)
 {
-//     // we use quintptr to force the alignment
-//     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
-// #if !defined(IP_PKTINFO) && defined(IP_RECVIF) && defined(Q_OS_BSD4)
-//                    + CMSG_SPACE(sizeof(sockaddr_dl))
-// #endif
-// #ifndef QT_NO_SCTP
-//                    + CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))
-// #endif
-//                    + sizeof(quintptr) - 1) / sizeof(quintptr)];
+#ifndef __amigaos4__
+    // we use quintptr to force the alignment
+    quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
+#if !defined(IP_PKTINFO) && defined(IP_RECVIF) && defined(Q_OS_BSD4)
+                   + CMSG_SPACE(sizeof(sockaddr_dl))
+#endif
+#ifndef QT_NO_SCTP
+                   + CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))
+#endif
+                   + sizeof(quintptr) - 1) / sizeof(quintptr)];
 
-//     struct msghdr msg;
-//     struct iovec vec;
-//     qt_sockaddr aa;
-//     char c;
-//     memset(&msg, 0, sizeof(msg));
-//     memset(&aa, 0, sizeof(aa));
+    struct msghdr msg;
+    struct iovec vec;
+    qt_sockaddr aa;
+    char c;
+    memset(&msg, 0, sizeof(msg));
+    memset(&aa, 0, sizeof(aa));
 
-//     // we need to receive at least one byte, even if our user isn't interested in it
-//     vec.iov_base = maxSize ? data : &c;
-//     vec.iov_len = maxSize ? maxSize : 1;
-//     msg.msg_iov = &vec;
-//     msg.msg_iovlen = 1;
-//     if (options & QAbstractSocketEngine::WantDatagramSender) {
-//         msg.msg_name = &aa;
-//         msg.msg_namelen = sizeof(aa);
-//     }
-//     if (options & (QAbstractSocketEngine::WantDatagramHopLimit | QAbstractSocketEngine::WantDatagramDestination
-//                    | QAbstractSocketEngine::WantStreamNumber)) {
-//         msg.msg_control = cbuf;
-//         msg.msg_controllen = sizeof(cbuf);
-//     }
+    // we need to receive at least one byte, even if our user isn't interested in it
+    vec.iov_base = maxSize ? data : &c;
+    vec.iov_len = maxSize ? maxSize : 1;
+    msg.msg_iov = &vec;
+    msg.msg_iovlen = 1;
+    if (options & QAbstractSocketEngine::WantDatagramSender) {
+        msg.msg_name = &aa;
+        msg.msg_namelen = sizeof(aa);
+    }
+    if (options & (QAbstractSocketEngine::WantDatagramHopLimit | QAbstractSocketEngine::WantDatagramDestination
+                   | QAbstractSocketEngine::WantStreamNumber)) {
+        msg.msg_control = cbuf;
+        msg.msg_controllen = sizeof(cbuf);
+    }
 
-//     ssize_t recvResult = 0;
-//     do {
-//         recvResult = ::recvmsg(socketDescriptor, &msg, 0);
-//     } while (recvResult == -1 && errno == EINTR);
+    ssize_t recvResult = 0;
+#ifdef __amigaos4__
+	bool done = false;
+	int error = 0;
+    while(!done)
+    {
+        char c;
+        recvFromResult = ISocket->recvfrom(socketDescriptor, maxSize ? data : &c, maxSize ? maxSize : 1,
+                                    0, &aa.a, &sz);
+        if(recvFromResult >= 0)
+        	done = true;
+        else
+        {
+        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+        	if(error != EINTR)
+        		done = true;
+       	}
+    }
+#else
+    do {
+        recvResult = ::recvmsg(socketDescriptor, &msg, 0);
+    } while (recvResult == -1 && errno == EINTR);
+#endif
 
-//     if (recvResult == -1) {
-//         switch (errno) {
-// #if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
-//         case EWOULDBLOCK:
-// #endif
-//         case EAGAIN:
-//             // No datagram was available for reading
-//             recvResult = -2;
-//             break;
-//         case ECONNREFUSED:
-//             setError(QAbstractSocket::ConnectionRefusedError, ConnectionRefusedErrorString);
-//             break;
-//         default:
-//             setError(QAbstractSocket::NetworkError, ReceiveDatagramErrorString);
-//         }
-//         if (header)
-//             header->clear();
-//     } else if (options != QAbstractSocketEngine::WantNone) {
-//         Q_ASSERT(header);
-//         qt_socket_getPortAndAddress(&aa, &header->senderPort, &header->senderAddress);
-//         header->destinationPort = localPort;
-//         header->endOfRecord = (msg.msg_flags & MSG_EOR) != 0;
+    if (recvResult == -1) {
+        switch (errno) {
+#if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
+        case EWOULDBLOCK:
+#endif
+        case EAGAIN:
+            // No datagram was available for reading
+            recvResult = -2;
+            break;
+        case ECONNREFUSED:
+            setError(QAbstractSocket::ConnectionRefusedError, ConnectionRefusedErrorString);
+            break;
+        default:
+            setError(QAbstractSocket::NetworkError, ReceiveDatagramErrorString);
+        }
+        if (header)
+            header->clear();
+    } else if (options != QAbstractSocketEngine::WantNone) {
+        Q_ASSERT(header);
+        qt_socket_getPortAndAddress(&aa, &header->senderPort, &header->senderAddress);
+        header->destinationPort = localPort;
+        header->endOfRecord = (msg.msg_flags & MSG_EOR) != 0;
 
-//         // parse the ancillary data
-//         struct cmsghdr *cmsgptr;
-//         QT_WARNING_PUSH
-//         QT_WARNING_DISABLE_CLANG("-Wsign-compare")
-//         for (cmsgptr = CMSG_FIRSTHDR(&msg); cmsgptr != nullptr;
-//              cmsgptr = CMSG_NXTHDR(&msg, cmsgptr)) {
-//             QT_WARNING_POP
-//             if (cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO
-//                     && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in6_pktinfo))) {
-//                 in6_pktinfo *info = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsgptr));
+        // parse the ancillary data
+        struct cmsghdr *cmsgptr;
+        QT_WARNING_PUSH
+        QT_WARNING_DISABLE_CLANG("-Wsign-compare")
+        for (cmsgptr = CMSG_FIRSTHDR(&msg); cmsgptr != nullptr;
+             cmsgptr = CMSG_NXTHDR(&msg, cmsgptr)) {
+            QT_WARNING_POP
+            if (cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_PKTINFO
+                    && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in6_pktinfo))) {
+                in6_pktinfo *info = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsgptr));
 
-//                 header->destinationAddress.setAddress(reinterpret_cast<quint8 *>(&info->ipi6_addr));
-//                 header->ifindex = info->ipi6_ifindex;
-//                 if (header->ifindex)
-//                     header->destinationAddress.setScopeId(QString::number(info->ipi6_ifindex));
-//             }
+                header->destinationAddress.setAddress(reinterpret_cast<quint8 *>(&info->ipi6_addr));
+                header->ifindex = info->ipi6_ifindex;
+                if (header->ifindex)
+                    header->destinationAddress.setScopeId(QString::number(info->ipi6_ifindex));
+            }
 
-// #ifdef IP_PKTINFO
-//             if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_PKTINFO
-//                     && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in_pktinfo))) {
-//                 in_pktinfo *info = reinterpret_cast<in_pktinfo *>(CMSG_DATA(cmsgptr));
+#ifdef IP_PKTINFO
+            if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_PKTINFO
+                    && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in_pktinfo))) {
+                in_pktinfo *info = reinterpret_cast<in_pktinfo *>(CMSG_DATA(cmsgptr));
 
-//                 header->destinationAddress.setAddress(ntohl(info->ipi_addr.s_addr));
-//                 header->ifindex = info->ipi_ifindex;
-//             }
-// #else
-// #  ifdef IP_RECVDSTADDR
-//             if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_RECVDSTADDR
-//                     && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in_addr))) {
-//                 in_addr *addr = reinterpret_cast<in_addr *>(CMSG_DATA(cmsgptr));
+                header->destinationAddress.setAddress(ntohl(info->ipi_addr.s_addr));
+                header->ifindex = info->ipi_ifindex;
+            }
+#else
+#  ifdef IP_RECVDSTADDR
+            if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_RECVDSTADDR
+                    && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(in_addr))) {
+                in_addr *addr = reinterpret_cast<in_addr *>(CMSG_DATA(cmsgptr));
 
-//                 header->destinationAddress.setAddress(ntohl(addr->s_addr));
-//             }
-// #  endif
-// #  if defined(IP_RECVIF) && defined(Q_OS_BSD4)
-//             if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_RECVIF
-//                     && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(sockaddr_dl))) {
-//                 sockaddr_dl *sdl = reinterpret_cast<sockaddr_dl *>(CMSG_DATA(cmsgptr));
-//                 header->ifindex = sdl->sdl_index;
-//             }
-// #  endif
-// #endif
+                header->destinationAddress.setAddress(ntohl(addr->s_addr));
+            }
+#  endif
+#  if defined(IP_RECVIF) && defined(Q_OS_BSD4)
+            if (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_RECVIF
+                    && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(sockaddr_dl))) {
+                sockaddr_dl *sdl = reinterpret_cast<sockaddr_dl *>(CMSG_DATA(cmsgptr));
+                header->ifindex = sdl->sdl_index;
+            }
+#  endif
+#endif
 
-//             if (cmsgptr->cmsg_len == CMSG_LEN(sizeof(int))
-//                     && ((cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_HOPLIMIT)
-//                         || (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_TTL))) {
-//                 static_assert(sizeof(header->hopLimit) == sizeof(int));
-//                 memcpy(&header->hopLimit, CMSG_DATA(cmsgptr), sizeof(header->hopLimit));
-//             }
+            if (cmsgptr->cmsg_len == CMSG_LEN(sizeof(int))
+                    && ((cmsgptr->cmsg_level == IPPROTO_IPV6 && cmsgptr->cmsg_type == IPV6_HOPLIMIT)
+                        || (cmsgptr->cmsg_level == IPPROTO_IP && cmsgptr->cmsg_type == IP_TTL))) {
+                static_assert(sizeof(header->hopLimit) == sizeof(int));
+                memcpy(&header->hopLimit, CMSG_DATA(cmsgptr), sizeof(header->hopLimit));
+            }
 
-// #ifndef QT_NO_SCTP
-//             if (cmsgptr->cmsg_level == IPPROTO_SCTP && cmsgptr->cmsg_type == SCTP_SNDRCV
-//                 && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(sctp_sndrcvinfo))) {
-//                 sctp_sndrcvinfo *rcvInfo = reinterpret_cast<sctp_sndrcvinfo *>(CMSG_DATA(cmsgptr));
+#ifndef QT_NO_SCTP
+            if (cmsgptr->cmsg_level == IPPROTO_SCTP && cmsgptr->cmsg_type == SCTP_SNDRCV
+                && cmsgptr->cmsg_len >= CMSG_LEN(sizeof(sctp_sndrcvinfo))) {
+                sctp_sndrcvinfo *rcvInfo = reinterpret_cast<sctp_sndrcvinfo *>(CMSG_DATA(cmsgptr));
 
-//                 header->streamNumber = int(rcvInfo->sinfo_stream);
-//             }
-// #endif
-//         }
-//     }
+                header->streamNumber = int(rcvInfo->sinfo_stream);
+            }
+#endif
+        }
+    }
 
-// #if defined (QNATIVESOCKETENGINE_DEBUG)
-//     qDebug("QNativeSocketEnginePrivate::nativeReceiveDatagram(%p \"%s\", %lli, %s, %i) == %lli",
-//            data, QtDebugUtils::toPrintable(data, recvResult, 16).constData(), maxSize,
-//            (recvResult != -1 && options != QAbstractSocketEngine::WantNone)
-//            ? header->senderAddress.toString().toLatin1().constData() : "(unknown)",
-//            (recvResult != -1 && options != QAbstractSocketEngine::WantNone)
-//            ? header->senderPort : 0, (qint64) recvResult);
-// #endif
+#if defined (QNATIVESOCKETENGINE_DEBUG)
+    qDebug("QNativeSocketEnginePrivate::nativeReceiveDatagram(%p \"%s\", %lli, %s, %i) == %lli",
+           data, QtDebugUtils::toPrintable(data, recvResult, 16).constData(), maxSize,
+           (recvResult != -1 && options != QAbstractSocketEngine::WantNone)
+           ? header->senderAddress.toString().toLatin1().constData() : "(unknown)",
+           (recvResult != -1 && options != QAbstractSocketEngine::WantNone)
+           ? header->senderPort : 0, (qint64) recvResult);
+#endif
 
-    // return qint64((maxSize || recvResult < 0) ? recvResult : Q_INT64_C(0));
+    return qint64((maxSize || recvResult < 0) ? recvResult : Q_INT64_C(0));
+#else
     return 0;
+#endif
 }
 
 qint64 QNativeSocketEnginePrivate::nativeSendDatagram(const char *data, qint64 len, const QIpPacketHeader &header)
 {
-//     // we use quintptr to force the alignment
-//     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
-// #ifndef QT_NO_SCTP
-//                    + CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))
-// #endif
-//                    + sizeof(quintptr) - 1) / sizeof(quintptr)];
+#ifndef __amigaos4__
+    // we use quintptr to force the alignment
+    quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
+#ifndef QT_NO_SCTP
+                   + CMSG_SPACE(sizeof(struct sctp_sndrcvinfo))
+#endif
+                   + sizeof(quintptr) - 1) / sizeof(quintptr)];
 
-//     struct cmsghdr *cmsgptr = reinterpret_cast<struct cmsghdr *>(cbuf);
-//     struct msghdr msg;
-//     struct iovec vec;
-//     qt_sockaddr aa;
+    struct cmsghdr *cmsgptr = reinterpret_cast<struct cmsghdr *>(cbuf);
+    struct msghdr msg;
+    struct iovec vec;
+    qt_sockaddr aa;
 
-//     memset(&msg, 0, sizeof(msg));
-//     memset(&aa, 0, sizeof(aa));
-//     vec.iov_base = const_cast<char *>(data);
-//     vec.iov_len = len;
-//     msg.msg_iov = &vec;
-//     msg.msg_iovlen = 1;
-//     msg.msg_control = &cbuf;
+    memset(&msg, 0, sizeof(msg));
+    memset(&aa, 0, sizeof(aa));
+    vec.iov_base = const_cast<char *>(data);
+    vec.iov_len = len;
+    msg.msg_iov = &vec;
+    msg.msg_iovlen = 1;
+    msg.msg_control = &cbuf;
 
-//     if (header.destinationPort != 0) {
-//         msg.msg_name = &aa.a;
-//         setPortAndAddress(header.destinationPort, header.destinationAddress,
-//                           &aa, &msg.msg_namelen);
-//     }
+    if (header.destinationPort != 0) {
+        msg.msg_name = &aa.a;
+        setPortAndAddress(header.destinationPort, header.destinationAddress,
+                          &aa, &msg.msg_namelen);
+    }
 
-//     if (msg.msg_namelen == sizeof(aa.a6)) {
-//         if (header.hopLimit != -1) {
-//             msg.msg_controllen += CMSG_SPACE(sizeof(int));
-//             cmsgptr->cmsg_len = CMSG_LEN(sizeof(int));
-//             cmsgptr->cmsg_level = IPPROTO_IPV6;
-//             cmsgptr->cmsg_type = IPV6_HOPLIMIT;
-//             memcpy(CMSG_DATA(cmsgptr), &header.hopLimit, sizeof(int));
-//             cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(int)));
-//         }
-//         if (header.ifindex != 0 || !header.senderAddress.isNull()) {
-//             struct in6_pktinfo *data = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsgptr));
-//             memset(data, 0, sizeof(*data));
-//             msg.msg_controllen += CMSG_SPACE(sizeof(*data));
-//             cmsgptr->cmsg_len = CMSG_LEN(sizeof(*data));
-//             cmsgptr->cmsg_level = IPPROTO_IPV6;
-//             cmsgptr->cmsg_type = IPV6_PKTINFO;
-//             data->ipi6_ifindex = header.ifindex;
+    if (msg.msg_namelen == sizeof(aa.a6)) {
+        if (header.hopLimit != -1) {
+            msg.msg_controllen += CMSG_SPACE(sizeof(int));
+            cmsgptr->cmsg_len = CMSG_LEN(sizeof(int));
+            cmsgptr->cmsg_level = IPPROTO_IPV6;
+            cmsgptr->cmsg_type = IPV6_HOPLIMIT;
+            memcpy(CMSG_DATA(cmsgptr), &header.hopLimit, sizeof(int));
+            cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(int)));
+        }
+        if (header.ifindex != 0 || !header.senderAddress.isNull()) {
+            struct in6_pktinfo *data = reinterpret_cast<in6_pktinfo *>(CMSG_DATA(cmsgptr));
+            memset(data, 0, sizeof(*data));
+            msg.msg_controllen += CMSG_SPACE(sizeof(*data));
+            cmsgptr->cmsg_len = CMSG_LEN(sizeof(*data));
+            cmsgptr->cmsg_level = IPPROTO_IPV6;
+            cmsgptr->cmsg_type = IPV6_PKTINFO;
+            data->ipi6_ifindex = header.ifindex;
 
-//             QIPv6Address tmp = header.senderAddress.toIPv6Address();
-//             memcpy(&data->ipi6_addr, &tmp, sizeof(tmp));
-//             cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
-//         }
-//     } else {
-//         if (header.hopLimit != -1) {
-//             msg.msg_controllen += CMSG_SPACE(sizeof(int));
-//             cmsgptr->cmsg_len = CMSG_LEN(sizeof(int));
-//             cmsgptr->cmsg_level = IPPROTO_IP;
-//             cmsgptr->cmsg_type = IP_TTL;
-//             memcpy(CMSG_DATA(cmsgptr), &header.hopLimit, sizeof(int));
-//             cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(int)));
-//         }
+            QIPv6Address tmp = header.senderAddress.toIPv6Address();
+            memcpy(&data->ipi6_addr, &tmp, sizeof(tmp));
+            cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
+        }
+    } else {
+        if (header.hopLimit != -1) {
+            msg.msg_controllen += CMSG_SPACE(sizeof(int));
+            cmsgptr->cmsg_len = CMSG_LEN(sizeof(int));
+            cmsgptr->cmsg_level = IPPROTO_IP;
+            cmsgptr->cmsg_type = IP_TTL;
+            memcpy(CMSG_DATA(cmsgptr), &header.hopLimit, sizeof(int));
+            cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(int)));
+        }
 
-// #if defined(IP_PKTINFO) || defined(IP_SENDSRCADDR)
-//         if (header.ifindex != 0 || !header.senderAddress.isNull()) {
-// #  ifdef IP_PKTINFO
-//             struct in_pktinfo *data = reinterpret_cast<in_pktinfo *>(CMSG_DATA(cmsgptr));
-//             memset(data, 0, sizeof(*data));
-//             cmsgptr->cmsg_type = IP_PKTINFO;
-//             data->ipi_ifindex = header.ifindex;
-//             data->ipi_addr.s_addr = htonl(header.senderAddress.toIPv4Address());
-// #  elif defined(IP_SENDSRCADDR)
-//             struct in_addr *data = reinterpret_cast<in_addr *>(CMSG_DATA(cmsgptr));
-//             cmsgptr->cmsg_type = IP_SENDSRCADDR;
-//             data->s_addr = htonl(header.senderAddress.toIPv4Address());
-// #  endif
-//             cmsgptr->cmsg_level = IPPROTO_IP;
-//             msg.msg_controllen += CMSG_SPACE(sizeof(*data));
-//             cmsgptr->cmsg_len = CMSG_LEN(sizeof(*data));
-//             cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
-//         }
-// #endif
-//     }
+#if defined(IP_PKTINFO) || defined(IP_SENDSRCADDR)
+        if (header.ifindex != 0 || !header.senderAddress.isNull()) {
+#  ifdef IP_PKTINFO
+            struct in_pktinfo *data = reinterpret_cast<in_pktinfo *>(CMSG_DATA(cmsgptr));
+            memset(data, 0, sizeof(*data));
+            cmsgptr->cmsg_type = IP_PKTINFO;
+            data->ipi_ifindex = header.ifindex;
+            data->ipi_addr.s_addr = htonl(header.senderAddress.toIPv4Address());
+#  elif defined(IP_SENDSRCADDR)
+            struct in_addr *data = reinterpret_cast<in_addr *>(CMSG_DATA(cmsgptr));
+            cmsgptr->cmsg_type = IP_SENDSRCADDR;
+            data->s_addr = htonl(header.senderAddress.toIPv4Address());
+#  endif
+            cmsgptr->cmsg_level = IPPROTO_IP;
+            msg.msg_controllen += CMSG_SPACE(sizeof(*data));
+            cmsgptr->cmsg_len = CMSG_LEN(sizeof(*data));
+            cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
+        }
+#endif
+    }
 
-// #ifndef QT_NO_SCTP
-//     if (header.streamNumber != -1) {
-//         struct sctp_sndrcvinfo *data = reinterpret_cast<sctp_sndrcvinfo *>(CMSG_DATA(cmsgptr));
-//         memset(data, 0, sizeof(*data));
-//         msg.msg_controllen += CMSG_SPACE(sizeof(sctp_sndrcvinfo));
-//         cmsgptr->cmsg_len = CMSG_LEN(sizeof(sctp_sndrcvinfo));
-//         cmsgptr->cmsg_level = IPPROTO_SCTP;
-//         cmsgptr->cmsg_type =  SCTP_SNDRCV;
-//         data->sinfo_stream = uint16_t(header.streamNumber);
-//         cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
-//     }
-// #endif
+#ifndef QT_NO_SCTP
+    if (header.streamNumber != -1) {
+        struct sctp_sndrcvinfo *data = reinterpret_cast<sctp_sndrcvinfo *>(CMSG_DATA(cmsgptr));
+        memset(data, 0, sizeof(*data));
+        msg.msg_controllen += CMSG_SPACE(sizeof(sctp_sndrcvinfo));
+        cmsgptr->cmsg_len = CMSG_LEN(sizeof(sctp_sndrcvinfo));
+        cmsgptr->cmsg_level = IPPROTO_SCTP;
+        cmsgptr->cmsg_type =  SCTP_SNDRCV;
+        data->sinfo_stream = uint16_t(header.streamNumber);
+        cmsgptr = reinterpret_cast<cmsghdr *>(reinterpret_cast<char *>(cmsgptr) + CMSG_SPACE(sizeof(*data)));
+    }
+#endif
 
-//     if (msg.msg_controllen == 0)
-//         msg.msg_control = nullptr;
-//     ssize_t sentBytes = qt_safe_sendmsg(socketDescriptor, &msg, 0);
+    if (msg.msg_controllen == 0)
+        msg.msg_control = nullptr;
+    ssize_t sentBytes = qt_safe_sendmsg(socketDescriptor, &msg, 0);
 
-//     if (sentBytes < 0) {
-//         switch (errno) {
-// #if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
-//         case EWOULDBLOCK:
-// #endif
-//         case EAGAIN:
-//             sentBytes = -2;
-//             break;
-//         case EMSGSIZE:
-//             setError(QAbstractSocket::DatagramTooLargeError, DatagramTooLargeErrorString);
-//             break;
-//         case ECONNRESET:
-//             setError(QAbstractSocket::RemoteHostClosedError, RemoteHostClosedErrorString);
-//             break;
-//         default:
-//             setError(QAbstractSocket::NetworkError, SendDatagramErrorString);
-//         }
-//     }
+    if (sentBytes < 0) {
+        switch (errno) {
+#if defined(EWOULDBLOCK) && EWOULDBLOCK != EAGAIN
+        case EWOULDBLOCK:
+#endif
+        case EAGAIN:
+            sentBytes = -2;
+            break;
+        case EMSGSIZE:
+            setError(QAbstractSocket::DatagramTooLargeError, DatagramTooLargeErrorString);
+            break;
+        case ECONNRESET:
+            setError(QAbstractSocket::RemoteHostClosedError, RemoteHostClosedErrorString);
+            break;
+        default:
+            setError(QAbstractSocket::NetworkError, SendDatagramErrorString);
+        }
+    }
 
-// #if defined (QNATIVESOCKETENGINE_DEBUG)
-//     qDebug("QNativeSocketEngine::sendDatagram(%p \"%s\", %lli, \"%s\", %i) == %lli", data,
-//            QtDebugUtils::toPrintable(data, len, 16).constData(), len,
-//            header.destinationAddress.toString().toLatin1().constData(),
-//            header.destinationPort, (qint64) sentBytes);
-// #endif
+#if defined (QNATIVESOCKETENGINE_DEBUG)
+    qDebug("QNativeSocketEngine::sendDatagram(%p \"%s\", %lli, \"%s\", %i) == %lli", data,
+           QtDebugUtils::toPrintable(data, len, 16).constData(), len,
+           header.destinationAddress.toString().toLatin1().constData(),
+           header.destinationPort, (qint64) sentBytes);
+#endif
 
-//     return qint64(sentBytes);
+    return qint64(sentBytes);
+#else
     return 0;
+#endif
 }
 
 bool QNativeSocketEnginePrivate::fetchConnectionParameters()
@@ -1187,7 +1345,11 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
 
     // Determine local address
     memset(&sa, 0, sizeof(sa));
+#ifdef __amigaos4__
+    if (ISocket->getsockname(socketDescriptor, &sa.a, &sockAddrSize) == 0) {
+#else
     if (::getsockname(socketDescriptor, &sa.a, &sockAddrSize) == 0) {
+#endif
         qt_socket_getPortAndAddress(&sa, &localPort, &localAddress);
 
         // Determine protocol family
@@ -1195,19 +1357,32 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
         case AF_INET:
             socketProtocol = QAbstractSocket::IPv4Protocol;
             break;
-        // case AF_INET6:
-        //     socketProtocol = QAbstractSocket::IPv6Protocol;
-        //     break;
+#ifndef __amigaos4__
+        case AF_INET6:
+            socketProtocol = QAbstractSocket::IPv6Protocol;
+            break;
+#endif
         default:
             socketProtocol = QAbstractSocket::UnknownNetworkLayerProtocol;
             break;
         }
 
+#ifdef __amigaos4__
+    } else
+    {
+    	int error = 0;
+    	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+    	if(error == EBADF)
+    	{
+#else
     } else if (errno == EBADF) {
+#endif
         setError(QAbstractSocket::UnsupportedSocketOperationError, InvalidSocketErrorString);
         return false;
     }
-
+#ifdef __amigaos4__
+    }
+#endif
 #if defined (IPV6_V6ONLY)
     // determine if local address is dual mode
     // On linux, these are returned as "::" (==AnyIPv6)
@@ -1228,7 +1403,11 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
 #endif
 
     // Determine the remote address
+#ifdef __amigaos4__
+    bool connected = ISocket->getpeername(socketDescriptor, &sa.a, &sockAddrSize);
+#else
     bool connected = ::getpeername(socketDescriptor, &sa.a, &sockAddrSize) == 0;
+#endif
     if (connected) {
         qt_socket_getPortAndAddress(&sa, &peerPort, &peerAddress);
         inboundStreamCount = outboundStreamCount = 1;
@@ -1237,7 +1416,11 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
     // Determine the socket type (UDP/TCP/SCTP)
     int value = 0;
     QT_SOCKOPTLEN_T valueSize = sizeof(int);
+#ifdef __amigaos4__
+    if (ISocket->getsockopt(socketDescriptor, SOL_SOCKET, SO_TYPE, &value, &valueSize) == 0) {
+#else
     if (::getsockopt(socketDescriptor, SOL_SOCKET, SO_TYPE, &value, &valueSize) == 0) {
+#endif
         if (value == SOCK_STREAM) {
 #ifndef QT_NO_SCTP
             if (option(QNativeSocketEngine::MaxStreamsSocketOption) != -1) {
@@ -1299,7 +1482,11 @@ void QNativeSocketEnginePrivate::nativeClose()
     qDebug("QNativeSocketEngine::nativeClose()");
 #endif
 
+#ifdef __amigaos4__
+	ISocket->CloseSocket(socketDescriptor);
+#else
     qt_safe_close(socketDescriptor);
+#endif
 }
 
 qint64 QNativeSocketEnginePrivate::nativeWrite(const char *data, qint64 len)
@@ -1307,10 +1494,20 @@ qint64 QNativeSocketEnginePrivate::nativeWrite(const char *data, qint64 len)
     Q_Q(QNativeSocketEngine);
 
     ssize_t writtenBytes;
+#ifdef __amigaos4__
+    writtenBytes = ISocket->send(socketDescriptor, (APTR)data, len, 0);
+#else
     writtenBytes = qt_safe_write_nosignal(socketDescriptor, data, len);
+#endif
 
     if (writtenBytes < 0) {
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch (errno) {
+#endif
         case EPIPE:
         case ECONNRESET:
             writtenBytes = -1;
@@ -1346,11 +1543,21 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
     }
 
     ssize_t r = 0;
+#ifdef __amigaos4__
+    r = ISocket->recv(socketDescriptor, data, maxSize, 0);
+#else
     r = qt_safe_read(socketDescriptor, data, maxSize);
+#endif
 
     if (r < 0) {
         r = -1;
+#ifdef __amigaos4__
+		int error = 0;
+		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+		switch(error) {
+#else
         switch (errno) {
+#endif
 #if EWOULDBLOCK-0 && EWOULDBLOCK != EAGAIN
         case EWOULDBLOCK:
 #endif
@@ -1388,6 +1595,10 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
 
 int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool selectForRead) const
 {
+#ifdef __amigaos4__
+    qInfo() << "nativeSelect not supported on AmigaOS";
+    return 0;
+#endif
     bool dummy;
     return nativeSelect(timeout, selectForRead, !selectForRead, &dummy, &dummy);
 }
@@ -1395,6 +1606,10 @@ int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool selectForRead) co
 int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool checkRead, bool checkWrite,
                        bool *selectForRead, bool *selectForWrite) const
 {
+#ifdef __amigaos4__
+    qInfo() << "nativeSelect not supported on AmigaOS";
+    return 0;
+#endif
     pollfd pfd = qt_make_pollfd(socketDescriptor, 0);
 
     if (checkRead)

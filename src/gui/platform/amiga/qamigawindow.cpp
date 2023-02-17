@@ -215,7 +215,7 @@ void QAmigaWindow::setVisible(bool visible)
 
     m_visible = visible;
 
-    IIntuition->SetWindowAttrs(m_intuitionWindow, WA_Hidden, visible ? FALSE : TRUE, TAG_DONE);
+    IIntuition->SetWindowAttrs(m_intuitionWindow, WA_Hidden, visible ? FALSE : TRUE, WA_Activate, visible ? TRUE : FALSE, TAG_DONE);
     // if(visible) openWindow();
     // else closeWindow();
 }

@@ -61,10 +61,21 @@
 #include <proto/exec.h>
 #include <devices/timer.h>
 
+
 QT_BEGIN_NAMESPACE
 
 class QEventDispatcherAMIGAPrivate;
 class AmigaIntuitionMessageHandler;
+
+struct Q_CORE_EXPORT QSocketNotifierSetUNIX final
+{
+    inline QSocketNotifierSetUNIX() noexcept;
+
+    inline bool isEmpty() const noexcept;
+    inline short events() const noexcept;
+
+    QSocketNotifier *notifiers[3];
+};
 
 class Q_CORE_EXPORT QEventDispatcherAMIGA : public QAbstractEventDispatcher
 {
@@ -104,6 +115,15 @@ public:
 
     int activateTimers();
 
+    void markPendingSocketNotifiers();
+    int activateSocketNotifiers();
+    void setSocketNotifierPending(QSocketNotifier *notifier);
+
+    QList<pollfd> pollfds;
+
+    QHash<int, QSocketNotifierSetUNIX> socketNotifiers;
+    QList<QSocketNotifier *> pendingNotifiers;
+
     QTimerInfoList timerList;
     QAtomicInt interrupt; // bool
 
@@ -112,6 +132,34 @@ public:
     uint8 wakeupSignal;
     struct Task *me;
 };
+
+inline QSocketNotifierSetUNIX::QSocketNotifierSetUNIX() noexcept
+{
+    notifiers[0] = nullptr;
+    notifiers[1] = nullptr;
+    notifiers[2] = nullptr;
+}
+
+inline bool QSocketNotifierSetUNIX::isEmpty() const noexcept
+{
+    return !notifiers[0] && !notifiers[1] && !notifiers[2];
+}
+
+inline short QSocketNotifierSetUNIX::events() const noexcept
+{
+    short result = 0;
+
+    if (notifiers[0])
+        result |= POLLIN;
+
+    if (notifiers[1])
+        result |= POLLOUT;
+
+    if (notifiers[2])
+        result |= POLLPRI;
+
+    return result;
+}
 
 QT_END_NAMESPACE
 

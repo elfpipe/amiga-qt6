@@ -165,6 +165,13 @@ inline timeval timespecToTimeval(const timespec &ts)
     tv.tv_usec = ts.tv_nsec / 1000;
     return tv;
 }
+inline timespec timevalToTimespec(const timeval &tv)
+{
+    timespec ts;
+    ts.tv_sec = tv.tv_sec;
+    ts.tv_nsec = tv.tv_usec * 1000;
+    return ts;
+}
 
 #ifndef __amigaos4__
 inline void qt_ignore_sigpipe()

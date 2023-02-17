@@ -71,6 +71,10 @@
 #  include <resolv.h>
 #endif
 
+#ifdef __amigaos4__
+#  include <proto/bsdsocket.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 // Almost always the same. If not, specify in qplatformdefs.h.
@@ -90,11 +94,17 @@ static inline int qt_safe_socket(int domain, int type, int protocol, int flags =
     fd = ::socket(domain, newtype, protocol);
     return fd;
 #else
+#ifdef __amigaos4_
+	int socket = ISocket->socket(protocol, type, 0);
+#else
     fd = ::socket(domain, type, protocol);
+#endif
     if (fd == -1)
         return -1;
 
+#ifndef __amigaos4__
     ::fcntl(fd, F_SETFD, FD_CLOEXEC);
+#endif
 
     // set non-block too?
     if (flags & O_NONBLOCK)
