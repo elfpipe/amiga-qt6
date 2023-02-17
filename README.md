@@ -1,21 +1,31 @@
 # amiga-qt6
 Qt 6.2.0 for AmigaOS 4.1 Final Edition - with optional support for OpenGLES2
 
-Build instructions:
+<h2>Build instructions</h2>
 
-First of all : Do not try to build on AmigaOS. Get Ubuntu and download this toolchain:
+First of all : Do not try to build on AmigaOS. Get Ubuntu and go to this page :
 
-https://drive.google.com/file/d/1cG6MiXR9F8HzWlyAtZu_nsZ2kfmATK6u/view?usp=sharing
+https://github.com/sba1/adtools
 
-Extract to /opt/adtools and do
+Follow the instructions here to set up the adtools cross toolchain. Qt6 is known to build and work with gcc 9 and 11.
+<br>
 
-> PATH=$PATH:/opt/adtools/bin
 
-This will get you ready to build Qt6.
+<h2>Configure and build on linux</h2>
 
-Notes: Qt 6 builds with GCC 11 and a slightly modified minimal SDK. Both are contained in the above link.
+In order to cross-build Qt6 for amiga, you need a Qt6 host install. If you are lucky then
 
-Configure and build:
+> sudo apt install qt6-base-dev
+
+will get you, what you need.
+
+If successful, you might need to edit amiga-qt6/configure-amiga.sh in the following way :
+
+> DQT_HOST_PATH='edit this part to point to your Qt6 host install'
+
+You also need an up-to-date version of cmake. Google 'install cmake ubuntu' to find instructions of that, in case there is not already a working version of cmake on your system.
+
+The following steps will build the amiga version :
 
 > git clone https://github.com/alfkil/amiga-qt6.git
 > 
@@ -29,29 +39,59 @@ Configure and build:
 > 
 > sudo make install
 
-This will give you an almost full install in /qt5-amiga. There are a few files, that are not copied automatically, so you need to
+This will install Qt6 into /qt6-amiga (in the root of your linux machine). 
 
-> sudo cp lib/* /qt5-amiga/lib
+You need to copy this entire directory unto your amiga hd and create
 
-If you succeed in building Qt6, please send me a note. :)
+> assign qt6-amiga: yourhd:yourpath
 
+on the amiga side.
 
--
+Also you need to copy your truetype fonts from FONTS:_TrueType/ and into
 
-Note : To run Qt6 apps on OS4.1, you need to copy the following files from the SDK to SYS:sobjs/
+> qt6-amiga:lib/fonts
 
-libatomic.so
-libgcc.so
-libstdc++.so
+Qt6 will warn you of this last step, if you forget.
+<br>
 
--
+  
+<h2>Shared object dependencies</h2>
 
-HOW TO BUILD A Qt6 PROJECT:
+To run Qt6 apps on OS4.1, you probably need to update the following files from adtools into SYS:sobjs/
+<br>
+<ul>
+<li>libatomic.so</li>
+<li>libgcc.so</li>
+<li>libstdc++.so</li>
+<li>libc.so</li>
+</ul>
 
-cd into the directory containing the .pro file. Then do:
+Remember to backup your files accordingly.
+  
+<br>
 
-> /qt5-amiga/bin/qmake
+<h2>Recommended setup</h2>
+
+Qt6 for amiga is known to work with the following setup :
+<br>
+<ul>
+<li>X5000 (untested on other platforms)</li>
+<li>exec-sg 54.54</li>
+<li>dos.library 54.121</li>
+<li>ramlib 54.2</li>
+<li>elf.library 53.39</li>
+<li>pthreads.library 53.12</li>
+<li>newlib.library 53.83</li>
+</ul>
+
+<br>
+
+<h2>How to build a Qt6 project</h2>
+
+cd into the source directory containing the .pro file. Then do:
+
+> /qt6-amiga/bin/qmake
 >
 > make
 
-Transfer your files to the amiga and test. Good luck :).
+Transfer the resulting executable to the amiga and test. Good luck :).
