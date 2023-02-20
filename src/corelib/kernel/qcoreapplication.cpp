@@ -799,9 +799,9 @@ void QCoreApplicationPrivate::init()
 		IExec->CloseLibrary(SocketBase);
 		qFatal("Couldn't get socket interface!\n");
 	}
-	//ISocket->SocketBaseTags(
-	//	SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES),TRUE,
-	//	TAG_END);
+	ISocket->SocketBaseTags(
+		SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES),TRUE,
+		TAG_END);
 #endif
 
 #if defined(Q_OS_MACOS)
@@ -2761,6 +2761,7 @@ QStringList QCoreApplication::libraryPathsLocked()
                 }
             }
         };
+        qInfo() << "QT_PLUGIN_PATH : " << qEnvironmentVariable("QT_PLUGIN_PATH");
         setPathsFromEnv(qEnvironmentVariable("QT_PLUGIN_PATH"));
 #ifdef Q_OS_ANDROID
         setPathsFromEnv(qEnvironmentVariable("QT_BUNDLED_LIBS_PATH"));

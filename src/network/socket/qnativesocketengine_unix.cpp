@@ -242,18 +242,23 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
 #ifdef __amigaos4__
     int domain = AF_INET;
     int type = SOCK_STREAM;
+    socketProtocol = QAbstractSocket::IPv4Protocol;
 #else
     int domain = (socketProtocol == QAbstractSocket::IPv6Protocol
                    || socketProtocol == QAbstractSocket::AnyIPProtocol) ? AF_INET6 : AF_INET;
     int type = (socketType == QAbstractSocket::UdpSocket) ? SOCK_DGRAM : SOCK_STREAM;
 #endif
 
+#ifdef __amigaos4__
+	int socket = ISocket->socket(domain, type, protocol);
+#else
     int socket = qt_safe_socket(domain, type, protocol, O_NONBLOCK);
     if (socket < 0 && socketProtocol == QAbstractSocket::AnyIPProtocol && errno == EAFNOSUPPORT) {
         domain = AF_INET;
         socket = qt_safe_socket(domain, type, protocol, O_NONBLOCK);
         socketProtocol = QAbstractSocket::IPv4Protocol;
     }
+#endif
 
 #ifdef __amigaos4__
 	if(socket < 0) {
@@ -277,6 +282,7 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
             setError(QAbstractSocket::SocketResourceError, ResourceErrorString);
             break;
         case EACCES:
+qInfo() << "qt_safe_socket failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             break;
         default:
@@ -464,15 +470,52 @@ bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16
     qDebug() << "QNativeSocketEnginePrivate::nativeConnect() " << socketDescriptor;
 #endif
 
+/*
+	int socket = ISocket->socket(AF_INET, SOCK_STREAM, 0);
+    if(socket < 0)
+    {
+        printf("socket creation failed\n");
+        return false;
+    }
+    struct sockaddr_in sa;
+
+    sa.sin_family = AF_INET;
+    sa.sin_port = htons(80);
+
+    struct hostent *he;
+
+    he = gethostbyname("google.com");
+    if(he == 0) {
+        perror("gethostbyname");
+        return 0;
+    }
+    char *address = (char *)&sa.sin_addr;
+    address[0] = he->h_addr_list[0][0];
+    address[1] = he->h_addr_list[0][1];
+    address[2] = he->h_addr_list[0][2];
+    address[3] = he->h_addr_list[0][3];
+*/
+/*
+    int connectResult = ISocket->connect (socket, (struct sockaddr *)&sa, sizeof(sa));
+*/
     qt_sockaddr aa;
     QT_SOCKLEN_T sockAddrSize;
     setPortAndAddress(port, addr, &aa, &sockAddrSize);
 
+    qInfo() << "calling ::connect : " << addr.toString() << ":" << port;
 #ifdef __amigaos4__
+    // int connectResult = ISocket->connect (socket, (struct sockaddr *)&sa, sizeof(sa));
     int connectResult = ISocket->connect(socketDescriptor, &aa.a, sockAddrSize);
 #else
     int connectResult = qt_safe_connect(socketDescriptor, &aa.a, sockAddrSize);
 #endif
+    if(connectResult < 0) {
+        printf("connect failed\n");
+    } else printf("success\n");
+/*
+    ISocket->CloseSocket(socket);
+    return false;
+*/
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     int ecopy = errno;
 #endif
@@ -516,6 +559,7 @@ bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16
             break;
         case EACCES:
         case EPERM:
+qInfo() << "qt_safe_connect failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             socketState = QAbstractSocket::UnconnectedState;
             break;
@@ -703,6 +747,7 @@ int QNativeSocketEnginePrivate::nativeAccept()
             break;
         case EACCES:
         case EPERM:
+qInfo() << "qt_safe_accept failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             break;
 #if EAGAIN != EWOULDBLOCK

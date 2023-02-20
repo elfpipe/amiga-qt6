@@ -12,7 +12,7 @@ qt_find_package(WrapOpenSSLHeaders PROVIDED_TARGETS WrapOpenSSLHeaders::WrapOpen
 # openssl_headers
 qt_config_compile_test(openssl_headers
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/opensslv.h>
@@ -35,7 +35,7 @@ qt_find_package(WrapOpenSSL PROVIDED_TARGETS WrapOpenSSL::WrapOpenSSL MODULE_NAM
 # openssl
 qt_config_compile_test(openssl
     LIBRARIES
-        WrapOpenSSL::WrapOpenSSL
+        WrapOpenSSL::WrapOpenSSL ssl crypto
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/opensslv.h>
@@ -170,7 +170,7 @@ socklen_t sctpInitMsgSize = sizeof(sctpInitMsg);
 qt_config_compile_test(dtls
     LABEL "DTLS support in OpenSSL"
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
     CODE
 "#include <openssl/ssl.h>
 #if defined(OPENSSL_NO_DTLS) || !defined(DTLS1_2_VERSION)
@@ -189,7 +189,7 @@ int main(void)
 qt_config_compile_test(ocsp
     LABEL "OCSP stapling support in OpenSSL"
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/ocsp.h>

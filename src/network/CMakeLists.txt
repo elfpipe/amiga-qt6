@@ -349,16 +349,20 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_ocsp AND QT_FEATURE_opens
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_openssl_linked AND QT_FEATURE_ssl
     LIBRARIES
-        WrapOpenSSL::WrapOpenSSL
-    PRIVATE_MODULE_INTERFACE
-        WrapOpenSSL::WrapOpenSSL
+        # WrapOpenSSL::WrapOpenSSL
+        ssl
+        crypto
+ #   PRIVATE_MODULE_INTERFACE
+#        WrapOpenSSL::WrapOpenSSL
 )
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_ssl AND NOT QT_FEATURE_openssl_linked
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders
-    PRIVATE_MODULE_INTERFACE
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders
+    ssl
+    crypto
+#        WrapOpenSSLHeaders::WrapOpenSSLHeaders
+#    PRIVATE_MODULE_INTERFACE
+#        WrapOpenSSLHeaders::WrapOpenSSLHeaders
 )
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_dnslookup AND UNIX AND NOT ANDROID AND NOT INTEGRITY AND NOT AMIGA

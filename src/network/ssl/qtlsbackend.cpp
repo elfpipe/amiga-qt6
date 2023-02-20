@@ -87,8 +87,10 @@ public:
 
     bool tryPopulateCollection()
     {
-        if (!loader())
+        qInfo() << "tryPopulateCollection";
+        if (!loader()) {
             return false;
+        }
 
         static QBasicMutex mutex;
         const QMutexLocker locker(&mutex);
@@ -593,8 +595,10 @@ int QTlsBackend::dhParametersFromPem(const QByteArray &pemData, QByteArray *data
 */
 QList<QString> QTlsBackend::availableBackendNames()
 {
-    if (!backends())
+    if (!backends())  {
+        qInfo() << "QTlsBackend: factory loader is null";
         return {};
+    }
 
     return backends->backendNames();
 }

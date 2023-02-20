@@ -1581,8 +1581,10 @@ QString QSslSocket::activeBackend()
 {
     const QMutexLocker locker(&QSslSocketPrivate::backendMutex);
 
-    if (!QSslSocketPrivate::activeBackendName.size())
+    if (!QSslSocketPrivate::activeBackendName.size()) {
         QSslSocketPrivate::activeBackendName = QTlsBackend::defaultBackendName();
+    }
+    qInfo() << "QSslSocketPrivate::activeBackendName : " << QSslSocketPrivate::activeBackendName;
 
     return QSslSocketPrivate::activeBackendName;
 }
@@ -3101,6 +3103,7 @@ bool QSslSocketPrivate::isMatchingHostname(const QString &cn, const QString &hos
     return true;
 }
 
+#include <iostream>
 /*!
     \internal
 */
