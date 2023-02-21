@@ -336,13 +336,14 @@ void QLocalServerPrivate::_q_onNewConnection()
 
 void QLocalServerPrivate::waitForNewConnection(int msec, bool *timedOut)
 {
-#ifdef __amigaos4__
-    qInfo() << "select not supported";
-    return;
-#endif
     pollfd pfd = qt_make_pollfd(listenSocket, POLLIN);
 
+#ifdef __amigaos4__
+    ULONG listenSignals = 0;
+    switch (qt_poll_msecs(&pfd, 1, msec, &listenSignals)) {
+#else
     switch (qt_poll_msecs(&pfd, 1, msec)) {
+#endif
     case 0:
         if (timedOut)
             *timedOut = true;

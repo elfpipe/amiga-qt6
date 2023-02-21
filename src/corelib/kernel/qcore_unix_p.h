@@ -91,6 +91,10 @@
 #  include <ioLib.h>
 #endif
 
+#ifdef __amigaos4__
+#include <proto/exec.h>
+#endif
+
 #if defined(__amigaos4__) && !defined(QT_NO_NATIVE_POLL)
 #define QT_NO_NATIVE_POLL
 #endif
@@ -387,9 +391,15 @@ inline bool qt_haveLinuxProcfs()
 }
 #endif //__amigaos4__
 
+#ifdef __amigaos4__
+Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals);
+
+static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout, ULONG *listenSignals)
+#else
 Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts);
 
 static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout)
+#endif
 {
     timespec ts, *pts = nullptr;
 
@@ -399,7 +409,7 @@ static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout)
         pts = &ts;
     }
 
-    return qt_safe_poll(fds, nfds, pts);
+    return qt_safe_poll(fds, nfds, pts, listenSignals);
 }
 
 static inline struct pollfd qt_make_pollfd(int fd, short events)

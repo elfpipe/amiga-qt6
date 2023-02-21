@@ -708,7 +708,9 @@ bool QNativeSocketEnginePrivate::nativeListen(int backlog)
 int QNativeSocketEnginePrivate::nativeAccept()
 {
 #ifdef __amigaos4__
-    int acceptedDescriptor = ISocket->accept(socketDescriptor, 0, 0);	
+    qInfo() << "calling accept";
+    int acceptedDescriptor = ISocket->accept(socketDescriptor, nullptr, nullptr);
+    qInfo() << "accept returned";
 #else
     int acceptedDescriptor = qt_safe_accept(socketDescriptor, nullptr, nullptr);
 #endif
@@ -1540,7 +1542,9 @@ qint64 QNativeSocketEnginePrivate::nativeWrite(const char *data, qint64 len)
 
     ssize_t writtenBytes;
 #ifdef __amigaos4__
+    qInfo() << "calling send";
     writtenBytes = ISocket->send(socketDescriptor, (APTR)data, len, 0);
+    qInfo() << "back from send";
 #else
     writtenBytes = qt_safe_write_nosignal(socketDescriptor, data, len);
 #endif
@@ -1589,7 +1593,9 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
 
     ssize_t r = 0;
 #ifdef __amigaos4__
+    qInfo() << "calling recv";
     r = ISocket->recv(socketDescriptor, data, maxSize, 0);
+    qInfo() << "recv returned";
 #else
     r = qt_safe_read(socketDescriptor, data, maxSize);
 #endif
@@ -1640,10 +1646,6 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
 
 int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool selectForRead) const
 {
-#ifdef __amigaos4__
-    qInfo() << "nativeSelect not supported on AmigaOS";
-    return 0;
-#endif
     bool dummy;
     return nativeSelect(timeout, selectForRead, !selectForRead, &dummy, &dummy);
 }
@@ -1651,10 +1653,6 @@ int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool selectForRead) co
 int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool checkRead, bool checkWrite,
                        bool *selectForRead, bool *selectForWrite) const
 {
-#ifdef __amigaos4__
-    qInfo() << "nativeSelect not supported on AmigaOS";
-    return 0;
-#endif
     pollfd pfd = qt_make_pollfd(socketDescriptor, 0);
 
     if (checkRead)
@@ -1663,7 +1661,12 @@ int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool checkRead, bool c
     if (checkWrite)
         pfd.events |= POLLOUT;
 
+#ifdef __amigaos4__
+    ULONG listenSignals = 0;
+    const int ret = qt_poll_msecs(&pfd, 1, timeout, &listenSignals);
+#else
     const int ret = qt_poll_msecs(&pfd, 1, timeout);
+#endif
 
     if (ret <= 0)
         return ret;

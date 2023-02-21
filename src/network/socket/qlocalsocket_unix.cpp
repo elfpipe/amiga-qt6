@@ -396,22 +396,26 @@ bool QLocalSocket::setSocketDescriptor(qintptr socketDescriptor,
 
 void QLocalSocketPrivate::describeSocket(qintptr socketDescriptor)
 {
+#ifdef __amigaos4__
+    qInfo() << "describeSocket : operation not supported";
+#else
     bool abstractAddress = false;
 
-    // struct ::sockaddr_un addr;
-    // QT_SOCKLEN_T len = sizeof(addr);
-    // memset(&addr, 0, sizeof(addr));
-    // const int getpeernameStatus = ::getpeername(socketDescriptor, (sockaddr *)&addr, &len);
-    // if (getpeernameStatus != 0 || len == offsetof(sockaddr_un, sun_path)) {
-    //     // this is the case when we call it from QLocalServer, then there is no peername
-    //     len = sizeof(addr);
-    //     if (::getsockname(socketDescriptor, (sockaddr *)&addr, &len) != 0)
-    //         return;
-    // }
-    // if (parseSockaddr(addr, static_cast<uint>(len), fullServerName, serverName, abstractAddress)) {
-    //     QLocalSocket::SocketOptions options = socketOptions.value();
-    //     socketOptions = options.setFlag(QLocalSocket::AbstractNamespaceOption, abstractAddress);
-    // }
+    struct ::sockaddr_un addr;
+    QT_SOCKLEN_T len = sizeof(addr);
+    memset(&addr, 0, sizeof(addr));
+    const int getpeernameStatus = ::getpeername(socketDescriptor, (sockaddr *)&addr, &len);
+    if (getpeernameStatus != 0 || len == offsetof(sockaddr_un, sun_path)) {
+        // this is the case when we call it from QLocalServer, then there is no peername
+        len = sizeof(addr);
+        if (::getsockname(socketDescriptor, (sockaddr *)&addr, &len) != 0)
+            return;
+    }
+    if (parseSockaddr(addr, static_cast<uint>(len), fullServerName, serverName, abstractAddress)) {
+        QLocalSocket::SocketOptions options = socketOptions.value();
+        socketOptions = options.setFlag(QLocalSocket::AbstractNamespaceOption, abstractAddress);
+    }
+#endif
 }
 
 bool QLocalSocketPrivate::parseSockaddr(const struct ::sockaddr_un &addr,
@@ -626,8 +630,12 @@ bool QLocalSocket::waitForConnected(int msec)
 
     do {
         const int timeout = (msec > 0) ? qMax(msec - timer.elapsed(), Q_INT64_C(0)) : msec;
+#ifdef __amigaos4__
+        ULONG listenSignals = 0;
+        const int result = qt_poll_msecs(&pfd, 1, timeout, &listenSignals);
+#else
         const int result = qt_poll_msecs(&pfd, 1, timeout);
-
+#endif
         if (result == -1)
             d->setErrorAndEmit(QLocalSocket::UnknownSocketError,
                                QLatin1String("QLocalSocket::waitForConnected"));

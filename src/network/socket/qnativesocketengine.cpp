@@ -1267,6 +1267,7 @@ protected:
 bool QReadNotifier::event(QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
+        qInfo() << "SockAct received";
         engine->readNotification();
         return true;
     } else if (e->type() == QEvent::SockClose) {

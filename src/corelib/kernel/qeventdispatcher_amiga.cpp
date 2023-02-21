@@ -184,16 +184,21 @@ void QEventDispatcherAMIGAPrivate::markPendingSocketNotifiers()
 
 int QEventDispatcherAMIGAPrivate::activateSocketNotifiers()
 {
+    qInfo() << "activateSocketNotifiers";
     markPendingSocketNotifiers();
+    qInfo() << "check(1)";
 
-    if (pendingNotifiers.isEmpty())
+    if (pendingNotifiers.isEmpty()) {
+        qInfo() << "pendingNotifiers is empty";
         return 0;
+    }
 
     int n_activated = 0;
     QEvent event(QEvent::SockAct);
 
     while (!pendingNotifiers.isEmpty()) {
         QSocketNotifier *notifier = pendingNotifiers.takeFirst();
+        qInfo() << "send QEvent::SockAct";
         QCoreApplication::sendEvent(notifier, &event);
         ++n_activated;
     }
@@ -206,7 +211,7 @@ void QEventDispatcherAMIGA::registerSocketNotifier(QSocketNotifier *notifier)
     Q_ASSERT(notifier);
     int sockfd = notifier->socket();
     QSocketNotifier::Type type = notifier->type();
-#ifndef QT_NO_DEBUG
+#if 1 //ndef QT_NO_DEBUG
     if (notifier->thread() != thread() || thread() != QThread::currentThread()) {
         qWarning("QSocketNotifier: socket notifiers cannot be enabled from another thread");
         return;
@@ -344,6 +349,63 @@ static inline int qt_poll_prepare(struct pollfd *fds, nfds_t nfds,
     return max_fd + 1;
 }
 
+static inline void qt_poll_examine_ready_read(struct pollfd &pfd)
+{
+    int res;
+    char data;
+
+    // EINTR_LOOP(res, ::recv(pfd.fd, &data, sizeof(data), MSG_PEEK));
+    int err = 0;
+    res =  ISocket->recv(pfd.fd, &data, sizeof(data), MSG_PEEK);
+    ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &err, TAG_END);
+    const int error = (res < 0) ? err : 0;
+
+    if (res == 0) {
+        pfd.revents |= POLLHUP;
+    } else if (res > 0 || error == ENOTSOCK || error == ENOTCONN) {
+        pfd.revents |= QT_POLL_READ_MASK & pfd.events;
+    } else {
+        switch (error) {
+        case ESHUTDOWN:
+        case ECONNRESET:
+        case ECONNABORTED:
+        case ENETRESET:
+            pfd.revents |= POLLHUP;
+            break;
+        default:
+            pfd.revents |= POLLERR;
+            break;
+        }
+    }
+}
+
+static inline int qt_poll_sweep(struct pollfd *fds, nfds_t nfds,
+                                fd_set *read_fds, fd_set *write_fds, fd_set *except_fds)
+{
+qInfo() << "qt_poll_sweep";
+    int result = 0;
+
+    for (nfds_t i = 0; i < nfds; i++) {
+        if (fds[i].fd < 0)
+            continue;
+
+        if (FD_ISSET(fds[i].fd, read_fds))
+            // qt_poll_examine_ready_read(fds[i]);
+            fds[i].revents |= QT_POLL_READ_MASK & fds[i].events;
+
+        if (FD_ISSET(fds[i].fd, write_fds))
+            fds[i].revents |= QT_POLL_WRITE_MASK & fds[i].events;
+
+        if (FD_ISSET(fds[i].fd, except_fds))
+            fds[i].revents |= QT_POLL_EXCEPT_MASK & fds[i].events;
+
+        if (fds[i].revents != 0)
+            result++;
+    }
+
+    return result;
+}
+
 /*****************************************************************************
  QEventDispatcherAMIGA implementations for AMIGAAAAAAAAAA.....!!
  *****************************************************************************/
@@ -405,23 +467,29 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
     // This must be last, as it's popped off the end below
     // d->pollfds.append(d->threadPipe.prepare());
 
-    int max_fd = qt_poll_prepare(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
-
     int nevents = 0;
 
 #if 0
     unsigned int caughtSignals = IExec->Wait(listenSignals);
 #elif 1
+    int max_fd = qt_poll_prepare(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
     int error = 0;
     int numfds;
     do {
+// qInfo() << "Calling WaitSelect, max_fd == " << max_fd;
         // int numfds = waitselect(max_fd, &read_fds, &write_fds, &except_fds, tm, &listenSignals);
         numfds = ISocket->WaitSelect(max_fd, &read_fds, &write_fds, &except_fds, tm, (ULONG*)&listenSignals);
-        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+
+// qInfo() << "WaitSelect returned : " << numfds;
+        if(numfds < 0 ) ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
         unsigned int caughtSignals = listenSignals;
     } while (numfds == -1 && (error == EINTR || error == EAGAIN));
+
+    if (numfds > 0)
+        qt_poll_sweep(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
+
 #else
-    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm)) {
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), (const timespec*)tm, (ULONG*)&listenSignals)) {
     case -1:
         perror("qt_safe_poll");
         break;
