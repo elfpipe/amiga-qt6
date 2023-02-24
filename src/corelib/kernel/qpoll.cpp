@@ -191,6 +191,13 @@ int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
         tv = timespecToTimeval(*timeout_ts);
         ptv = &tv;
     }
+// #ifdef __amigaos4__
+//     else {
+//         tv.tv_sec = 10;
+//         tv.tv_usec = 0;
+//         ptv = &tv;
+//     }
+// #endif
 
     int n_bad_fds = 0;
 

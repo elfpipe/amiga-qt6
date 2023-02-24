@@ -1594,7 +1594,11 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
     ssize_t r = 0;
 #ifdef __amigaos4__
     qInfo() << "calling recv";
-    r = ISocket->recv(socketDescriptor, data, maxSize, 0);
+    int error = 0;
+    do {                      \
+        r = ISocket->recv(socketDescriptor, data, maxSize, 0);
+        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+    } while (r == -1 && error == EINTR);
     qInfo() << "recv returned";
 #else
     r = qt_safe_read(socketDescriptor, data, maxSize);

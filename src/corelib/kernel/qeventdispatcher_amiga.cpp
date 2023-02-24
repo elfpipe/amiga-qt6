@@ -390,8 +390,8 @@ qInfo() << "qt_poll_sweep";
             continue;
 
         if (FD_ISSET(fds[i].fd, read_fds))
-            // qt_poll_examine_ready_read(fds[i]);
-            fds[i].revents |= QT_POLL_READ_MASK & fds[i].events;
+            qt_poll_examine_ready_read(fds[i]);
+            // fds[i].revents |= QT_POLL_READ_MASK & fds[i].events;
 
         if (FD_ISSET(fds[i].fd, write_fds))
             fds[i].revents |= QT_POLL_WRITE_MASK & fds[i].events;
@@ -476,6 +476,8 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
     int error = 0;
     int numfds;
     do {
+        // timeval tv = {1, 0};
+        // if(!tm) tm = &tv;
 // qInfo() << "Calling WaitSelect, max_fd == " << max_fd;
         // int numfds = waitselect(max_fd, &read_fds, &write_fds, &except_fds, tm, &listenSignals);
         numfds = ISocket->WaitSelect(max_fd, &read_fds, &write_fds, &except_fds, tm, (ULONG*)&listenSignals);
@@ -489,7 +491,12 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
         qt_poll_sweep(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
 
 #else
-    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), (const timespec*)tm, (ULONG*)&listenSignals)) {
+    timespec ts, *tsp = nullptr;
+    if(tm) {
+        ts = timevalToTimespec(*tm);
+        tsp = &ts;
+    }
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tsp, (ULONG*)&listenSignals)) {
     case -1:
         perror("qt_safe_poll");
         break;

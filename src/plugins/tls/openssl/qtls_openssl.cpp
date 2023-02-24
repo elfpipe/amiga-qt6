@@ -580,6 +580,8 @@ bool TlsCryptographOpenSSL::startHandshake()
     // arrive after the handshake, for example, this happens when the server
     // does not find a ClientCert or does not like it.
 
+    qInfo() << "q_SSL_connect result : " << result;
+
     if (!lastErrors.isEmpty() || errorsReportedFromCallback)
         storePeerCertificates();
 

@@ -54,6 +54,10 @@
 #include <mach/mach_time.h>
 #endif
 
+#ifdef __amigaos4__
+#  include <proto/bsdsocket.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 QByteArray qt_readlink(const char *path)
@@ -180,7 +184,13 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
     // loop and recalculate the timeout as needed
     forever {
         const int ret = qt_ppoll(fds, nfds, &timeout, listenSignals);
+#ifdef __amigaos4__
+        int error = 0;
+        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
+        if (ret != -1 || error != EINTR)
+#else
         if (ret != -1 || errno != EINTR)
+#endif
             return ret;
 
         // recalculate the timeout
