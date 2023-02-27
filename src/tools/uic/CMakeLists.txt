@@ -38,6 +38,7 @@ qt_internal_add_tool(${target_name}
         python
         shared
     PUBLIC_LIBRARIES # special case remove
+        dl
         auto
         #Qt::Gui # special case remove
 )

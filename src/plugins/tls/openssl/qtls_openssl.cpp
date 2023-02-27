@@ -573,6 +573,8 @@ bool TlsCryptographOpenSSL::startHandshake()
     q_SSL_set_ex_data(ssl, QTlsBackendOpenSSL::s_indexForSSLExtraData + socketOffsetInExData, this);
     q_SSL_set_info_callback(ssl, qt_AlertInfoCallback);
 
+    qInfo() << "Client mode : " << QSslSocket::SslClientMode;
+
     int result = (mode == QSslSocket::SslClientMode) ? q_SSL_connect(ssl) : q_SSL_accept(ssl);
     q_SSL_set_ex_data(ssl, QTlsBackendOpenSSL::s_indexForSSLExtraData + errorOffsetInExData, nullptr);
     // Note, unlike errors as external data on SSL object, we do not unset

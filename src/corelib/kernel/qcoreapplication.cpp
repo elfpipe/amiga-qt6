@@ -79,7 +79,9 @@
 #include <private/qhooks_p.h>
 
 #ifndef QT_NO_QOBJECT
-#if defined(Q_OS_UNIX) && !defined(__amigaos4__)
+#if defined(__amigaos4__)
+#  include "qeventdispatcher_amiga_p.h"
+#elif defined(Q_OS_UNIX)
 # if defined(Q_OS_DARWIN)
 #  include "qeventdispatcher_cf_p.h"
 # else
@@ -140,7 +142,7 @@
 #  include <proto/dos.h>
 #  include <proto/bsdsocket.h>
 #  include <workbench/startup.h>
-#  include "qeventdispatcher_amiga_p.h"
+//#  include "qeventdispatcher_amiga_p.h"
 #endif
 
 QT_BEGIN_NAMESPACE

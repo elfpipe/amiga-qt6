@@ -23,7 +23,8 @@ qt_internal_add_tool(${target_name}
     # _OPTION = "host_build"
 )
 qt_internal_extend_target(${target_name} CONDITION AMIGA
-    PUBLIC_LIBRARIES auto)
+    PUBLIC_LIBRARIES dl auto 
+)
 
 #### Keys ignored in scope 1:.:.:qdbusxml2cpp.pro:<TRUE>:
 # QMAKE_TARGET_DESCRIPTION = "Qt D-Bus XML to C++ Compiler"

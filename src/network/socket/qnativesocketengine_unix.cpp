@@ -974,6 +974,8 @@ qint64 QNativeSocketEnginePrivate::nativeBytesAvailable() const
 
 bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 {
+    qInfo() << "nativeHasPendingDatagrams : operation not supported";
+
     // Peek 1 bytes into the next message.
     ssize_t readBytes;
 #ifdef __amigaos4__
@@ -1017,6 +1019,7 @@ bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 
 qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 {
+    qInfo() << "nativePendingDatagramSize : operation not supported";
     ssize_t recvResult = -1;
 #if defined(Q_OS_LINUX)
     // Linux can return the actual datagram size if we use MSG_TRUNC
@@ -1089,6 +1092,8 @@ qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxSize, QIpPacketHeader *header,
                                                          QAbstractSocketEngine::PacketHeaderOptions options)
 {
+    qInfo() << "nativeReceiveDatagram : operation not supported";
+
 #ifndef __amigaos4__
     // we use quintptr to force the alignment
     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
@@ -1247,6 +1252,8 @@ qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxS
 
 qint64 QNativeSocketEnginePrivate::nativeSendDatagram(const char *data, qint64 len, const QIpPacketHeader &header)
 {
+    qInfo() << "nativeSendDatagram : operation not supported";
+
 #ifndef __amigaos4__
     // we use quintptr to force the alignment
     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))

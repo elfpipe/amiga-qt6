@@ -136,12 +136,22 @@ qt_internal_extend_target(Bootstrap CONDITION UNIX
         ../../corelib/io/qfilesystemiterator_unix.cpp
         ../../corelib/io/qfsfileengine_unix.cpp
         ../../corelib/kernel/qcore_unix.cpp
+)
+
+qt_internal_extend_target(Bootstrap CONDITION UNIX AND NOT AMIGA
+    SOURCES
         ../../corelib/kernel/qsharedmemory_posix.cpp
         ../../corelib/kernel/qsharedmemory_systemv.cpp
         ../../corelib/kernel/qsharedmemory_unix.cpp
         ../../corelib/kernel/qsystemsemaphore_posix.cpp
         ../../corelib/kernel/qsystemsemaphore_systemv.cpp
         ../../corelib/kernel/qsystemsemaphore_unix.cpp
+)
+
+qt_internal_extend_target(Bootstrap CONDITION AMIGA
+    SOURCES
+    ../../corelib/kernel/qsharedmemory_amiga.cpp
+    ../../corelib/kernel/qsystemsemaphore_amiga.cpp
 )
 
 qt_internal_extend_target(Bootstrap CONDITION WIN32

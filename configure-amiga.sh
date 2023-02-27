@@ -19,9 +19,15 @@ cmake \
 -DQT_FEATURE_network=ON \
 -DQT_FEATURE_ssl=ON \
 -DQT_FEATURE_openssl=ON \
--DQT_FEATURE_openssl_linked=ON \
+-DQT_FEATURE_openssl_linked=OFF \
 -DQT_FEATURE_library=ON \
--DQT_FEATURE_glib=OFF \
+-DQT_FEATURE_concurrent=ON \
+-DQT_FEATURE_sql=ON \
+-DQT_FEATURE_future=ON \
+-DQT_FEATURE_process=ON \
+-DQT_FEATURE_processenvironment=ON \
+-DQT_FEATURE_systemsemaphore=ON \
+-DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
 ../amiga-qt6
 
 # cmake -DCMAKE_PREFIX_PATH="/qt6-amiga" \
