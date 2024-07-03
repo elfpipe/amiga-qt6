@@ -23,7 +23,7 @@ qt_internal_add_tool(${target_name}
     # _OPTION = "host_build"
 )
 qt_internal_extend_target(${target_name} CONDITION AMIGA
-    PUBLIC_LIBRARIES dl auto 
+    PUBLIC_LIBRARIES auto
 )
 
 #### Keys ignored in scope 1:.:.:qdbusxml2cpp.pro:<TRUE>:

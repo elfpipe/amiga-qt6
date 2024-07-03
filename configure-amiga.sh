@@ -7,9 +7,9 @@ cmake \
 -DCMAKE_CXX_COMPILER="ppc-amigaos-g++" \
 -DCMAKE_ASM_COMPILER="ppc-amigaos-as" \
 -DCMAKE_MAKE_PROGRAM="make" \
--DCMAKE_CXX_FLAGS_INIT="-mcrt=newlib -athread=native" \
--DCMAKE_C_FLAGS_INIT="-mcrt=newlib -athread=native" \
--DCMAKE_EXE_LINKER_FLAGS="-use-dynld" \
+-DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native" \
+-DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native" \
+-DCMAKE_EXE_LINKER_FLAGS="-use-dynld -Wl,--verbose" \
 -DUNIX=1 -DAMIGA=1 \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
@@ -27,6 +27,7 @@ cmake \
 -DQT_FEATURE_process=ON \
 -DQT_FEATURE_processenvironment=ON \
 -DQT_FEATURE_systemsemaphore=ON \
+-DQT_FEATURE_brotli=OFF \
 -DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
 ../amiga-qt6
 

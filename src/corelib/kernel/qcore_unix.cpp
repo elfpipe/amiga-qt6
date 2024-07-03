@@ -55,6 +55,7 @@
 #endif
 
 #ifdef __amigaos4__
+#  include <poll.h>
 #  include <proto/bsdsocket.h>
 #endif
 

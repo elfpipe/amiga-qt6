@@ -95,9 +95,9 @@
 #include <proto/exec.h>
 #endif
 
-#if defined(__amigaos4__) && !defined(QT_NO_NATIVE_POLL)
-#define QT_NO_NATIVE_POLL
-#endif
+// #if defined(__amigaos4__) && !defined(QT_NO_NATIVE_POLL)
+// #define QT_NO_NATIVE_POLL
+// #endif
  
 #if defined(QT_NO_NATIVE_POLL)
 #  include "qpoll_p.h"

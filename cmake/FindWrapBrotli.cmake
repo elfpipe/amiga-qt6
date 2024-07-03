@@ -3,6 +3,7 @@ if(TARGET WrapBrotli::WrapBrotliDec)
     return()
 endif()
 
+return()
 # From VCPKG
 find_package(unofficial-brotli CONFIG QUIET)
 if (unofficial-brotli_FOUND)

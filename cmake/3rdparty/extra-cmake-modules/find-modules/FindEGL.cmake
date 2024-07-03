@@ -64,6 +64,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/ECMFindModuleHelpersStub.cmake)
 include(CheckCXXSourceCompiles)
 include(CMakePushCheckState)
 
+if(NOT AMIGA)
+
 ecm_find_package_version_check(EGL)
 
 # Use pkg-config to get the directories and then use these values
@@ -85,6 +87,7 @@ find_library(EGL_LIBRARY
     HINTS
         ${PKG_EGL_LIBRARY_DIRS}
 )
+endif(NOT AMIGA)
 
 # NB: We do *not* use the version information from pkg-config, as that
 #     is the implementation version (eg: the Mesa version)

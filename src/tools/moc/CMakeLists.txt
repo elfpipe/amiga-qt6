@@ -46,3 +46,4 @@ qt_internal_extend_target(${target_name} CONDITION MSVC
     DEFINES
         _CRT_SECURE_NO_WARNINGS
 )
+

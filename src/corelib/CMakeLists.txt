@@ -1148,7 +1148,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_mimetype
 )
 
 qt_internal_extend_target(Core CONDITION AMIGA
-    LIBRARIES atomic dl unix
+    LIBRARIES atomic
 )
 
 # set(CMAKE_SHARED_LINKER_FLAGS "-Wl,--allow-shlib-undefined")

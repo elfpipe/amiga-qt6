@@ -228,7 +228,7 @@ QHostInfo QHostInfoAgent::fromName(const QString &hostName)
 //printf("hostname = %s\n", __he->h_name);
 
      QList<QHostAddress> addresses;
-     for (__BYTE **p = __he->h_addr_list; *p != 0; p++) {
+     for (__BYTE **p = (__BYTE**)__he->h_addr_list; *p != 0; p++) {
           QHostAddress addr;
           addr.setAddress(ntohl(*((quint32 *)*p)));
           if (!addresses.contains(addr))

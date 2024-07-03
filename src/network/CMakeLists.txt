@@ -121,10 +121,10 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_http
         socket/qhttpsocketengine.cpp socket/qhttpsocketengine_p.h
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_brotli AND QT_FEATURE_http
-    LIBRARIES
-        WrapBrotli::WrapBrotliDec
-)
+# qt_internal_extend_target(Network CONDITION QT_FEATURE_brotli AND QT_FEATURE_http AND NOT AMIGA
+#     LIBRARIES
+#         WrapBrotli::WrapBrotliDec
+# )
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_http AND QT_FEATURE_zstd
     LIBRARIES

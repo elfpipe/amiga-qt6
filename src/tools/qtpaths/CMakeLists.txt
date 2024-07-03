@@ -26,7 +26,7 @@ qt_internal_extend_target(${target_name} CONDITION QT_FEATURE_settings
 )
 
 qt_internal_extend_target(${target_name} CONDITION AMIGA
-    PUBLIC_LIBRARIES dl auto)
+    PUBLIC_LIBRARIES auto)
 
 if(WIN32 AND TARGET ${target_name})
     set_target_properties(${target_name} PROPERTIES

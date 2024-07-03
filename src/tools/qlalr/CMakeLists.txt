@@ -25,7 +25,7 @@ qt_internal_add_tool(${target_name}
 )
 
 qt_internal_extend_target(${target_name} CONDITION AMIGA
-    PUBLIC_LIBRARIES dl auto)
+    PUBLIC_LIBRARIES auto)
 
 #### Keys ignored in scope 1:.:.:qlalr.pro:<TRUE>:
 # OTHER_FILES = "lalr.g"
