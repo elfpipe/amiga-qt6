@@ -52,7 +52,7 @@
 #include <private/qcoreapplication_p.h>
 #include <private/qcore_unix_p.h>
 
-#include <proto/intuition.h>
+// #include <proto/intuition.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -62,7 +62,7 @@
 #  include <sys/eventfd.h>
 #endif
 
-#include <proto/bsdsocket.h>
+// #include <proto/bsdsocket.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -88,28 +88,28 @@ QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
         qWarning("Failed to allocate message port for timer.device communication. Exit.\n");
         QCoreApplication::quit();
     }
-    timerRequest = (struct TimeRequest *)IExec->AllocSysObjectTags(ASOT_IOREQUEST,
-        ASOIOR_Size, sizeof(struct TimeRequest),
-        ASOIOR_ReplyPort, timerPort,
-        TAG_END);
-    if(!timerRequest) {
-        qWarning("Failed to allocate message structure for timer.device communication. Exit.\n");
-        QCoreApplication::quit();
-    }
-    unsigned int error = IExec->OpenDevice("timer.device", UNIT_MICROHZ, (struct IORequest *)timerRequest, 0);
-    if(error) {
-        qWarning("Error opening timer.device for communication. Exit.\n");
-        QCoreApplication::quit();
-    }
+    // timerRequest = (struct TimeRequest *)IExec->AllocSysObjectTags(ASOT_IOREQUEST,
+    //     ASOIOR_Size, sizeof(struct TimeRequest),
+    //     ASOIOR_ReplyPort, timerPort,
+    //     TAG_END);
+    // if(!timerRequest) {
+    //     qWarning("Failed to allocate message structure for timer.device communication. Exit.\n");
+    //     QCoreApplication::quit();
+    // }
+    // unsigned int error = IExec->OpenDevice("timer.device", UNIT_MICROHZ, (struct IORequest *)timerRequest, 0);
+    // if(error) {
+    //     qWarning("Error opening timer.device for communication. Exit.\n");
+    //     QCoreApplication::quit();
+    // }
     wakeupSignal = IExec->AllocSignal(-1);
     me = IExec->FindTask(0);
 }
 
 QEventDispatcherAMIGAPrivate::~QEventDispatcherAMIGAPrivate()
 {
-    IExec->CloseDevice ((IORequest *)timerRequest);
-    IExec->FreeSysObject(ASOT_IOREQUEST, timerRequest);
-    IExec->FreeSysObject(ASOT_PORT, timerPort);
+    // IExec->CloseDevice ((IORequest *)timerRequest);
+    // IExec->FreeSysObject(ASOT_IOREQUEST, timerRequest);
+    // IExec->FreeSysObject(ASOT_PORT, timerPort);
     IExec->FreeSignal(wakeupSignal);
     // cleanup timers
     qDeleteAll(timerList);
@@ -211,7 +211,7 @@ void QEventDispatcherAMIGA::registerSocketNotifier(QSocketNotifier *notifier)
     Q_ASSERT(notifier);
     int sockfd = notifier->socket();
     QSocketNotifier::Type type = notifier->type();
-#if 1 //ndef QT_NO_DEBUG
+#ifndef QT_NO_DEBUG
     if (notifier->thread() != thread() || thread() != QThread::currentThread()) {
         qWarning("QSocketNotifier: socket notifiers cannot be enabled from another thread");
         return;
@@ -309,107 +309,9 @@ QEventDispatcherAMIGA::registeredTimers(QObject *object) const
     return d->timerList.registeredTimers(object);
 }
 
-#define QT_POLL_READ_MASK   (POLLIN | POLLRDNORM)
-#define QT_POLL_WRITE_MASK  (POLLOUT | POLLWRNORM | POLLWRBAND)
-#define QT_POLL_EXCEPT_MASK (POLLPRI | POLLRDBAND)
-#define QT_POLL_ERROR_MASK  (POLLERR | POLLNVAL)
-#define QT_POLL_EVENTS_MASK (QT_POLL_READ_MASK | QT_POLL_WRITE_MASK | QT_POLL_EXCEPT_MASK)
-
-static inline int qt_poll_prepare(struct pollfd *fds, nfds_t nfds,
-                                  fd_set *read_fds, fd_set *write_fds, fd_set *except_fds)
-{
-    int max_fd = -1;
-
-    FD_ZERO(read_fds);
-    FD_ZERO(write_fds);
-    FD_ZERO(except_fds);
-
-    for (nfds_t i = 0; i < nfds; i++) {
-        if (fds[i].fd >= FD_SETSIZE) {
-            errno = EINVAL;
-            return -1;
-        }
-
-        if ((fds[i].fd < 0) || (fds[i].revents & QT_POLL_ERROR_MASK))
-            continue;
-
-        if (fds[i].events & QT_POLL_READ_MASK)
-            FD_SET(fds[i].fd, read_fds);
-
-        if (fds[i].events & QT_POLL_WRITE_MASK)
-            FD_SET(fds[i].fd, write_fds);
-
-        if (fds[i].events & QT_POLL_EXCEPT_MASK)
-            FD_SET(fds[i].fd, except_fds);
-
-        if (fds[i].events & QT_POLL_EVENTS_MASK)
-            max_fd = qMax(max_fd, fds[i].fd);
-    }
-
-    return max_fd + 1;
-}
-
-static inline void qt_poll_examine_ready_read(struct pollfd &pfd)
-{
-    int res;
-    char data;
-
-    // EINTR_LOOP(res, ::recv(pfd.fd, &data, sizeof(data), MSG_PEEK));
-    int err = 0;
-    res =  ISocket->recv(pfd.fd, &data, sizeof(data), MSG_PEEK);
-    ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &err, TAG_END);
-    const int error = (res < 0) ? err : 0;
-
-    if (res == 0) {
-        pfd.revents |= POLLHUP;
-    } else if (res > 0 || error == ENOTSOCK || error == ENOTCONN) {
-        pfd.revents |= QT_POLL_READ_MASK & pfd.events;
-    } else {
-        switch (error) {
-        case ESHUTDOWN:
-        case ECONNRESET:
-        case ECONNABORTED:
-        case ENETRESET:
-            pfd.revents |= POLLHUP;
-            break;
-        default:
-            pfd.revents |= POLLERR;
-            break;
-        }
-    }
-}
-
-static inline int qt_poll_sweep(struct pollfd *fds, nfds_t nfds,
-                                fd_set *read_fds, fd_set *write_fds, fd_set *except_fds)
-{
-qInfo() << "qt_poll_sweep";
-    int result = 0;
-
-    for (nfds_t i = 0; i < nfds; i++) {
-        if (fds[i].fd < 0)
-            continue;
-
-        if (FD_ISSET(fds[i].fd, read_fds))
-            qt_poll_examine_ready_read(fds[i]);
-            // fds[i].revents |= QT_POLL_READ_MASK & fds[i].events;
-
-        if (FD_ISSET(fds[i].fd, write_fds))
-            fds[i].revents |= QT_POLL_WRITE_MASK & fds[i].events;
-
-        if (FD_ISSET(fds[i].fd, except_fds))
-            fds[i].revents |= QT_POLL_EXCEPT_MASK & fds[i].events;
-
-        if (fds[i].revents != 0)
-            result++;
-    }
-
-    return result;
-}
-
 /*****************************************************************************
  QEventDispatcherAMIGA implementations for AMIGAAAAAAAAAA.....!!
  *****************************************************************************/
-
 
 bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
 {
@@ -436,26 +338,15 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
     if (d->interrupt.loadRelaxed())
         return false;
 
-    // timespec *tm = nullptr;
-    struct timeval *tm = nullptr;
-    struct TimeVal wait_tm = { 0, 0 };
+    timespec *tm = nullptr;
+    timespec wait_tm = { 0, 0 };
 
     unsigned int listenSignals = 0;
-    if (!canWait || (include_timers && d->timerList.timerWait(wait_tm))) {
-//         d->timerRequest->Request.io_Command = TR_ADDREQUEST;
-//         d->timerRequest->Time = wait_tm;
 
-// //        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
-
-//         IExec->SendIO((struct IORequest *)d->timerRequest);
-//         listenSignals |= 1 << d->timerPort->mp_SigBit;
-
-        tm = (struct timeval*)&wait_tm;
-    }
+    if (!canWait || (include_timers && d->timerList.timerWait(wait_tm)))
+        tm = &wait_tm;
 
     listenSignals |= 1 << d->wakeupSignal;
-
-    fd_set read_fds, write_fds, except_fds;
 
     d->pollfds.clear();
     d->pollfds.reserve(1 + (include_notifiers ? d->socketNotifiers.size() : 0));
@@ -464,57 +355,21 @@ bool QEventDispatcherAMIGA::processEvents(QEventLoop::ProcessEventsFlags flags)
         for (auto it = d->socketNotifiers.cbegin(); it != d->socketNotifiers.cend(); ++it)
             d->pollfds.append(qt_make_pollfd(it.key(), it.value().events()));
 
-    // This must be last, as it's popped off the end below
-    // d->pollfds.append(d->threadPipe.prepare());
-
     int nevents = 0;
 
-#if 0
-    unsigned int caughtSignals = IExec->Wait(listenSignals);
-#elif 1
-    int max_fd = qt_poll_prepare(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
-    int error = 0;
-    int numfds;
-    do {
-        // timeval tv = {1, 0};
-        // if(!tm) tm = &tv;
-// qInfo() << "Calling WaitSelect, max_fd == " << max_fd;
-        // int numfds = waitselect(max_fd, &read_fds, &write_fds, &except_fds, tm, &listenSignals);
-        numfds = ISocket->WaitSelect(max_fd, &read_fds, &write_fds, &except_fds, tm, (ULONG*)&listenSignals);
-
-// qInfo() << "WaitSelect returned : " << numfds;
-        if(numfds < 0 ) ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        unsigned int caughtSignals = listenSignals;
-    } while (numfds == -1 && (error == EINTR || error == EAGAIN));
-
-    if (numfds > 0)
-        qt_poll_sweep(d->pollfds.data(), d->pollfds.size(), &read_fds, &write_fds, &except_fds);
-
-#else
-    timespec ts, *tsp = nullptr;
-    if(tm) {
-        ts = timevalToTimespec(*tm);
-        tsp = &ts;
-    }
-    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tsp, (ULONG*)&listenSignals)) {
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
     case -1:
         perror("qt_safe_poll");
         break;
     case 0:
         break;
     default:
-        qInfo() << "poll";
-        // nevents += d->threadPipe.check(d->pollfds.takeLast());
         if (include_notifiers)
             nevents += d->activateSocketNotifiers();
         break;
     }
-#endif
 
-    // if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
-    //     IExec->AbortIO((struct IORequest *)d->timerRequest);
-
-    if (include_timers) { // && caughtSignals | 1 << d->timerPort->mp_SigBit) {
+    if (include_timers) {
         nevents += d->activateTimers();
     }
 

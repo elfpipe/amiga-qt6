@@ -126,7 +126,6 @@ public:
     QQueue<QLocalSocket*> pendingConnections;
     QString errorString;
     QAbstractSocket::SocketError error;
-    int listenBacklog = 50;
 
     Q_OBJECT_BINDABLE_PROPERTY(QLocalServerPrivate, QLocalServer::SocketOptions, socketOptions)
 };

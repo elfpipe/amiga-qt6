@@ -83,7 +83,6 @@ public:
     QAbstractSocket::SocketError serverSocketError;
     QString serverSocketErrorString;
 
-    int listenBacklog = 50;
     int maxConnections;
 
 #ifndef QT_NO_NETWORKPROXY

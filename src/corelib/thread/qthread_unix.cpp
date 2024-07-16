@@ -53,8 +53,10 @@
 #  endif
 #endif
 
-#ifndef __amigaos4__
-#include <private/qeventdispatcher_unix_p.h>
+#ifdef __amigaos4__
+#  include "kernel/qeventdispatcher_amiga_p.h"
+#else
+#  include <private/qeventdispatcher_unix_p.h>
 #endif
 
 #include "qthreadstorage.h"
@@ -67,16 +69,8 @@
 #include <cxxabi.h>
 #endif
 
-#ifndef __amigaos4__
 #include <sched.h>
-#endif
 #include <errno.h>
-
-#ifdef __amigaos4__
-#define TRUE 1
-#define FALSE 0
-#include "kernel/qeventdispatcher_amiga_p.h"
-#endif
 
 #ifdef Q_OS_BSD4
 #include <sys/sysctl.h>
@@ -375,7 +369,6 @@ void QThreadPrivate::finish(void *arg)
         QThread *thr = reinterpret_cast<QThread *>(arg);
         QThreadPrivate *d = thr->d_func();
 
-        printf("QThreadPrivate::finish() d == 0x%x\n", (void *)d);
         QMutexLocker locker(&d->mutex);
 
         d->isInFinish = true;
@@ -455,9 +448,7 @@ int QThread::idealThreadCount() noexcept
 {
     int cores = 1;
 
-#if defined(__amigaos4__)
-//do nothing
-#elif defined(Q_OS_HPUX)
+#if defined(Q_OS_HPUX)
     // HP-UX
     struct pst_dynamic psd;
     if (pstat_getdynamic(&psd, sizeof(psd), 1, 0) == -1) {
@@ -514,9 +505,7 @@ int QThread::idealThreadCount() noexcept
 
 void QThread::yieldCurrentThread()
 {
-#ifndef __amigaos4__
     sched_yield();
-#endif
 }
 
 #endif // QT_CONFIG(thread)

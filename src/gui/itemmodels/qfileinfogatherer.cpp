@@ -91,18 +91,11 @@ QFileInfoGatherer::QFileInfoGatherer(QObject *parent)
 */
 QFileInfoGatherer::~QFileInfoGatherer()
 {
-    printf("~QFileInfoGatherer() : this = 0x%x\n", (void *)this);
-    printf("abort.storeRelaxed()\n");
     abort.storeRelaxed(true);
-    printf("QMutexLocker\n");
     QMutexLocker locker(&mutex);
-    printf("condition.wakeAll()\n");
     condition.wakeAll();
-    printf("locker.unlock()\n");
     locker.unlock();
-    printf("wait()\n");
     wait();
-    printf("Done.\n");
 }
 
 void QFileInfoGatherer::setResolveSymlinks(bool enable)

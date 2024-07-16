@@ -47,7 +47,7 @@
 #include <QCoreApplication>
 #include <QCryptographicHash>
 
-#if defined(Q_OS_UNIX) && !defined(__amigaos4__)
+#if defined(Q_OS_UNIX)
 #include <sys/mman.h>
 #include <private/qcore_unix_p.h>
 #endif
@@ -219,7 +219,7 @@ bool QOpenGLProgramBinaryCache::setProgramBinary(uint programId, uint blobFormat
     return true;
 }
 
-#if defined(Q_OS_UNIX) && !defined(__amigaos4__)
+#if defined(Q_OS_UNIX)
 class FdWrapper
 {
 public:
@@ -284,7 +284,7 @@ bool QOpenGLProgramBinaryCache::load(const QByteArray &cacheKey, uint programId)
     QByteArray buf;
     const QString fn = cacheFileName(cacheKey);
     DeferredFileRemove undertaker(fn);
-#if defined(Q_OS_UNIX) && !defined(__amigaos4__)
+#if defined(Q_OS_UNIX)
     FdWrapper fdw(fn);
     if (fdw.fd == -1)
         return false;
@@ -305,7 +305,7 @@ bool QOpenGLProgramBinaryCache::load(const QByteArray &cacheKey, uint programId)
     }
 
     const uchar *p;
-#if defined(Q_OS_UNIX) && !defined(__amigaos4__)
+#if defined(Q_OS_UNIX)
     if (!fdw.map()) {
         undertaker.setActive();
         return false;

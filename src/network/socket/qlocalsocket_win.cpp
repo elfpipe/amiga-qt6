@@ -67,6 +67,8 @@ QSocketPoller::QSocketPoller(const QLocalSocketPrivate &socket)
 }
 
 /*!
+    \internal
+
     Waits until new data is available for reading or write operation
     completes. Returns \c true, if we need to check pipe workers;
     otherwise it returns \c false (if an error occurred or the operation
@@ -74,7 +76,7 @@ QSocketPoller::QSocketPoller(const QLocalSocketPrivate &socket)
 
     \note If the read operation is inactive, it succeeds after
     a short wait, allowing the caller to check the state of the socket.
-*/
+ */
 bool QSocketPoller::poll(const QDeadlineTimer &deadline)
 {
     const qint64 sleepTime = 10;
@@ -157,13 +159,20 @@ QLocalSocketPrivate::QLocalSocketPrivate() : QIODevicePrivate(),
        emittedReadyRead(false),
        emittedBytesWritten(false)
 {
+    writeBufferChunkSize = QIODEVICE_BUFFERSIZE;
 }
 
 QLocalSocketPrivate::~QLocalSocketPrivate()
 {
-    Q_ASSERT(state == QLocalSocket::UnconnectedState);
-    Q_ASSERT(handle == INVALID_HANDLE_VALUE);
-    Q_ASSERT(pipeWriter == nullptr);
+    destroyPipeHandles();
+}
+
+void QLocalSocketPrivate::destroyPipeHandles()
+{
+    if (handle != INVALID_HANDLE_VALUE) {
+        DisconnectNamedPipe(handle);
+        CloseHandle(handle);
+    }
 }
 
 void QLocalSocket::connectToServer(OpenMode openMode)
@@ -232,20 +241,6 @@ void QLocalSocket::connectToServer(OpenMode openMode)
         emit connected();
 }
 
-static qint64 transformPipeReaderResult(qint64 res)
-{
-    // QWindowsPipeReader's reading functions return error codes
-    // that don't match what we need.
-    switch (res) {
-    case 0:     // EOF -> transform to error
-        return -1;
-    case -2:    // EWOULDBLOCK -> no error, just no bytes
-        return 0;
-    default:
-        return res;
-    }
-}
-
 // This is reading from the buffer
 qint64 QLocalSocket::readData(char *data, qint64 maxSize)
 {
@@ -254,29 +249,22 @@ qint64 QLocalSocket::readData(char *data, qint64 maxSize)
     if (!maxSize)
         return 0;
 
-    return transformPipeReaderResult(d->pipeReader->read(data, maxSize));
-}
+    qint64 ret = d->pipeReader->read(data, maxSize);
 
-qint64 QLocalSocket::readLineData(char *data, qint64 maxSize)
-{
-    Q_D(QLocalSocket);
-
-    if (!maxSize)
+    // QWindowsPipeReader::read() returns error codes that don't match what we need
+    switch (ret) {
+    case 0:     // EOF -> transform to error
+        return -1;
+    case -2:    // EWOULDBLOCK -> no error, just no bytes
         return 0;
-
-    // QIODevice::readLine() reserves space for the trailing '\0' byte,
-    // so we must read 'maxSize + 1' bytes.
-    return transformPipeReaderResult(d->pipeReader->readLine(data, maxSize + 1));
+    default:
+        return ret;
+    }
 }
 
 qint64 QLocalSocket::skipData(qint64 maxSize)
 {
-    Q_D(QLocalSocket);
-
-    if (!maxSize)
-        return 0;
-
-    return transformPipeReaderResult(d->pipeReader->skip(maxSize));
+    return QIODevice::skipData(maxSize);
 }
 
 qint64 QLocalSocket::writeData(const char *data, qint64 len)
@@ -290,18 +278,13 @@ qint64 QLocalSocket::writeData(const char *data, qint64 len)
 
     if (len == 0)
         return 0;
-
+    d->write(data, len);
     if (!d->pipeWriter) {
         d->pipeWriter = new QWindowsPipeWriter(d->handle, this);
         QObjectPrivate::connect(d->pipeWriter, &QWindowsPipeWriter::bytesWritten,
                                 d, &QLocalSocketPrivate::_q_bytesWritten);
     }
-
-    if (d->isWriteChunkCached(data, len))
-        d->pipeWriter->write(*(d->currentWriteChunk));
-    else
-        d->pipeWriter->write(data, len);
-
+    d->writeToSocket();
     return len;
 }
 
@@ -337,16 +320,11 @@ void QLocalSocketPrivate::_q_pipeClosed()
             return;
     }
 
-    serverName.clear();
-    fullServerName.clear();
     pipeReader->stop();
     delete pipeWriter;
     pipeWriter = nullptr;
-    if (handle != INVALID_HANDLE_VALUE) {
-        DisconnectNamedPipe(handle);
-        CloseHandle(handle);
-        handle = INVALID_HANDLE_VALUE;
-    }
+    destroyPipeHandles();
+    handle = INVALID_HANDLE_VALUE;
 
     state = QLocalSocket::UnconnectedState;
     emit q->stateChanged(state);
@@ -365,7 +343,7 @@ qint64 QLocalSocket::bytesAvailable() const
 qint64 QLocalSocket::bytesToWrite() const
 {
     Q_D(const QLocalSocket);
-    return d->pipeWriterBytesToWrite();
+    return d->writeBuffer.size() + d->pipeWriterBytesToWrite();
 }
 
 bool QLocalSocket::canReadLine() const
@@ -377,29 +355,52 @@ bool QLocalSocket::canReadLine() const
 void QLocalSocket::close()
 {
     Q_D(QLocalSocket);
+    if (openMode() == NotOpen)
+        return;
 
+    d->setWriteChannelCount(0);
     QIODevice::close();
     d->serverName = QString();
     d->fullServerName = QString();
-    disconnectFromServer();
+
+    if (state() != UnconnectedState) {
+        if (bytesToWrite() > 0) {
+            disconnectFromServer();
+            return;
+        }
+
+        d->_q_pipeClosed();
+    }
 }
 
 bool QLocalSocket::flush()
 {
     Q_D(QLocalSocket);
-
-    return d->pipeWriter && d->pipeWriter->checkForWrite();
+    bool written = false;
+    while (d->pipeWriter && d->pipeWriter->waitForWrite(0))
+        written = true;
+    return written;
 }
 
 void QLocalSocket::disconnectFromServer()
 {
     Q_D(QLocalSocket);
 
-    if (bytesToWrite() == 0) {
-        d->_q_pipeClosed();
-    } else if (d->state != QLocalSocket::ClosingState) {
+    // Are we still connected?
+    if (!isValid()) {
+        // If we have unwritten data, the pipeWriter is still present.
+        // It must be destroyed before close() to prevent an infinite loop.
+        delete d->pipeWriter;
+        d->pipeWriter = 0;
+        d->writeBuffer.clear();
+    }
+
+    flush();
+    if (bytesToWrite() != 0) {
         d->state = QLocalSocket::ClosingState;
         emit stateChanged(d->state);
+    } else {
+        close();
     }
 }
 
@@ -436,8 +437,21 @@ void QLocalSocketPrivate::_q_bytesWritten(qint64 bytes)
         QScopedValueRollback<bool> guard(emittedBytesWritten, true);
         emit q->bytesWritten(bytes);
     }
-    if (state == QLocalSocket::ClosingState)
-        q->disconnectFromServer();
+    if (writeBuffer.isEmpty()) {
+        if (state == QLocalSocket::ClosingState && pipeWriterBytesToWrite() == 0)
+            q->close();
+    } else {
+        writeToSocket();
+    }
+}
+
+void QLocalSocketPrivate::writeToSocket()
+{
+    Q_ASSERT(pipeWriter);
+    Q_ASSERT(!writeBuffer.isEmpty());
+
+    if (!pipeWriter->isWriteOperationActive())
+        pipeWriter->write(writeBuffer.read());
 }
 
 qintptr QLocalSocket::socketDescriptor() const
@@ -471,9 +485,16 @@ bool QLocalSocket::waitForDisconnected(int msecs)
         qWarning("QLocalSocket::waitForDisconnected() is not allowed in UnconnectedState");
         return false;
     }
+    if (!openMode().testFlag(QIODevice::ReadOnly)) {
+        qWarning("QLocalSocket::waitForDisconnected isn't supported for write only pipes.");
+        return false;
+    }
 
     QDeadlineTimer deadline(msecs);
     while (!d->pipeReader->isPipeClosed()) {
+        if (!d->writeBuffer.isEmpty())
+            d->writeToSocket();
+
         QSocketPoller poller(*d);
         if (!poller.poll(deadline))
             return false;
@@ -507,6 +528,9 @@ bool QLocalSocket::waitForReadyRead(int msecs)
 
     QDeadlineTimer deadline(msecs);
     while (!d->pipeReader->isPipeClosed()) {
+        if (!d->writeBuffer.isEmpty())
+            d->writeToSocket();
+
         QSocketPoller poller(*d);
         if (poller.waitForClose || !poller.poll(deadline))
             return false;
@@ -530,8 +554,11 @@ bool QLocalSocket::waitForBytesWritten(int msecs)
 
     QDeadlineTimer deadline(msecs);
     while (!d->pipeReader->isPipeClosed()) {
-        if (bytesToWrite() == 0)
+        if (!d->writeBuffer.isEmpty()) {
+            d->writeToSocket();
+        } else if (d->pipeWriterBytesToWrite() == 0) {
             return false;
+        }
 
         QSocketPoller poller(*d);
         if (!poller.poll(deadline))

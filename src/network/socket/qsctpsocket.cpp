@@ -156,7 +156,7 @@ bool QSctpSocketPrivate::canReadNotification()
     const int savedCurrentChannel = currentReadChannel;
     bool currentChannelRead = false;
     do {
-        qsizetype datagramSize = incomingDatagram.size();
+        int datagramSize = incomingDatagram.size();
         QIpPacketHeader header;
 
         do {
@@ -169,7 +169,7 @@ bool QSctpSocketPrivate::canReadNotification()
                 bytesToRead = 4096;
             }
 
-            Q_ASSERT((datagramSize + qsizetype(bytesToRead)) < MaxByteArraySize);
+            Q_ASSERT((datagramSize + int(bytesToRead)) < MaxByteArraySize);
             incomingDatagram.resize(datagramSize + int(bytesToRead));
 
 #if defined (QSCTPSOCKET_DEBUG)

@@ -137,14 +137,6 @@
 
 #include <algorithm>
 
-#ifdef __amigaos4__
-#  include <proto/exec.h>
-#  include <proto/dos.h>
-#  include <proto/bsdsocket.h>
-#  include <workbench/startup.h>
-//#  include "qeventdispatcher_amiga_p.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 #if defined(Q_OS_WIN) || defined(Q_OS_MAC)
@@ -781,30 +773,9 @@ QCoreApplication::QCoreApplication(int &argc, char **argv
   \value ApplicationFlags QT_VERSION
 */
 
-#ifdef __amigaos4__
-struct Library *SocketBase;
-struct SocketIFace *ISocket;
-#endif
-
 void QCoreApplicationPrivate::init()
 {
     Q_TRACE_SCOPE(QCoreApplicationPrivate_init);
-
-#ifdef __amigaos4__
-	//open bsdsocket.library
-	SocketBase = IExec->OpenLibrary ("bsdsocket.library", 0L);
-	if (!SocketBase)
-		qFatal("Couldn't open bsdsocket.library!\n");
-	ISocket = (struct SocketIFace *) IExec->GetInterface(SocketBase, "main", 1, NULL);
-	if (!ISocket)
-	{
-		IExec->CloseLibrary(SocketBase);
-		qFatal("Couldn't get socket interface!\n");
-	}
-	ISocket->SocketBaseTags(
-		SBTM_SETVAL(SBTC_CAN_SHARE_LIBRARY_BASES),TRUE,
-		TAG_END);
-#endif
 
 #if defined(Q_OS_MACOS)
     QMacAutoReleasePool pool;
@@ -942,11 +913,6 @@ QCoreApplication::~QCoreApplication()
 #if QT_CONFIG(library)
     coreappdata()->app_libpaths.reset();
     coreappdata()->manual_libpaths.reset();
-#endif
-
-#ifdef __amigaos4__
-	IExec->DropInterface((struct Interface *)ISocket);
-	IExec->CloseLibrary(SocketBase);
 #endif
 }
 

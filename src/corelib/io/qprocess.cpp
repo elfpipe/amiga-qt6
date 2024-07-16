@@ -56,6 +56,10 @@
 #include <paths.h>
 #endif
 
+#ifdef __amigaos4__
+#include <unistd.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 /*!
@@ -2341,7 +2345,7 @@ QT_BEGIN_INCLUDE_NAMESPACE
 #elif defined(QT_PLATFORM_UIKIT)
   static char *qt_empty_environ[] = { 0 };
 #define environ qt_empty_environ
-#elif !defined(Q_OS_WIN) && !defined(__amigaos4__)
+#elif !defined(Q_OS_WIN) && !defined(__amigaos4___) // amiga has this as a macro (clib4)
   extern char **environ;
 #endif
 QT_END_INCLUDE_NAMESPACE
@@ -2368,12 +2372,10 @@ QT_END_INCLUDE_NAMESPACE
 QStringList QProcess::systemEnvironment()
 {
     QStringList tmp;
-#ifndef __amigaos4__
     char *entry = nullptr;
     int count = 0;
     while ((entry = environ[count++]))
         tmp << QString::fromLocal8Bit(entry);
-#endif
     return tmp;
 }
 

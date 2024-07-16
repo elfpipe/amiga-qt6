@@ -199,7 +199,7 @@ QNetworkReplyHttpImpl::QNetworkReplyHttpImpl(QNetworkAccessManager* const manage
         if (d->synchronous && outgoingData) {
             // The synchronous HTTP is a corner case, we will put all upload data in one big QByteArray in the outgoingDataBuffer.
             // Yes, this is not the most efficient thing to do, but on the other hand synchronous XHR needs to die anyway.
-            d->outgoingDataBuffer = std::make_shared<QRingBuffer>();
+            d->outgoingDataBuffer = QSharedPointer<QRingBuffer>::create();
             qint64 previousDataSize = 0;
             do {
                 previousDataSize = d->outgoingDataBuffer->size();
@@ -305,13 +305,6 @@ qint64 QNetworkReplyHttpImpl::bytesAvailable() const
         return QNetworkReply::bytesAvailable() + d->downloadBufferCurrentSize - d->downloadBufferReadPosition;
     }
 
-    if (d->decompressHelper.isValid()) {
-        if (d->decompressHelper.isCountingBytes())
-            return QNetworkReply::bytesAvailable() + d->decompressHelper.uncompressedSize();
-        if (d->decompressHelper.hasData())
-            return QNetworkReply::bytesAvailable() + 1;
-    }
-
     // normal buffer
     return QNetworkReply::bytesAvailable();
 }
@@ -350,30 +343,6 @@ qint64 QNetworkReplyHttpImpl::readData(char* data, qint64 maxlen)
         d->downloadBufferReadPosition += howMuch;
         return howMuch;
 
-    }
-
-    if (d->decompressHelper.isValid() && (d->decompressHelper.hasData() || !isFinished())) {
-        if (maxlen == 0 || !d->decompressHelper.hasData())
-            return 0;
-        const qint64 bytesRead = d->decompressHelper.read(data, maxlen);
-        if (!d->decompressHelper.isValid()) {
-            // error occurred, error copied from QHttpNetworkConnectionPrivate::errorDetail
-            d->error(QNetworkReplyImpl::NetworkError::ProtocolFailure,
-                     QCoreApplication::translate("QHttp", "Data corrupted"));
-        }
-        if (d->cacheSaveDevice) {
-            // Need to write to the cache now that we have the data
-            d->cacheSaveDevice->write(data, bytesRead);
-            // ... and if we've read everything then the cache can be closed.
-            if (isFinished() && !d->decompressHelper.hasData())
-                d->completeCacheSave();
-        }
-        // In case of buffer size restriction we need to emit that it has been emptied
-        qint64 wasBuffered = d->bytesBuffered;
-        d->bytesBuffered = 0;
-        if (readBufferSize())
-            emit readBufferFreed(wasBuffered);
-        return bytesRead;
     }
 
     // normal buffer
@@ -478,8 +447,8 @@ QNetworkReplyHttpImplPrivate::QNetworkReplyHttpImplPrivate()
     , downloadBufferReadPosition(0)
     , downloadBufferCurrentSize(0)
     , downloadZerocopyBuffer(nullptr)
-    , pendingDownloadDataEmissions(std::make_shared<QAtomicInt>())
-    , pendingDownloadProgressEmissions(std::make_shared<QAtomicInt>())
+    , pendingDownloadDataEmissions(QSharedPointer<QAtomicInt>::create())
+    , pendingDownloadProgressEmissions(QSharedPointer<QAtomicInt>::create())
     #ifndef QT_NO_SSL
     , pendingIgnoreAllSslErrors(false)
     #endif
@@ -805,15 +774,13 @@ void QNetworkReplyHttpImplPrivate::postRequest(const QNetworkRequest &newHttpReq
     if (request.attribute(QNetworkRequest::EmitAllUploadProgressSignalsAttribute).toBool())
         emitAllUploadProgressSignals = true;
 
+    httpRequest.setMinimumArchiveBombSize(newHttpRequest.decompressedSafetyCheckThreshold());
     httpRequest.setPeerVerifyName(newHttpRequest.peerVerifyName());
 
     // Create the HTTP thread delegate
     QHttpThreadDelegate *delegate = new QHttpThreadDelegate;
     // Propagate Http/2 settings:
     delegate->http2Parameters = request.http2Configuration();
-
-    if (request.attribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute).isValid())
-        delegate->connectionCacheExpiryTimeoutSeconds = request.attribute(QNetworkRequest::ConnectionCacheExpiryTimeoutSecondsAttribute).toInt();
 
     // For the synchronous HTTP, this is the normal way the delegate gets deleted
     // For the asynchronous HTTP this is a safety measure, the delegate deletes itself when HTTP is finished
@@ -872,12 +839,14 @@ void QNetworkReplyHttpImplPrivate::postRequest(const QNetworkRequest &newHttpReq
         QObject::connect(delegate, SIGNAL(downloadFinished()),
                 q, SLOT(replyFinished()),
                 Qt::QueuedConnection);
-        QObject::connect(delegate, &QHttpThreadDelegate::socketConnecting,
-                q, &QNetworkReply::socketConnecting, Qt::QueuedConnection);
-        QObject::connect(delegate, &QHttpThreadDelegate::requestSent,
-                q, &QNetworkReply::requestSent, Qt::QueuedConnection);
-        connect(delegate, &QHttpThreadDelegate::downloadMetaData, this,
-                &QNetworkReplyHttpImplPrivate::replyDownloadMetaData, Qt::QueuedConnection);
+        QObject::connect(delegate, SIGNAL(downloadMetaData(QList<QPair<QByteArray,QByteArray> >,
+                                                           int, QString, bool,
+                                                           QSharedPointer<char>, qint64, qint64,
+                                                           bool)),
+                q, SLOT(replyDownloadMetaData(QList<QPair<QByteArray,QByteArray> >,
+                                              int, QString, bool,
+                                              QSharedPointer<char>, qint64, qint64, bool)),
+                Qt::QueuedConnection);
         QObject::connect(delegate, SIGNAL(downloadProgress(qint64,qint64)),
                 q, SLOT(replyDownloadProgressSlot(qint64,qint64)),
                 Qt::QueuedConnection);
@@ -930,14 +899,14 @@ void QNetworkReplyHttpImplPrivate::postRequest(const QNetworkRequest &newHttpReq
             delegate->httpRequest.setUploadByteDevice(forwardUploadDevice);
 
             // If the device in the user thread claims it has more data, keep the flow to HTTP thread going
-            QObject::connect(uploadByteDevice.get(), SIGNAL(readyRead()),
+            QObject::connect(uploadByteDevice.data(), SIGNAL(readyRead()),
                              q, SLOT(uploadByteDeviceReadyReadSlot()),
                              Qt::QueuedConnection);
 
             // From user thread to http thread:
             QObject::connect(q, SIGNAL(haveUploadData(qint64,QByteArray,bool,qint64)),
                              forwardUploadDevice, SLOT(haveDataSlot(qint64,QByteArray,bool,qint64)), Qt::QueuedConnection);
-            QObject::connect(uploadByteDevice.get(), SIGNAL(readyRead()),
+            QObject::connect(uploadByteDevice.data(), SIGNAL(readyRead()),
                              forwardUploadDevice, SIGNAL(readyRead()),
                              Qt::QueuedConnection);
 
@@ -960,7 +929,7 @@ void QNetworkReplyHttpImplPrivate::postRequest(const QNetworkRequest &newHttpReq
             // use the uploadByteDevice provided to us by the QNetworkReplyImpl.
             // The code that is in start() makes sure it is safe to use from a thread
             // since it only wraps a QRingBuffer
-            delegate->httpRequest.setUploadByteDevice(uploadByteDevice.get());
+            delegate->httpRequest.setUploadByteDevice(uploadByteDevice.data());
         }
     }
 
@@ -977,20 +946,30 @@ void QNetworkReplyHttpImplPrivate::postRequest(const QNetworkRequest &newHttpReq
     if (synchronous) {
         emit q->startHttpRequestSynchronously(); // This one is BlockingQueuedConnection, so it will return when all work is done
 
-        replyDownloadMetaData
-                (delegate->incomingHeaders,
-                    delegate->incomingStatusCode,
-                    delegate->incomingReasonPhrase,
-                    delegate->isPipeliningUsed,
-                    QSharedPointer<char>(),
-                    delegate->incomingContentLength,
-                    delegate->removedContentLength,
-                    delegate->isHttp2Used,
-                    delegate->isCompressed);
-        replyDownloadData(delegate->synchronousDownloadData);
-
-        if (delegate->incomingErrorCode != QNetworkReply::NoError)
+        if (delegate->incomingErrorCode != QNetworkReply::NoError) {
+            replyDownloadMetaData
+                    (delegate->incomingHeaders,
+                     delegate->incomingStatusCode,
+                     delegate->incomingReasonPhrase,
+                     delegate->isPipeliningUsed,
+                     QSharedPointer<char>(),
+                     delegate->incomingContentLength,
+                     delegate->removedContentLength,
+                     delegate->isHttp2Used);
+            replyDownloadData(delegate->synchronousDownloadData);
             httpError(delegate->incomingErrorCode, delegate->incomingErrorDetail);
+        } else {
+            replyDownloadMetaData
+                    (delegate->incomingHeaders,
+                     delegate->incomingStatusCode,
+                     delegate->incomingReasonPhrase,
+                     delegate->isPipeliningUsed,
+                     QSharedPointer<char>(),
+                     delegate->incomingContentLength,
+                     delegate->removedContentLength,
+                     delegate->isHttp2Used);
+            replyDownloadData(delegate->synchronousDownloadData);
+        }
 
         thread->quit();
         thread->wait(QDeadlineTimer(5000));
@@ -1061,72 +1040,23 @@ void QNetworkReplyHttpImplPrivate::replyDownloadData(QByteArray d)
     if (!q->isOpen())
         return;
 
-    // cache this, we need it later and it's invalidated when dealing with compressed data
-    auto dataSize = d.size();
-    // Grab this to compare later (only relevant for compressed data) in case none of the data
-    // will be propagated to the user
-    const qint64 previousBytesDownloaded = bytesDownloaded;
-
     if (cacheEnabled && isCachingAllowed() && !cacheSaveDevice)
         initCacheSaveDevice();
-
-    if (decompressHelper.isValid()) {
-        qint64 uncompressedBefore = -1;
-        if (decompressHelper.isCountingBytes())
-            uncompressedBefore = decompressHelper.uncompressedSize();
-
-        decompressHelper.feed(std::move(d));
-
-        if (!decompressHelper.isValid()) {
-            // error occurred, error copied from QHttpNetworkConnectionPrivate::errorDetail
-            error(QNetworkReplyImpl::NetworkError::ProtocolFailure,
-                  QCoreApplication::translate("QHttp", "Data corrupted"));
-            return;
-        }
-
-        if (!isHttpRedirectResponse()) {
-            if (decompressHelper.isCountingBytes())
-                bytesDownloaded += (decompressHelper.uncompressedSize() - uncompressedBefore);
-            setupTransferTimeout();
-        }
-
-        if (synchronous) {
-            d = QByteArray();
-            const qsizetype increments = 16 * 1024;
-            qint64 bytesRead = 0;
-            while (decompressHelper.hasData()) {
-                quint64 nextSize = quint64(d.size()) + quint64(increments);
-                if (nextSize > quint64(std::numeric_limits<QByteArray::size_type>::max())) {
-                    error(QNetworkReplyImpl::NetworkError::ProtocolFailure,
-                          QCoreApplication::translate("QHttp", "Data corrupted"));
-                    return;
-                }
-                d.resize(nextSize);
-                bytesRead += decompressHelper.read(d.data() + bytesRead, increments);
-            }
-            d.resize(bytesRead);
-            // we're synchronous so we're not calling this function again; reset the decompressHelper
-            decompressHelper.clear();
-        }
-    }
 
     // This is going to look a little strange. When downloading data while a
     // HTTP redirect is happening (and enabled), we write the redirect
     // response to the cache. However, we do not append it to our internal
     // buffer as that will contain the response data only for the final
     // response
-    // Note: For compressed data this is done in readData()
-    if (cacheSaveDevice && !decompressHelper.isValid()) {
+    if (cacheSaveDevice)
         cacheSaveDevice->write(d);
-    }
 
-    // if decompressHelper is valid then we have compressed data, and this is handled above
-    if (!decompressHelper.isValid() && !isHttpRedirectResponse()) {
+    if (!isHttpRedirectResponse()) {
         buffer.append(d);
-        bytesDownloaded += dataSize;
+        bytesDownloaded += d.size();
         setupTransferTimeout();
     }
-    bytesBuffered += dataSize;
+    bytesBuffered += d.size();
 
     int pendingSignals = pendingDownloadDataEmissions->fetchAndSubAcquire(1) - 1;
     if (pendingSignals > 0) {
@@ -1140,25 +1070,17 @@ void QNetworkReplyHttpImplPrivate::replyDownloadData(QByteArray d)
     if (isHttpRedirectResponse())
         return;
 
-    // This can occur when downloading compressed data as some of the data may be the content
-    // encoding's header. Don't emit anything for this.
-    if (previousBytesDownloaded == bytesDownloaded) {
-        if (readBufferMaxSize)
-            emit q->readBufferFreed(dataSize);
-        return;
-    }
-
     QVariant totalSize = cookedHeaders.value(QNetworkRequest::ContentLengthHeader);
 
     emit q->readyRead();
     // emit readyRead before downloadProgress incase this will cause events to be
     // processed and we get into a recursive call (as in QProgressDialog).
-    if (downloadProgressSignalChoke.elapsed() >= progressSignalInterval
-        && (!decompressHelper.isValid() || decompressHelper.isCountingBytes())) {
+    if (downloadProgressSignalChoke.elapsed() >= progressSignalInterval) {
         downloadProgressSignalChoke.restart();
         emit q->downloadProgress(bytesDownloaded,
                              totalSize.isNull() ? Q_INT64_C(-1) : totalSize.toLongLong());
     }
+
 }
 
 void QNetworkReplyHttpImplPrivate::replyFinished()
@@ -1285,7 +1207,6 @@ void QNetworkReplyHttpImplPrivate::followRedirect()
     Q_Q(QNetworkReplyHttpImpl);
     Q_ASSERT(managerPrivate);
 
-    decompressHelper.clear();
     rawHeaders.clear();
     cookedHeaders.clear();
 
@@ -1321,7 +1242,7 @@ void QNetworkReplyHttpImplPrivate::replyDownloadMetaData(const QList<QPair<QByte
                                                          QSharedPointer<char> db,
                                                          qint64 contentLength,
                                                          qint64 removedContentLength,
-                                                         bool h2Used, bool isCompressed)
+                                                         bool h2Used)
 {
     Q_Q(QNetworkReplyHttpImpl);
     Q_UNUSED(contentLength);
@@ -1361,21 +1282,6 @@ void QNetworkReplyHttpImplPrivate::replyDownloadMetaData(const QList<QPair<QByte
         // rather we keep only the latest one
         if (it->first.toLower() == "location")
             value.clear();
-
-        if (isCompressed && !decompressHelper.isValid()
-            && it->first.compare("content-encoding", Qt::CaseInsensitive) == 0) {
-
-            if (!synchronous) // with synchronous all the data is expected to be handled at once
-                decompressHelper.setCountingBytesEnabled(true);
-
-            if (!decompressHelper.setEncoding(it->second)) {
-                // error occurred, error copied from QHttpNetworkConnectionPrivate::errorDetail
-                error(QNetworkReplyImpl::NetworkError::ProtocolFailure,
-                      QCoreApplication::translate("QHttp", "Data corrupted"));
-            }
-            decompressHelper.setDecompressedSafetyCheckThreshold(
-                    request.decompressedSafetyCheckThreshold());
-        }
 
         if (!value.isEmpty()) {
             // Why are we appending values for headers which are already
@@ -1973,7 +1879,7 @@ void QNetworkReplyHttpImplPrivate::_q_bufferOutgoingData()
 
     if (!outgoingDataBuffer) {
         // first call, create our buffer
-        outgoingDataBuffer = std::make_shared<QRingBuffer>();
+        outgoingDataBuffer = QSharedPointer<QRingBuffer>::create();
 
         QObject::connect(outgoingData, SIGNAL(readyRead()), q, SLOT(_q_bufferOutgoingData()));
         QObject::connect(outgoingData, SIGNAL(readChannelFinished()), q, SLOT(_q_bufferOutgoingDataFinished()));
@@ -2073,10 +1979,10 @@ QNonContiguousByteDevice* QNetworkReplyHttpImplPrivate::createUploadByteDevice()
 
     // We want signal emissions only for normal asynchronous uploads
     if (!synchronous)
-        QObject::connect(uploadByteDevice.get(), SIGNAL(readProgress(qint64,qint64)),
+        QObject::connect(uploadByteDevice.data(), SIGNAL(readProgress(qint64,qint64)),
                          q, SLOT(emitReplyUploadProgress(qint64,qint64)));
 
-    return uploadByteDevice.get();
+    return uploadByteDevice.data();
 }
 
 void QNetworkReplyHttpImplPrivate::_q_finished()
@@ -2095,12 +2001,9 @@ void QNetworkReplyHttpImplPrivate::finished()
 
     QVariant totalSize = cookedHeaders.value(QNetworkRequest::ContentLengthHeader);
 
-    // if we don't know the total size of or we received everything save the cache.
-    // If the data is compressed then this is done in readData()
-    if ((totalSize.isNull() || totalSize == -1 || bytesDownloaded == totalSize)
-        && !decompressHelper.isValid()) {
+    // if we don't know the total size of or we received everything save the cache
+    if (totalSize.isNull() || totalSize == -1 || bytesDownloaded == totalSize)
         completeCacheSave();
-    }
 
     // We check for errorCode too as in case of SSL handshake failure, we still
     // get the HTTP redirect status code (301, 303 etc)
@@ -2137,9 +2040,6 @@ void QNetworkReplyHttpImplPrivate::error(QNetworkReplyImpl::NetworkError code, c
         qWarning("QNetworkReplyImplPrivate::error: Internal problem, this method must only be called once.");
         return;
     }
-
-    if (decompressHelper.isValid())
-        decompressHelper.clear(); // Just get rid of any data that might be stored
 
     errorCode = code;
     q->setErrorString(errorMessage);

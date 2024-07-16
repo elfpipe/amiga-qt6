@@ -132,9 +132,11 @@ public:
     void _q_errorOccurred(QAbstractSocket::SocketError newError);
 #elif defined(Q_OS_WIN)
     ~QLocalSocketPrivate();
+    void destroyPipeHandles();
     qint64 pipeWriterBytesToWrite() const;
     void _q_canRead();
     void _q_bytesWritten(qint64 bytes);
+    void writeToSocket();
     void _q_pipeClosed();
     void _q_winError(ulong windowsError, const QString &function);
     HANDLE handle;

@@ -1391,10 +1391,9 @@ bool QSocks5SocketEngine::bind(const QHostAddress &addr, quint16 port)
 }
 
 
-bool QSocks5SocketEngine::listen(int backlog)
+bool QSocks5SocketEngine::listen()
 {
     Q_D(QSocks5SocketEngine);
-    Q_UNUSED(backlog);
 
     QSOCKS5_Q_DEBUG << "listen()";
 

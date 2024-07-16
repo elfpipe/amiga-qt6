@@ -71,10 +71,6 @@
 #  include <resolv.h>
 #endif
 
-#ifdef __amigaos4__
-#  include <proto/bsdsocket.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 // Almost always the same. If not, specify in qplatformdefs.h.
@@ -180,7 +176,7 @@ static inline int qt_safe_sendmsg(int sockfd, const struct msghdr *msg, int flag
 #ifdef MSG_NOSIGNAL
     flags |= MSG_NOSIGNAL;
 #else
-    // qt_ignore_sigpipe();
+    qt_ignore_sigpipe();
 #endif
 
     int ret;

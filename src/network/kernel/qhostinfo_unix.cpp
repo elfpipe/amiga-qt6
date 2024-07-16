@@ -114,7 +114,7 @@ static QFunctionPointer resolveSymbol(QLibrary &lib, const char *sym)
         return lib.resolve(sym);
 
 #if defined(RTLD_DEFAULT) && (defined(Q_OS_FREEBSD) || QT_CONFIG(dlopen))
-    return reinterpret_cast<QFunctionPointer>(dlsym(RTLD_DEFAULT, (char *)sym));
+    return reinterpret_cast<QFunctionPointer>(dlsym(RTLD_DEFAULT, sym));
 #else
     return nullptr;
 #endif
@@ -212,7 +212,7 @@ QHostInfo QHostInfoAgent::fromName(const QString &hostName)
 
 QString QHostInfo::localDomainName()
 {
-#if !defined(Q_OS_VXWORKS) && !defined(Q_OS_ANDROID) && !defined(__amigaos4__)
+#if !defined(Q_OS_VXWORKS) && !defined(Q_OS_ANDROID)
     resolveLibrary(NeedResNInit);
     if (local_res_ninit) {
         // using thread-safe version

@@ -69,9 +69,11 @@ public:
 
     ~QSslContext();
 
-    static std::shared_ptr<QSslContext> sharedFromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration,
+    static QSslContext* fromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration,
+                                          bool allowRootCertOnDemandLoading);
+    static QSharedPointer<QSslContext> sharedFromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration,
                                                                bool allowRootCertOnDemandLoading);
-    static std::shared_ptr<QSslContext> sharedFromPrivateConfiguration(QSslSocket::SslMode mode, QSslConfigurationPrivate *privConfiguration,
+    static QSharedPointer<QSslContext> sharedFromPrivateConfiguration(QSslSocket::SslMode mode, QSslConfigurationPrivate *privConfiguration,
                                                                       bool allowRootCertOnDemandLoading);
     static long setupOpenSslOptions(QSsl::SslProtocol protocol, QSsl::SslOptions sslOptions);
 
@@ -103,6 +105,7 @@ public:
 
 protected:
     QSslContext();
+    friend class QSharedPointer<QSslContext>;
 
 private:
     static void initSslContext(QSslContext* sslContext, QSslSocket::SslMode mode, const QSslConfiguration &configuration,

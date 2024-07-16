@@ -44,7 +44,5 @@
 #  define NDEBUG
 #endif
 
-#ifndef __amigaos4__
 #include <forkfd.h>
 #include "../../3rdparty/forkfd/forkfd.c"
-#endif

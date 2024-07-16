@@ -150,8 +150,6 @@ static SLJIT_INLINE sljit_sw get_page_alignment(void) {
 	if (sljit_page_align < 0) {
 #ifdef _SC_PAGESIZE
 		sljit_page_align = sysconf(_SC_PAGESIZE);
-#elif __amigaos4__
-		sljit_page_align = 4096;
 #else
 		sljit_page_align = getpagesize();
 #endif
@@ -272,8 +270,6 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_stack* SLJIT_FUNC sljit_allocate_stack(slj
 #else /* !_WIN32 */
 #ifdef MAP_ANON
 	ptr = mmap(NULL, max_size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANON, -1, 0);
-#elif defined(__amigaos4__)
-	ptr = malloc(max_size);	
 #else /* !MAP_ANON */
 	if (SLJIT_UNLIKELY((dev_zero < 0) && open_dev_zero())) {
 		SLJIT_FREE(stack, allocator_data);
@@ -281,12 +277,10 @@ SLJIT_API_FUNC_ATTRIBUTE struct sljit_stack* SLJIT_FUNC sljit_allocate_stack(slj
 	}
 	ptr = mmap(NULL, max_size, PROT_READ | PROT_WRITE, MAP_PRIVATE, dev_zero, 0);
 #endif /* MAP_ANON */
-#ifndef __amigaos4__
 	if (ptr == MAP_FAILED) {
 		SLJIT_FREE(stack, allocator_data);
 		return NULL;
 	}
-#endif
 	stack->min_start = (sljit_u8 *)ptr;
 	stack->end = stack->min_start + max_size;
 	stack->start = stack->end - start_size;

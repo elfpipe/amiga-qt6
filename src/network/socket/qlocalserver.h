@@ -93,9 +93,6 @@ public:
     void setMaxPendingConnections(int numConnections);
     bool waitForNewConnection(int msec = 0, bool *timedOut = nullptr);
 
-    void setListenBacklogSize(int size);
-    int listenBacklogSize() const;
-
     void setSocketOptions(SocketOptions options);
     SocketOptions socketOptions() const;
     QBindable<SocketOptions> bindableSocketOptions();

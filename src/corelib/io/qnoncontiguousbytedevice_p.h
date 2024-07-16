@@ -55,9 +55,8 @@
 #include <QtCore/qbytearray.h>
 #include <QtCore/qbuffer.h>
 #include <QtCore/qiodevice.h>
+#include <QtCore/QSharedPointer>
 #include "private/qringbuffer_p.h"
-
-#include <memory>
 
 QT_BEGIN_NAMESPACE
 
@@ -86,13 +85,13 @@ class Q_CORE_EXPORT QNonContiguousByteDeviceFactory
 {
 public:
     static QNonContiguousByteDevice *create(QIODevice *device);
-    static std::shared_ptr<QNonContiguousByteDevice> createShared(QIODevice *device);
+    static QSharedPointer<QNonContiguousByteDevice> createShared(QIODevice *device);
 
     static QNonContiguousByteDevice *create(QByteArray *byteArray);
-    static std::shared_ptr<QNonContiguousByteDevice> createShared(QByteArray *byteArray);
+    static QSharedPointer<QNonContiguousByteDevice> createShared(QByteArray *byteArray);
 
-    static QNonContiguousByteDevice *create(std::shared_ptr<QRingBuffer> ringBuffer);
-    static std::shared_ptr<QNonContiguousByteDevice> createShared(std::shared_ptr<QRingBuffer> ringBuffer);
+    static QNonContiguousByteDevice *create(QSharedPointer<QRingBuffer> ringBuffer);
+    static QSharedPointer<QNonContiguousByteDevice> createShared(QSharedPointer<QRingBuffer> ringBuffer);
 
     static QIODevice *wrap(QNonContiguousByteDevice *byteDevice);
 };
@@ -103,7 +102,7 @@ public:
 class QNonContiguousByteDeviceByteArrayImpl : public QNonContiguousByteDevice
 {
 public:
-    explicit QNonContiguousByteDeviceByteArrayImpl(QByteArray *ba);
+    QNonContiguousByteDeviceByteArrayImpl(QByteArray *ba);
     ~QNonContiguousByteDeviceByteArrayImpl();
     const char *readPointer(qint64 maximumLength, qint64 &len) override;
     bool advanceReadPointer(qint64 amount) override;
@@ -120,7 +119,7 @@ protected:
 class QNonContiguousByteDeviceRingBufferImpl : public QNonContiguousByteDevice
 {
 public:
-    explicit QNonContiguousByteDeviceRingBufferImpl(std::shared_ptr<QRingBuffer> rb);
+    QNonContiguousByteDeviceRingBufferImpl(QSharedPointer<QRingBuffer> rb);
     ~QNonContiguousByteDeviceRingBufferImpl();
     const char *readPointer(qint64 maximumLength, qint64 &len) override;
     bool advanceReadPointer(qint64 amount) override;
@@ -130,15 +129,15 @@ public:
     qint64 pos() const override;
 
 protected:
-    std::shared_ptr<QRingBuffer> ringBuffer;
-    qint64 currentPosition = 0;
+    QSharedPointer<QRingBuffer> ringBuffer;
+    qint64 currentPosition;
 };
 
 class QNonContiguousByteDeviceIoDeviceImpl : public QNonContiguousByteDevice
 {
     Q_OBJECT
 public:
-    explicit QNonContiguousByteDeviceIoDeviceImpl(QIODevice *d);
+    QNonContiguousByteDeviceIoDeviceImpl(QIODevice *d);
     ~QNonContiguousByteDeviceIoDeviceImpl();
     const char *readPointer(qint64 maximumLength, qint64 &len) override;
     bool advanceReadPointer(qint64 amount) override;
@@ -162,7 +161,7 @@ class QNonContiguousByteDeviceBufferImpl : public QNonContiguousByteDevice
 {
     Q_OBJECT
 public:
-    explicit QNonContiguousByteDeviceBufferImpl(QBuffer *b);
+    QNonContiguousByteDeviceBufferImpl(QBuffer *b);
     ~QNonContiguousByteDeviceBufferImpl();
     const char *readPointer(qint64 maximumLength, qint64 &len) override;
     bool advanceReadPointer(qint64 amount) override;
@@ -180,7 +179,7 @@ protected:
 class QByteDeviceWrappingIoDevice : public QIODevice
 {
 public:
-    explicit QByteDeviceWrappingIoDevice(QNonContiguousByteDevice *bd);
+    QByteDeviceWrappingIoDevice(QNonContiguousByteDevice *bd);
     ~QByteDeviceWrappingIoDevice();
     bool isSequential() const override;
     bool atEnd() const override;

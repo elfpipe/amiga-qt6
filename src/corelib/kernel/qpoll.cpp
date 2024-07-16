@@ -39,10 +39,6 @@
 
 #include "qcore_unix_p.h"
 
-#ifdef __amigaos4__
-#include <proto/bsdsocket.h>
-#endif
-
 #ifdef Q_OS_RTEMS
 #include <rtems/rtems_bsdnet_internal.h>
 #endif
@@ -173,11 +169,7 @@ static inline int qt_poll_mark_bad_fds(struct pollfd *fds, const nfds_t nfds)
    return n_marked;
 }
 
-#ifdef __amigaos4__
-int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals)
-#else
 int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
-#endif
 {
     if (!fds && nfds) {
         errno = EFAULT;
@@ -191,13 +183,6 @@ int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
         tv = timespecToTimeval(*timeout_ts);
         ptv = &tv;
     }
-// #ifdef __amigaos4__
-//     else {
-//         tv.tv_sec = 10;
-//         tv.tv_usec = 0;
-//         ptv = &tv;
-//     }
-// #endif
 
     int n_bad_fds = 0;
 
@@ -225,22 +210,12 @@ int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
         if (max_fd < 0)
             return max_fd;
 
-#ifdef __amigaos4__
-        if(max_fd == 0) {
-            FD_SET(0, &read_fds);
-            max_fd = 1;
-        }
-#endif
         if (n_bad_fds > 0) {
             tv.tv_sec = 0;
             tv.tv_usec = 0;
             ptv = &tv;
         }
-#ifdef __amigaos4__
-        const int ret = ISocket->WaitSelect(max_fd, &read_fds, &write_fds, &except_fds, ptv, listenSignals);
-#else
         const int ret = ::select(max_fd, &read_fds, &write_fds, &except_fds, ptv);
-#endif
 
         if (ret == 0)
             return n_bad_fds;
@@ -248,13 +223,7 @@ int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
         if (ret > 0)
             return qt_poll_sweep(fds, nfds, &read_fds, &write_fds, &except_fds);
 
-#ifdef __amigaos4__
-        int error = 0;
-        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        if (error != EBADF)
-#else
         if (errno != EBADF)
-#endif
             return -1;
 
         // We have at least one bad file descriptor that we waited on, find out which and try again

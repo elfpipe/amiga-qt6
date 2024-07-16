@@ -210,8 +210,7 @@ QBindable<QLocalServer::SocketOptions> QLocalServer::bindableSocketOptions()
     The type of the descriptor depends on the platform:
     \list
         \li On Windows, the returned value is a
-        \l{https://msdn.microsoft.com/en-us/library/windows/desktop/ms740522(v=vs.85).aspx}
-        {Winsock 2 Socket Handle}.
+        \l{Winsock 2 Socket Handle}.
 
         \li On INTEGRITY, the returned value is the
         QTcpServer socket descriptor and the type is defined by
@@ -552,36 +551,6 @@ bool QLocalServer::waitForNewConnection(int msec, bool *timedOut)
     d->waitForNewConnection(msec, timedOut);
 
     return !d->pendingConnections.isEmpty();
-}
-
-/*!
-    Sets the backlog queue size of to be accepted connections to \a
-    size. The operating system might reduce or ignore this value.
-    By default, the queue size is 50.
-
-    \note This property must be set prior to calling listen().
-
-    \since 6.3
-
-    \sa listenBacklogSize()
-*/
-void QLocalServer::setListenBacklogSize(int size)
-{
-    Q_D(QLocalServer);
-    d->listenBacklog = size;
-}
-
-/*!
-    Returns the backlog queue size of to be accepted connections.
-
-    \since 6.3
-
-    \sa setListenBacklogSize()
-*/
-int QLocalServer::listenBacklogSize() const
-{
-    Q_D(const QLocalServer);
-    return d->listenBacklog;
 }
 
 QT_END_NAMESPACE

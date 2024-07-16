@@ -356,13 +356,6 @@ bool QHttpNetworkConnectionChannel::ensureConnection()
         QString connectHost = connection->d_func()->hostName;
         quint16 connectPort = connection->d_func()->port;
 
-        QHttpNetworkReply *potentialReply = connection->d_func()->predictNextRequestsReply();
-        if (potentialReply) {
-            QMetaObject::invokeMethod(potentialReply, "socketConnecting", Qt::QueuedConnection);
-        } else if (h2RequestsToSend.count() > 0) {
-            QMetaObject::invokeMethod(h2RequestsToSend.values().at(0).second, "socketConnecting", Qt::QueuedConnection);
-        }
-
 #ifndef QT_NO_NETWORKPROXY
         // HTTPS always use transparent proxy.
         if (connection->d_func()->networkProxy.type() != QNetworkProxy::NoProxy && !ssl) {
@@ -400,8 +393,8 @@ bool QHttpNetworkConnectionChannel::ensureConnection()
             // check whether we can re-use an existing SSL session
             // (meaning another socket in this connection has already
             // performed a full handshake)
-            if (auto ctx = connection->sslContext())
-                QSslSocketPrivate::checkSettingSslContext(sslSocket, std::move(ctx));
+            if (!connection->sslContext().isNull())
+                QSslSocketPrivate::checkSettingSslContext(sslSocket, connection->sslContext());
 
             sslSocket->setPeerVerifyName(connection->d_func()->peerVerifyName);
             sslSocket->connectToHostEncrypted(connectHost, connectPort, QIODevice::ReadWrite, networkLayerPreference);
@@ -932,11 +925,12 @@ void QHttpNetworkConnectionChannel::_q_connected()
     //channels[i].reconnectAttempts = 2;
     if (ssl || pendingEncrypt) { // FIXME: Didn't work properly with pendingEncrypt only, we should refactor this into an EncrypingState
 #ifndef QT_NO_SSL
-        if (!connection->sslContext()) {
+        if (connection->sslContext().isNull()) {
             // this socket is making the 1st handshake for this connection,
             // we need to set the SSL context so new sockets can reuse it
-            if (auto socketSslContext = QSslSocketPrivate::sslContext(static_cast<QSslSocket*>(socket)))
-                connection->setSslContext(std::move(socketSslContext));
+            QSharedPointer<QSslContext> socketSslContext = QSslSocketPrivate::sslContext(static_cast<QSslSocket*>(socket));
+            if (!socketSslContext.isNull())
+                connection->setSslContext(socketSslContext);
         }
 #endif
     } else if (connection->connectionType() == QHttpNetworkConnection::ConnectionTypeHTTP2Direct) {

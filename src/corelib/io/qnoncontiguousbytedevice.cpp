@@ -227,9 +227,10 @@ qint64 QNonContiguousByteDeviceByteArrayImpl::pos() const
     return currentPosition;
 }
 
-QNonContiguousByteDeviceRingBufferImpl::QNonContiguousByteDeviceRingBufferImpl(std::shared_ptr<QRingBuffer> rb)
-    : QNonContiguousByteDevice(), ringBuffer(std::move(rb))
+QNonContiguousByteDeviceRingBufferImpl::QNonContiguousByteDeviceRingBufferImpl(QSharedPointer<QRingBuffer> rb)
+    : QNonContiguousByteDevice(), currentPosition(0)
 {
+    ringBuffer = rb;
 }
 
 QNonContiguousByteDeviceRingBufferImpl::~QNonContiguousByteDeviceRingBufferImpl()
@@ -494,44 +495,44 @@ QNonContiguousByteDevice *QNonContiguousByteDeviceFactory::create(QIODevice *dev
 }
 
 /*!
-    Create a QNonContiguousByteDevice out of a QIODevice, return it in a std::shared_ptr.
+    Create a QNonContiguousByteDevice out of a QIODevice, return it in a QSharedPointer.
     For QFile, QBuffer and all other QIODevice, sequential or not.
 
     \internal
 */
-std::shared_ptr<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QIODevice *device)
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QIODevice *device)
 {
     // shortcut if it is a QBuffer
     if (QBuffer *buffer = qobject_cast<QBuffer*>(device))
-        return std::make_shared<QNonContiguousByteDeviceBufferImpl>(buffer);
+        return QSharedPointer<QNonContiguousByteDeviceBufferImpl>::create(buffer);
 
     // ### FIXME special case if device is a QFile that supports map()
     // then we can actually deal with the file without using read/peek
 
     // generic QIODevice
-    return std::make_shared<QNonContiguousByteDeviceIoDeviceImpl>(device); // FIXME
+    return QSharedPointer<QNonContiguousByteDeviceIoDeviceImpl>::create(device); // FIXME
 }
 
 /*!
-    \fn static QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(std::shared_ptr<QRingBuffer> ringBuffer)
+    \fn static QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(QSharedPointer<QRingBuffer> ringBuffer)
 
     Create a QNonContiguousByteDevice out of a QRingBuffer.
 
     \internal
 */
-QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(std::shared_ptr<QRingBuffer> ringBuffer)
+QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(QSharedPointer<QRingBuffer> ringBuffer)
 {
     return new QNonContiguousByteDeviceRingBufferImpl(ringBuffer);
 }
 
 /*!
-    Create a QNonContiguousByteDevice out of a QRingBuffer, return it in a std::shared_ptr.
+    Create a QNonContiguousByteDevice out of a QRingBuffer, return it in a QSharedPointer.
 
     \internal
 */
-std::shared_ptr<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(std::shared_ptr<QRingBuffer> ringBuffer)
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QSharedPointer<QRingBuffer> ringBuffer)
 {
-    return std::make_shared<QNonContiguousByteDeviceRingBufferImpl>(std::move(ringBuffer));
+    return QSharedPointer<QNonContiguousByteDeviceRingBufferImpl>::create(std::move(ringBuffer));
 }
 
 /*!
@@ -551,9 +552,9 @@ QNonContiguousByteDevice* QNonContiguousByteDeviceFactory::create(QByteArray *by
 
     \internal
 */
-std::shared_ptr<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QByteArray *byteArray)
+QSharedPointer<QNonContiguousByteDevice> QNonContiguousByteDeviceFactory::createShared(QByteArray *byteArray)
 {
-    return std::make_shared<QNonContiguousByteDeviceByteArrayImpl>(byteArray);
+    return QSharedPointer<QNonContiguousByteDeviceByteArrayImpl>::create(byteArray);
 }
 
 /*!

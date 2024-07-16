@@ -177,7 +177,8 @@ void QHttpProtocolHandler::_q_receiveReply()
                    m_connection->d_func()->emitReplyError(m_socket, m_reply, QNetworkReply::RemoteHostClosedError);
                    break;
                }
-           } else if (!replyPrivate->isChunked() && replyPrivate->bodyLength > 0) {
+           } else if (!replyPrivate->isChunked() && !replyPrivate->autoDecompress
+                 && replyPrivate->bodyLength > 0) {
                  // bulk files like images should fulfill these properties and
                  // we can therefore save on memory copying
                 qint64 haveRead = replyPrivate->readBodyFast(m_socket, &replyPrivate->responseData);
@@ -319,8 +320,6 @@ bool QHttpProtocolHandler::sendRequest()
 #else
         m_header = QHttpNetworkRequestPrivate::header(m_channel->request, false);
 #endif
-        QMetaObject::invokeMethod(m_reply, "requestSent", Qt::QueuedConnection);
-
         // flushing is dangerous (QSslSocket calls transmit which might read or error)
 //        m_socket->flush();
         QNonContiguousByteDevice* uploadByteDevice = m_channel->request.uploadByteDevice();

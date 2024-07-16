@@ -97,15 +97,14 @@ public:
     qint64 readBufferMaxSize;
     qint64 bytesEmitted;
     // From backend, modified by us for signal compression
-    std::shared_ptr<QAtomicInt> pendingDownloadData;
-    std::shared_ptr<QAtomicInt> pendingDownloadProgress;
+    QSharedPointer<QAtomicInt> pendingDownloadData;
+    QSharedPointer<QAtomicInt> pendingDownloadProgress;
 #ifndef QT_NO_NETWORKPROXY
     QNetworkProxy cacheProxy;
     QNetworkProxy transparentProxy;
 #endif
-    std::shared_ptr<QNetworkAccessAuthenticationManager> authenticationManager;
+    QSharedPointer<QNetworkAccessAuthenticationManager> authenticationManager;
     bool synchronous;
-    qint64 connectionCacheExpiryTimeoutSeconds;
 
     // outgoing, Retrieved in the synchronous HTTP case
     QByteArray synchronousDownloadData;
@@ -119,8 +118,6 @@ public:
     QNetworkReply::NetworkError incomingErrorCode;
     QString incomingErrorDetail;
     QHttp2Configuration http2Parameters;
-
-    bool isCompressed;
 
 protected:
     // The zerocopy download buffer, if used:
@@ -144,10 +141,8 @@ signals:
     void sslConfigurationChanged(const QSslConfiguration &);
     void preSharedKeyAuthenticationRequired(QSslPreSharedKeyAuthenticator *);
 #endif
-    void socketConnecting();
-    void requestSent();
     void downloadMetaData(const QList<QPair<QByteArray,QByteArray> > &, int, const QString &, bool,
-                          QSharedPointer<char>, qint64, qint64, bool, bool);
+                          QSharedPointer<char>, qint64, qint64, bool);
     void downloadProgress(qint64, qint64);
     void downloadData(const QByteArray &);
     void error(QNetworkReply::NetworkError, const QString &);

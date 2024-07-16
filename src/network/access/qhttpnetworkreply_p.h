@@ -87,7 +87,7 @@ class QHttpNetworkConnectionChannel;
 class QHttpNetworkRequest;
 class QHttpNetworkConnectionPrivate;
 class QHttpNetworkReplyPrivate;
-class Q_NETWORK_PRIVATE_EXPORT QHttpNetworkReply : public QObject, public QHttpNetworkHeader
+class Q_AUTOTEST_EXPORT QHttpNetworkReply : public QObject, public QHttpNetworkHeader
 {
     Q_OBJECT
 public:
@@ -107,7 +107,7 @@ public:
     QList<QPair<QByteArray, QByteArray> > header() const override;
     QByteArray headerField(const QByteArray &name, const QByteArray &defaultValue = QByteArray()) const override;
     void setHeaderField(const QByteArray &name, const QByteArray &data) override;
-    void parseHeader(const QByteArray &header); // used by QtWebSockets
+    void parseHeader(const QByteArray &header); // mainly for testing
 
     QHttpNetworkRequest request() const;
     void setRequest(const QHttpNetworkRequest &request);
@@ -170,8 +170,6 @@ Q_SIGNALS:
 #endif
 
 Q_SIGNALS:
-    void socketConnecting();
-    void requestSent();
     void readyRead();
     void finished();
     void finishedWithError(QNetworkReply::NetworkError errorCode, const QString &detail = QString());
@@ -276,6 +274,8 @@ public:
 
     char* userProvidedDownloadBuffer;
     QUrl redirectUrl;
+
+    QDecompressHelper decompressHelper;
 };
 
 

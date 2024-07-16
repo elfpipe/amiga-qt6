@@ -668,7 +668,7 @@ using qsizetype = QIntegerForSizeof<std::size_t>::Signed;
 // platform.
 //
 // We know that sizeof(size_t) == sizeof(void *) == sizeof(qptrdiff).
-#if SIZE_MAX == 4294967295ULL || defined(__amigaos4__)
+#if SIZE_MAX == 4294967295ULL
 #define PRIuQUINTPTR "u"
 #define PRIoQUINTPTR "o"
 #define PRIxQUINTPTR "x"

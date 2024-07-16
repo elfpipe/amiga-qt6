@@ -52,7 +52,9 @@
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOffscreenSurface>
 
+#ifdef __amigaos4__
 #include "../gui/platform/amiga/qamigaopenglcontext_p.h"
+#endif
 #ifndef GL_TEXTURE_BASE_LEVEL
 #define GL_TEXTURE_BASE_LEVEL             0x813C
 #endif

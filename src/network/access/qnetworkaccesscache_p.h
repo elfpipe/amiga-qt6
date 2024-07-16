@@ -79,7 +79,6 @@ public:
         QByteArray key;
         bool expires;
         bool shareable;
-        qint64 expiryTimeoutSeconds;
     public:
         CacheableObject();
         virtual ~CacheableObject();
@@ -96,7 +95,7 @@ public:
 
     void clear();
 
-    void addEntry(const QByteArray &key, CacheableObject *entry, qint64 connectionCacheExpiryTimeoutSeconds = -1);
+    void addEntry(const QByteArray &key, CacheableObject *entry);
     bool hasEntry(const QByteArray &key) const;
     bool requestEntry(const QByteArray &key, QObject *target, const char *member);
     CacheableObject *requestEntryNow(const QByteArray &key);

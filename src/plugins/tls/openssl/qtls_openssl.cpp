@@ -504,13 +504,13 @@ void TlsCryptographOpenSSL::init(QSslSocket *qObj, QSslSocketPrivate *dObj)
     caToFetch = QSslCertificate{};
 }
 
-void TlsCryptographOpenSSL::checkSettingSslContext(std::shared_ptr<QSslContext> tlsContext)
+void TlsCryptographOpenSSL::checkSettingSslContext(QSharedPointer<QSslContext> tlsContext)
 {
-    if (!sslContextPointer)
-        sslContextPointer = std::move(tlsContext);
+    if (sslContextPointer.isNull())
+        sslContextPointer = tlsContext;
 }
 
-std::shared_ptr<QSslContext> TlsCryptographOpenSSL::sslContext() const
+QSharedPointer<QSslContext> TlsCryptographOpenSSL::sslContext() const
 {
     return sslContextPointer;
 }
@@ -573,16 +573,12 @@ bool TlsCryptographOpenSSL::startHandshake()
     q_SSL_set_ex_data(ssl, QTlsBackendOpenSSL::s_indexForSSLExtraData + socketOffsetInExData, this);
     q_SSL_set_info_callback(ssl, qt_AlertInfoCallback);
 
-    qInfo() << "Client mode : " << QSslSocket::SslClientMode;
-
     int result = (mode == QSslSocket::SslClientMode) ? q_SSL_connect(ssl) : q_SSL_accept(ssl);
     q_SSL_set_ex_data(ssl, QTlsBackendOpenSSL::s_indexForSSLExtraData + errorOffsetInExData, nullptr);
     // Note, unlike errors as external data on SSL object, we do not unset
     // a callback/ex-data if alert notifications are enabled: an alert can
     // arrive after the handshake, for example, this happens when the server
     // does not find a ClientCert or does not like it.
-
-    qInfo() << "q_SSL_connect result : " << result;
 
     if (!lastErrors.isEmpty() || errorsReportedFromCallback)
         storePeerCertificates();
@@ -819,7 +815,7 @@ void TlsCryptographOpenSSL::continueHandshake()
     // Cache this SSL session inside the QSslContext
     if (!(configuration.testSslOption(QSsl::SslOptionDisableSessionSharing))) {
         if (!sslContextPointer->cacheSession(ssl)) {
-            sslContextPointer.reset(); // we could not cache the session
+            sslContextPointer.clear(); // we could not cache the session
         } else {
             // Cache the session for permanent usage as well
             if (!(configuration.testSslOption(QSsl::SslOptionDisableSessionPersistence))) {
@@ -1163,13 +1159,10 @@ QSsl::SslProtocol TlsCryptographOpenSSL::sessionProtocol() const
 
     const int ver = q_SSL_version(ssl);
     switch (ver) {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     case 0x301:
         return QSsl::TlsV1_0;
     case 0x302:
         return QSsl::TlsV1_1;
-QT_WARNING_POP
     case 0x303:
         return QSsl::TlsV1_2;
     case 0x304:
@@ -1371,7 +1364,7 @@ bool TlsCryptographOpenSSL::initSslContext()
 
     if (sslContextPointer->error() != QSslError::NoError) {
         setErrorAndEmit(d, QAbstractSocket::SslInvalidUserDataError, sslContextPointer->errorString());
-        sslContextPointer.reset();
+        sslContextPointer.clear(); // deletes the QSslContext
         return false;
     }
 
@@ -1499,7 +1492,7 @@ void TlsCryptographOpenSSL::destroySslContext()
         q_SSL_free(ssl);
         ssl = nullptr;
     }
-    sslContextPointer.reset();
+    sslContextPointer.clear();
 }
 
 void TlsCryptographOpenSSL::storePeerCertificates()

@@ -48,8 +48,6 @@
 
 #ifdef Q_OS_WIN
 #include <winsock2.h>
-#elif defined(__amigaos4__)
-#include <netinet/in.h>
 #else
 #include <arpa/inet.h>
 #endif

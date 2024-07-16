@@ -90,7 +90,7 @@ QT_BEGIN_NAMESPACE
  *  see http://pubs.opengroup.org/onlinepubs/9699919799/functions/clock_getres.html
  */
 
-#if 1 //!defined(CLOCK_REALTIME)
+#if !defined(CLOCK_REALTIME)
 #  define CLOCK_REALTIME 0
 static inline void qt_clock_gettime(int, struct timespec *ts)
 {
@@ -177,9 +177,6 @@ struct timespec qt_gettime() noexcept
 
 void qt_nanosleep(timespec amount)
 {
-#ifdef __amigaos4__
-    usleep(amount.tv_sec * 1000 * 1000 + amount.tv_nsec / 1000);
-#else
     // We'd like to use clock_nanosleep.
     //
     // But clock_nanosleep is from POSIX.1-2001 and both are *not*
@@ -190,7 +187,6 @@ void qt_nanosleep(timespec amount)
 
     int r;
     EINTR_LOOP(r, nanosleep(&amount, &amount));
-#endif
 }
 
 static qint64 elapsedAndRestart(qint64 sec, qint64 frac,

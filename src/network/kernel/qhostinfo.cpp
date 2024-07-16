@@ -67,11 +67,6 @@
 #  define QT_SOCKLEN_T int
 #endif
 
-#ifdef __amigaos4_
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#endif
 QT_BEGIN_NAMESPACE
 
 //#define QHOSTINFO_DEBUG
@@ -411,7 +406,7 @@ QHostInfo QHostInfoAgent::reverseLookup(const QHostAddress &address)
     QHostInfo results;
     // Reverse lookup
     sockaddr_in sa4;
-//    sockaddr_in6 sa6;
+    sockaddr_in6 sa6;
     sockaddr *sa = nullptr;
     QT_SOCKLEN_T saSize;
     if (address.protocol() == QAbstractSocket::IPv4Protocol) {
@@ -421,16 +416,16 @@ QHostInfo QHostInfoAgent::reverseLookup(const QHostAddress &address)
         sa4.sin_family = AF_INET;
         sa4.sin_addr.s_addr = htonl(address.toIPv4Address());
     } else {
-        // sa = reinterpret_cast<sockaddr *>(&sa6);
-        // saSize = sizeof(sa6);
-        // memset(&sa6, 0, sizeof(sa6));
-        // sa6.sin6_family = AF_INET6;
-        // memcpy(&sa6.sin6_addr, address.toIPv6Address().c, sizeof(sa6.sin6_addr));
+        sa = reinterpret_cast<sockaddr *>(&sa6);
+        saSize = sizeof(sa6);
+        memset(&sa6, 0, sizeof(sa6));
+        sa6.sin6_family = AF_INET6;
+        memcpy(&sa6.sin6_addr, address.toIPv6Address().c, sizeof(sa6.sin6_addr));
     }
 
-    // char hbuf[NI_MAXHOST];
-    // if (sa && getnameinfo(sa, saSize, hbuf, sizeof(hbuf), nullptr, 0, 0) == 0)
-    //     results.setHostName(QString::fromLatin1(hbuf));
+    char hbuf[NI_MAXHOST];
+    if (sa && getnameinfo(sa, saSize, hbuf, sizeof(hbuf), nullptr, 0, 0) == 0)
+        results.setHostName(QString::fromLatin1(hbuf));
 
     if (results.hostName().isEmpty())
         results.setHostName(address.toString());
@@ -457,91 +452,91 @@ QHostInfo QHostInfoAgent::lookup(const QString &hostName)
         return results;
     }
 
-//     // addrinfo *res = nullptr;
-//     // struct addrinfo hints;
-//     memset(&hints, 0, sizeof(hints));
-//     hints.ai_family = PF_UNSPEC;
-// #ifdef Q_ADDRCONFIG
-//     hints.ai_flags = Q_ADDRCONFIG;
-// #endif
+    addrinfo *res = nullptr;
+    struct addrinfo hints;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = PF_UNSPEC;
+#ifdef Q_ADDRCONFIG
+    hints.ai_flags = Q_ADDRCONFIG;
+#endif
 
-//     // int result = getaddrinfo(aceHostname.constData(), nullptr, &hints, &res);
-// # ifdef Q_ADDRCONFIG
-//     if (result == EAI_BADFLAGS) {
-//         // if the lookup failed with AI_ADDRCONFIG set, try again without it
-//         hints.ai_flags = 0;
-//         result = getaddrinfo(aceHostname.constData(), nullptr, &hints, &res);
-//     }
-// # endif
+    int result = getaddrinfo(aceHostname.constData(), nullptr, &hints, &res);
+# ifdef Q_ADDRCONFIG
+    if (result == EAI_BADFLAGS) {
+        // if the lookup failed with AI_ADDRCONFIG set, try again without it
+        hints.ai_flags = 0;
+        result = getaddrinfo(aceHostname.constData(), nullptr, &hints, &res);
+    }
+# endif
 
-//     if (result == 0) {
-//         addrinfo *node = res;
-//         QList<QHostAddress> addresses;
-//         while (node) {
-// #ifdef QHOSTINFO_DEBUG
-//             qDebug() << "getaddrinfo node: flags:" << node->ai_flags << "family:" << node->ai_family
-//                      << "ai_socktype:" << node->ai_socktype << "ai_protocol:" << node->ai_protocol
-//                      << "ai_addrlen:" << node->ai_addrlen;
-// #endif
-//             switch (node->ai_family) {
-//             case AF_INET: {
-//                 QHostAddress addr;
-//                 addr.setAddress(ntohl(((sockaddr_in *) node->ai_addr)->sin_addr.s_addr));
-//                 if (!addresses.contains(addr))
-//                     addresses.append(addr);
-//                 break;
-//             }
-//             case AF_INET6: {
-//                 QHostAddress addr;
-//                 sockaddr_in6 *sa6 = (sockaddr_in6 *) node->ai_addr;
-//                 addr.setAddress(sa6->sin6_addr.s6_addr);
-//                 if (sa6->sin6_scope_id)
-//                     addr.setScopeId(QString::number(sa6->sin6_scope_id));
-//                 if (!addresses.contains(addr))
-//                     addresses.append(addr);
-//                 break;
-//             }
-//             default:
-//                 results.setError(QHostInfo::UnknownError);
-//                 results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Unknown address type"));
-//             }
-//             node = node->ai_next;
-//         }
-//         if (addresses.isEmpty()) {
-//             // Reached the end of the list, but no addresses were found; this
-//             // means the list contains one or more unknown address types.
-//             results.setError(QHostInfo::UnknownError);
-//             results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Unknown address type"));
-//         }
+    if (result == 0) {
+        addrinfo *node = res;
+        QList<QHostAddress> addresses;
+        while (node) {
+#ifdef QHOSTINFO_DEBUG
+            qDebug() << "getaddrinfo node: flags:" << node->ai_flags << "family:" << node->ai_family
+                     << "ai_socktype:" << node->ai_socktype << "ai_protocol:" << node->ai_protocol
+                     << "ai_addrlen:" << node->ai_addrlen;
+#endif
+            switch (node->ai_family) {
+            case AF_INET: {
+                QHostAddress addr;
+                addr.setAddress(ntohl(((sockaddr_in *) node->ai_addr)->sin_addr.s_addr));
+                if (!addresses.contains(addr))
+                    addresses.append(addr);
+                break;
+            }
+            case AF_INET6: {
+                QHostAddress addr;
+                sockaddr_in6 *sa6 = (sockaddr_in6 *) node->ai_addr;
+                addr.setAddress(sa6->sin6_addr.s6_addr);
+                if (sa6->sin6_scope_id)
+                    addr.setScopeId(QString::number(sa6->sin6_scope_id));
+                if (!addresses.contains(addr))
+                    addresses.append(addr);
+                break;
+            }
+            default:
+                results.setError(QHostInfo::UnknownError);
+                results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Unknown address type"));
+            }
+            node = node->ai_next;
+        }
+        if (addresses.isEmpty()) {
+            // Reached the end of the list, but no addresses were found; this
+            // means the list contains one or more unknown address types.
+            results.setError(QHostInfo::UnknownError);
+            results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Unknown address type"));
+        }
 
-//         results.setAddresses(addresses);
-//         freeaddrinfo(res);
-//     } else {
-//         switch (result) {
-// #ifdef Q_OS_WIN
-//         case WSAHOST_NOT_FOUND: //authoritative not found
-//         case WSATRY_AGAIN: //non authoritative not found
-//         case WSANO_DATA: //valid name, no associated address
-// #else
-//         case EAI_NONAME:
-//         case EAI_FAIL:
-// #  ifdef EAI_NODATA // EAI_NODATA is deprecated in RFC 3493
-//         case EAI_NODATA:
-// #  endif
-// #endif
-//             results.setError(QHostInfo::HostNotFound);
-//             results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Host not found"));
-//             break;
-//         default:
-//             results.setError(QHostInfo::UnknownError);
-// #ifdef Q_OS_WIN
-//             results.setErrorString(QString::fromWCharArray(gai_strerror(result)));
-// #else
-//             results.setErrorString(QString::fromLocal8Bit(gai_strerror(result)));
-// #endif
-//             break;
-//         }
-//     }
+        results.setAddresses(addresses);
+        freeaddrinfo(res);
+    } else {
+        switch (result) {
+#ifdef Q_OS_WIN
+        case WSAHOST_NOT_FOUND: //authoritative not found
+        case WSATRY_AGAIN: //non authoritative not found
+        case WSANO_DATA: //valid name, no associated address
+#else
+        case EAI_NONAME:
+        case EAI_FAIL:
+#  ifdef EAI_NODATA // EAI_NODATA is deprecated in RFC 3493
+        case EAI_NODATA:
+#  endif
+#endif
+            results.setError(QHostInfo::HostNotFound);
+            results.setErrorString(QCoreApplication::translate("QHostInfoAgent", "Host not found"));
+            break;
+        default:
+            results.setError(QHostInfo::UnknownError);
+#ifdef Q_OS_WIN
+            results.setErrorString(QString::fromWCharArray(gai_strerror(result)));
+#else
+            results.setErrorString(QString::fromLocal8Bit(gai_strerror(result)));
+#endif
+            break;
+        }
+    }
 
 #if defined(QHOSTINFO_DEBUG)
     if (results.error() != QHostInfo::NoError) {

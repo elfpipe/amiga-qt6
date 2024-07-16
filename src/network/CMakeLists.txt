@@ -5,7 +5,7 @@
 #####################################################################
 
 qt_internal_add_module(Network
-    PLUGIN_TYPES networkaccessbackends networkinformation tls
+    PLUGIN_TYPES networkaccess networkinformation tls
     SOURCES
         access/qabstractnetworkcache.cpp access/qabstractnetworkcache.h access/qabstractnetworkcache_p.h
         access/qhsts.cpp access/qhsts_p.h
@@ -59,7 +59,6 @@ qt_internal_add_module(Network
         Qt::CorePrivate
     PRECOMPILED_HEADER
         "../corelib/global/qt_pch.h"
-    GENERATE_CPP_EXPORTS
 )
 
 #### Keys ignored in scope 1:.:.:network.pro:<TRUE>:
@@ -121,10 +120,10 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_http
         socket/qhttpsocketengine.cpp socket/qhttpsocketengine_p.h
 )
 
-# qt_internal_extend_target(Network CONDITION QT_FEATURE_brotli AND QT_FEATURE_http AND NOT AMIGA
-#     LIBRARIES
-#         WrapBrotli::WrapBrotliDec
-# )
+qt_internal_extend_target(Network CONDITION QT_FEATURE_brotli AND QT_FEATURE_http
+    LIBRARIES
+        WrapBrotli::WrapBrotliDec
+)
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_http AND QT_FEATURE_zstd
     LIBRARIES
@@ -159,18 +158,9 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_dnslookup
 
 qt_internal_extend_target(Network CONDITION UNIX
     SOURCES
+        kernel/qhostinfo_unix.cpp
         socket/qnativesocketengine_unix.cpp
         socket/qnet_unix_p.h
-)
-
-qt_internal_extend_target(Network CONDITION UNIX AND NOT AMIGA
-    SOURCES
-        kernel/qhostinfo_unix.cpp
-)
-
-qt_internal_extend_target(Network CONDITION AMIGA
-    SOURCES
-        kernel/qhostinfo_amiga.cpp
 )
 
 qt_internal_extend_target(Network CONDITION QT_FEATURE_dlopen AND UNIX
@@ -191,11 +181,6 @@ qt_internal_extend_target(Network CONDITION UNIX AND NOT QT_FEATURE_linux_netlin
 qt_internal_extend_target(Network CONDITION ANDROID AND QT_FEATURE_dnslookup
     SOURCES
         kernel/qdnslookup_android.cpp
-)
-
-qt_internal_extend_target(Network CONDITION AMIGA AND QT_FEATURE_dnslookup
-    SOURCES
-        kernel/qdnslookup_amiga.cpp
 )
 
 qt_internal_extend_target(Network CONDITION WIN32
@@ -347,7 +332,7 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_ocsp AND QT_FEATURE_opens
         ssl/qocsp_p.h
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_openssl_linked AND QT_FEATURE_ssl AND NOT AMIGA
+qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_openssl_linked AND QT_FEATURE_ssl
     LIBRARIES
         WrapOpenSSL::WrapOpenSSL
     PRIVATE_MODULE_INTERFACE
@@ -361,7 +346,7 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_ss
         WrapOpenSSLHeaders::WrapOpenSSLHeaders
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_dnslookup AND UNIX AND NOT ANDROID AND NOT INTEGRITY AND NOT AMIGA
+qt_internal_extend_target(Network CONDITION QT_FEATURE_dnslookup AND UNIX AND NOT ANDROID AND NOT INTEGRITY
     SOURCES
         kernel/qdnslookup_unix.cpp
 )

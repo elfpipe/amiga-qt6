@@ -138,8 +138,8 @@ public:
     void setSslConfiguration(const QSslConfiguration &config);
     void ignoreSslErrors(int channel = -1);
     void ignoreSslErrors(const QList<QSslError> &errors, int channel = -1);
-    std::shared_ptr<QSslContext> sslContext();
-    void setSslContext(std::shared_ptr<QSslContext> context);
+    QSharedPointer<QSslContext> sslContext();
+    void setSslContext(QSharedPointer<QSslContext> context);
 #endif
 
     void preConnectFinished();
@@ -214,7 +214,6 @@ public:
     void prepareRequest(HttpMessagePair &request);
     void updateChannel(int i, const HttpMessagePair &messagePair);
     QHttpNetworkRequest predictNextRequest() const;
-    QHttpNetworkReply* predictNextRequestsReply() const;
 
     void fillPipeline(QAbstractSocket *socket);
     bool fillPipeline(QList<HttpMessagePair> &queue, QHttpNetworkConnectionChannel &channel);
@@ -276,7 +275,7 @@ public:
     QHttpNetworkConnection::ConnectionType connectionType;
 
 #ifndef QT_NO_SSL
-    std::shared_ptr<QSslContext> sslContext;
+    QSharedPointer<QSslContext> sslContext;
 #endif
 
     QHttp2Configuration http2Parameters;

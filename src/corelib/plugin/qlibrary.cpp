@@ -256,11 +256,7 @@ static bool findPatternUnloaded(const QString &library, QLibraryPrivate *lib)
 
     QByteArray data;
     qsizetype fdlen = qMin(file.size(), MaxMemoryMapSize);
-#ifdef __amigaos4__
-    const char *filedata = nullptr;
-#else
     const char *filedata = reinterpret_cast<char *>(file.map(0, fdlen));
-#endif
 
     if (filedata == nullptr) {
         // Try reading the data into memory instead (up to 64 MB).
@@ -277,7 +273,7 @@ static bool findPatternUnloaded(const QString &library, QLibraryPrivate *lib)
     char pattern[] = "qTMETADATA ";
     pattern[0] = 'Q'; // Ensure the pattern "QTMETADATA" is not found in this library should QPluginLoader ever encounter it.
     const ulong plen = ulong(qstrlen(pattern));
-#if defined (Q_OF_ELF) && defined(Q_CC_GNU) && !defined(__amigaos4__)
+#if defined (Q_OF_ELF) && defined(Q_CC_GNU)
     int r = QElfParser().parse(filedata, fdlen, library, lib, &pos, &fdlen);
     if (r == QElfParser::Corrupt || r == QElfParser::NotElf) {
             if (lib && qt_debug_component()) {

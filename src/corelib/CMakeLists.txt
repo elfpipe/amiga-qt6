@@ -648,8 +648,9 @@ qt_internal_extend_target(Core CONDITION AMIGA
     SOURCES
         kernel/qeventdispatcher_amiga_p.h
         kernel/qeventdispatcher_amiga.cpp
-        kernel/qtimerinfo_amiga.cpp kernel/qtimerinfo_amiga_p.h
-)
+        kernel/qtimerinfo_unix.cpp kernel/qtimerinfo_unix_p.h
+        kernel/qpoll_p.h
+        )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_thread
     SOURCES
@@ -696,7 +697,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_future
         thread/qresultstore.cpp thread/qresultstore.h
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_std_atomic64 OR AMIGA
+qt_internal_extend_target(Core CONDITION QT_FEATURE_std_atomic64
     PUBLIC_LIBRARIES
         WrapAtomic::WrapAtomic
 )
@@ -1088,12 +1089,12 @@ qt_internal_extend_target(Core CONDITION WATCHOS
         ${FWWatchKit}
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_poll_select AND UNIX 
+qt_internal_extend_target(Core CONDITION QT_FEATURE_poll_select AND UNIX
     SOURCES
         kernel/qpoll.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_glib AND UNIX AND NOT AMIGA
+qt_internal_extend_target(Core CONDITION QT_FEATURE_glib AND UNIX
     SOURCES
         kernel/qeventdispatcher_glib.cpp kernel/qeventdispatcher_glib_p.h
     LIBRARIES

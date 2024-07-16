@@ -103,16 +103,13 @@ long QSslContext::setupOpenSslOptions(QSsl::SslProtocol protocol, QSsl::SslOptio
 {
     long options;
     switch (protocol) {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
+    case QSsl::SecureProtocols:
     case QSsl::TlsV1_0OrLater:
         options = SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3;
         break;
     case QSsl::TlsV1_1OrLater:
         options = SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1;
         break;
-QT_WARNING_POP
-    case QSsl::SecureProtocols:
     case QSsl::TlsV1_2OrLater:
         options = SSL_OP_ALL | SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 | SSL_OP_NO_TLSv1_1;
         break;
@@ -173,15 +170,21 @@ QSslContext::~QSslContext()
         q_SSL_SESSION_free(session);
 }
 
-std::shared_ptr<QSslContext> QSslContext::sharedFromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration, bool allowRootCertOnDemandLoading)
+QSslContext* QSslContext::fromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration, bool allowRootCertOnDemandLoading)
 {
-    struct AccessToPrivateCtor : QSslContext {};
-    std::shared_ptr<QSslContext> sslContext = std::make_shared<AccessToPrivateCtor>();
-    initSslContext(sslContext.get(), mode, configuration, allowRootCertOnDemandLoading);
+    QSslContext *sslContext = new QSslContext();
+    initSslContext(sslContext, mode, configuration, allowRootCertOnDemandLoading);
     return sslContext;
 }
 
-std::shared_ptr<QSslContext> QSslContext::sharedFromPrivateConfiguration(QSslSocket::SslMode mode, QSslConfigurationPrivate *privConfiguration,
+QSharedPointer<QSslContext> QSslContext::sharedFromConfiguration(QSslSocket::SslMode mode, const QSslConfiguration &configuration, bool allowRootCertOnDemandLoading)
+{
+    QSharedPointer<QSslContext> sslContext = QSharedPointer<QSslContext>::create();
+    initSslContext(sslContext.data(), mode, configuration, allowRootCertOnDemandLoading);
+    return sslContext;
+}
+
+QSharedPointer<QSslContext> QSslContext::sharedFromPrivateConfiguration(QSslSocket::SslMode mode, QSslConfigurationPrivate *privConfiguration,
                                                                         bool allowRootCertOnDemandLoading)
 {
     return sharedFromConfiguration(mode, privConfiguration, allowRootCertOnDemandLoading);
@@ -361,11 +364,8 @@ void QSslContext::initSslContext(QSslContext *sslContext, QSslSocket::SslMode mo
     bool isDtls = false;
 init_context:
     switch (sslContext->sslConfiguration.protocol()) {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     case QSsl::DtlsV1_0:
     case QSsl::DtlsV1_0OrLater:
-QT_WARNING_POP
     case QSsl::DtlsV1_2:
     case QSsl::DtlsV1_2OrLater:
 #if QT_CONFIG(dtls)
@@ -420,8 +420,6 @@ QT_WARNING_POP
     long maxVersion = anyVersion;
 
     switch (sslContext->sslConfiguration.protocol()) {
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     case QSsl::TlsV1_0:
         minVersion = TLS1_VERSION;
         maxVersion = TLS1_VERSION;
@@ -430,7 +428,6 @@ QT_WARNING_DISABLE_DEPRECATED
         minVersion = TLS1_1_VERSION;
         maxVersion = TLS1_1_VERSION;
         break;
-QT_WARNING_POP
     case QSsl::TlsV1_2:
         minVersion = TLS1_2_VERSION;
         maxVersion = TLS1_2_VERSION;
@@ -447,8 +444,7 @@ QT_WARNING_POP
         break;
     // Ranges:
     case QSsl::AnyProtocol:
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
+    case QSsl::SecureProtocols:
     case QSsl::TlsV1_0OrLater:
         minVersion = TLS1_VERSION;
         maxVersion = 0;
@@ -457,14 +453,10 @@ QT_WARNING_DISABLE_DEPRECATED
         minVersion = TLS1_1_VERSION;
         maxVersion = 0;
         break;
-QT_WARNING_POP
-    case QSsl::SecureProtocols:
     case QSsl::TlsV1_2OrLater:
         minVersion = TLS1_2_VERSION;
         maxVersion = 0;
         break;
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     case QSsl::DtlsV1_0:
         minVersion = DTLS1_VERSION;
         maxVersion = DTLS1_VERSION;
@@ -473,7 +465,6 @@ QT_WARNING_DISABLE_DEPRECATED
         minVersion = DTLS1_VERSION;
         maxVersion = 0;
         break;
-QT_WARNING_POP
     case QSsl::DtlsV1_2:
         minVersion = DTLS1_2_VERSION;
         maxVersion = DTLS1_2_VERSION;

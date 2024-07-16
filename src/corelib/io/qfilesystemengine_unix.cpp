@@ -1700,7 +1700,7 @@ bool QFileSystemEngine::setCurrentPath(const QFileSystemEntry &path)
 QFileSystemEntry QFileSystemEngine::currentPath()
 {
     QFileSystemEntry result;
-#if defined(__GLIBC__) && !defined(PATH_MAX) && !defined(__amigaos4__)
+#if defined(__GLIBC__) && !defined(PATH_MAX)
     char *currentName = ::get_current_dir_name();
     if (currentName) {
         result = QFileSystemEntry(QByteArray(currentName), QFileSystemEntry::FromNativePath());

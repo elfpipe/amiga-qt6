@@ -246,7 +246,7 @@ public:
 
     VisitReturn writeFile(const QString &ctx, const QString &fn, QIODevice::OpenMode mode,
                           QMakeVfs::VfsFlags flags, const QString &contents);
-#if QT_CONFIG(process) && !defined(__amigaos4__)
+#if QT_CONFIG(process)
     void runProcess(QProcess *proc, const QString &command) const;
 #endif
     QByteArray getCommandOutput(const QString &args, int *exitCode) const;

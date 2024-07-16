@@ -38,7 +38,7 @@
 
 #include <qhash.h>
 #include <qstringlist.h>
-#if QT_CONFIG(process) && !defined(__amigaos4__)
+#if QT_CONFIG(process)
 # include <qprocess.h>
 #endif
 #ifdef PROEVALUATOR_THREAD_SAFE
@@ -104,7 +104,7 @@ public:
     QString dir_sep;
     QString dirlist_sep;
     QString cachefile;
-#if defined(PROEVALUATOR_SETENV) && !defined(__amigaos4__)
+#if defined(PROEVALUATOR_SETENV)
     QProcessEnvironment environment;
 #endif
     QString qmake_abslocation;

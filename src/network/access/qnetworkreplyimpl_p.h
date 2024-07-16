@@ -63,8 +63,6 @@
 #include "private/qbytedata_p.h"
 #include <QSharedPointer>
 
-#include <memory>
-
 QT_BEGIN_NAMESPACE
 
 class QAbstractNetworkCache;
@@ -155,7 +153,7 @@ public:
 
     QNetworkAccessBackend *backend;
     QIODevice *outgoingData;
-    std::shared_ptr<QRingBuffer> outgoingDataBuffer;
+    QSharedPointer<QRingBuffer> outgoingDataBuffer;
     QIODevice *copyDevice;
     QAbstractNetworkCache *networkCache() const;
 

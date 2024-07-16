@@ -226,7 +226,6 @@ QHttpThreadDelegate::QHttpThreadDelegate(QObject *parent) :
     , pendingDownloadData()
     , pendingDownloadProgress()
     , synchronous(false)
-    , connectionCacheExpiryTimeoutSeconds(-1)
     , incomingStatusCode(0)
     , isPipeliningUsed(false)
     , isHttp2Used(false)
@@ -345,7 +344,7 @@ void QHttpThreadDelegate::startRequest()
 #endif
         httpConnection->setPeerVerifyName(httpRequest.peerVerifyName());
         // cache the QHttpNetworkConnection corresponding to this cache key
-        connections.localData()->addEntry(cacheKey, httpConnection, connectionCacheExpiryTimeoutSeconds);
+        connections.localData()->addEntry(cacheKey, httpConnection);
     } else {
         if (httpRequest.withCredentials()) {
             QNetworkAuthenticationCredential credential = authenticationManager->fetchCachedCredentials(httpRequest.url(), nullptr);
@@ -378,8 +377,6 @@ void QHttpThreadDelegate::startRequest()
 
         // Don't care about ignored SSL errors for now in the synchronous HTTP case.
     } else if (!synchronous) {
-        connect(httpReply,SIGNAL(socketConnecting()), this, SIGNAL(socketConnecting()));
-        connect(httpReply,SIGNAL(requestSent()), this, SIGNAL(requestSent()));
         connect(httpReply,SIGNAL(headerChanged()), this, SLOT(headerChangedSlot()));
         connect(httpReply,SIGNAL(finished()), this, SLOT(finishedSlot()));
         connect(httpReply,SIGNAL(finishedWithError(QNetworkReply::NetworkError,QString)),
@@ -548,7 +545,6 @@ void QHttpThreadDelegate::synchronousFinishedSlot()
             incomingErrorCode = statusCodeFromHttp(httpReply->statusCode(), httpRequest.url());
     }
 
-    isCompressed = httpReply->isCompressed();
     synchronousDownloadData = httpReply->readAll();
 
     QMetaObject::invokeMethod(httpReply, "deleteLater", Qt::QueuedConnection);
@@ -638,7 +634,6 @@ void QHttpThreadDelegate::headerChangedSlot()
     incomingContentLength = httpReply->contentLength();
     removedContentLength = httpReply->removedContentLength();
     isHttp2Used = httpReply->isHttp2Used();
-    isCompressed = httpReply->isCompressed();
 
     emit downloadMetaData(incomingHeaders,
                           incomingStatusCode,
@@ -647,8 +642,7 @@ void QHttpThreadDelegate::headerChangedSlot()
                           downloadBuffer,
                           incomingContentLength,
                           removedContentLength,
-                          isHttp2Used,
-                          isCompressed);
+                          isHttp2Used);
 }
 
 void QHttpThreadDelegate::synchronousHeaderChangedSlot()

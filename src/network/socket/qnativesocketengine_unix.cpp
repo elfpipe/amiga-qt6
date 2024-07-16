@@ -73,11 +73,6 @@
 #include <netinet/sctp.h>
 #endif
 
-#ifdef __amigaos4__
-# include <proto/bsdsocket.h>
-# include <sys/filio.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 /*
@@ -86,7 +81,6 @@ QT_BEGIN_NAMESPACE
 */
 static inline void qt_socket_getPortAndAddress(const qt_sockaddr *s, quint16 *port, QHostAddress *addr)
 {
-#ifndef __amigaos4__
     if (s->a.sa_family == AF_INET6) {
         Q_IPV6ADDR tmp;
         memcpy(&tmp, &s->a6.sin6_addr, sizeof(tmp));
@@ -103,7 +97,6 @@ static inline void qt_socket_getPortAndAddress(const qt_sockaddr *s, quint16 *po
             *port = ntohs(s->a6.sin6_port);
         return;
     }
-#endif
 
     if (port)
         *port = ntohs(s->a4.sin_port);
@@ -150,8 +143,8 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
         break;
     case QNativeSocketEngine::MulticastTtlOption:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-            // level = IPPROTO_IPV6;
-            // n = IPV6_MULTICAST_HOPS;
+            level = IPPROTO_IPV6;
+            n = IPV6_MULTICAST_HOPS;
         } else
         {
             level = IPPROTO_IP;
@@ -160,8 +153,8 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
         break;
     case QNativeSocketEngine::MulticastLoopbackOption:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-            // level = IPPROTO_IPV6;
-            // n = IPV6_MULTICAST_LOOP;
+            level = IPPROTO_IPV6;
+            n = IPV6_MULTICAST_LOOP;
         } else
         {
             level = IPPROTO_IP;
@@ -176,8 +169,8 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
         break;
     case QNativeSocketEngine::ReceivePacketInformation:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-            // level = IPPROTO_IPV6;
-            // n = IPV6_RECVPKTINFO;
+            level = IPPROTO_IPV6;
+            n = IPV6_RECVPKTINFO;
         } else if (socketProtocol == QAbstractSocket::IPv4Protocol) {
             level = IPPROTO_IP;
 #ifdef IP_PKTINFO
@@ -191,8 +184,8 @@ static void convertToLevelAndOption(QNativeSocketEngine::SocketOption opt,
         break;
     case QNativeSocketEngine::ReceiveHopLimit:
         if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
-            // level = IPPROTO_IPV6;
-            // n = IPV6_RECVHOPLIMIT;
+            level = IPPROTO_IPV6;
+            n = IPV6_RECVHOPLIMIT;
         } else if (socketProtocol == QAbstractSocket::IPv4Protocol) {
 #ifdef IP_RECVTTL               // IP_RECVTTL is a non-standard extension supported on some OS
             level = IPPROTO_IP;
@@ -239,37 +232,20 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
     }
     int protocol = 0;
 #endif // QT_NO_SCTP
-#ifdef __amigaos4__
-    int domain = AF_INET;
-    int type = SOCK_STREAM;
-    socketProtocol = QAbstractSocket::IPv4Protocol;
-#else
     int domain = (socketProtocol == QAbstractSocket::IPv6Protocol
-                   || socketProtocol == QAbstractSocket::AnyIPProtocol) ? AF_INET6 : AF_INET;
+                  || socketProtocol == QAbstractSocket::AnyIPProtocol) ? AF_INET6 : AF_INET;
     int type = (socketType == QAbstractSocket::UdpSocket) ? SOCK_DGRAM : SOCK_STREAM;
-#endif
 
-#ifdef __amigaos4__
-	int socket = ISocket->socket(domain, type, protocol);
-#else
     int socket = qt_safe_socket(domain, type, protocol, O_NONBLOCK);
     if (socket < 0 && socketProtocol == QAbstractSocket::AnyIPProtocol && errno == EAFNOSUPPORT) {
         domain = AF_INET;
         socket = qt_safe_socket(domain, type, protocol, O_NONBLOCK);
         socketProtocol = QAbstractSocket::IPv4Protocol;
     }
-#endif
 
-#ifdef __amigaos4__
-	if(socket < 0) {
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error)  {
-#else
     if (socket < 0) {
         int ecopy = errno;
         switch (ecopy) {
-#endif
         case EPROTONOSUPPORT:
         case EAFNOSUPPORT:
         case EINVAL:
@@ -282,7 +258,6 @@ bool QNativeSocketEnginePrivate::createNewSocket(QAbstractSocket::SocketType soc
             setError(QAbstractSocket::SocketResourceError, ResourceErrorString);
             break;
         case EACCES:
-qInfo() << "qt_safe_socket failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             break;
         default:
@@ -358,11 +333,7 @@ int QNativeSocketEnginePrivate::option(QNativeSocketEngine::SocketOption opt) co
     QT_SOCKOPTLEN_T len = sizeof(v);
 
     convertToLevelAndOption(opt, socketProtocol, level, n);
-#ifdef __amigaos4__
-    if (n != -1 && ISocket->getsockopt(socketDescriptor, level, n, (char *) &v, &len) != -1)
-#else
     if (n != -1 && ::getsockopt(socketDescriptor, level, n, (char *) &v, &len) != -1)
-#endif
         return v;
 
     return -1;
@@ -382,20 +353,7 @@ bool QNativeSocketEnginePrivate::setOption(QNativeSocketEngine::SocketOption opt
     switch (opt) {
     case QNativeSocketEngine::NonBlockingSocketOption: {
         // Make the socket nonblocking.
-#ifdef __amigaos4__
-		int onoff = 1;
-		if(ISocket->IoctlSocket(socketDescriptor, FIONBIO, &onoff) < 0)
-		{
-#ifdef QNATIVESOCKETENGINE_DEBUG
-            perror("QNativeSocketEnginePrivate::setOption(): IoctlSocket(FIONBIO) failed");
-#endif
-			int error = 0;
-			ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-			printf("IoctlSocket() returned an error: %d\n", error);
-			return false;
-		}
-		return true;
-#elif !defined(Q_OS_VXWORKS)
+#if !defined(Q_OS_VXWORKS)
         int flags = ::fcntl(socketDescriptor, F_GETFL, 0);
         if (flags == -1) {
 #ifdef QNATIVESOCKETENGINE_DEBUG
@@ -457,11 +415,7 @@ bool QNativeSocketEnginePrivate::setOption(QNativeSocketEngine::SocketOption opt
 
     if (n == -1)
         return false;
-#ifdef __amigaos4__
-    return ISocket->setsockopt(socketDescriptor, level, n, (char *) &v, sizeof(v)) == 0;
-#else
     return ::setsockopt(socketDescriptor, level, n, (char *) &v, sizeof(v)) == 0;
-#endif
 }
 
 bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16 port)
@@ -470,63 +424,16 @@ bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16
     qDebug() << "QNativeSocketEnginePrivate::nativeConnect() " << socketDescriptor;
 #endif
 
-/*
-	int socket = ISocket->socket(AF_INET, SOCK_STREAM, 0);
-    if(socket < 0)
-    {
-        printf("socket creation failed\n");
-        return false;
-    }
-    struct sockaddr_in sa;
-
-    sa.sin_family = AF_INET;
-    sa.sin_port = htons(80);
-
-    struct hostent *he;
-
-    he = gethostbyname("google.com");
-    if(he == 0) {
-        perror("gethostbyname");
-        return 0;
-    }
-    char *address = (char *)&sa.sin_addr;
-    address[0] = he->h_addr_list[0][0];
-    address[1] = he->h_addr_list[0][1];
-    address[2] = he->h_addr_list[0][2];
-    address[3] = he->h_addr_list[0][3];
-*/
-/*
-    int connectResult = ISocket->connect (socket, (struct sockaddr *)&sa, sizeof(sa));
-*/
     qt_sockaddr aa;
     QT_SOCKLEN_T sockAddrSize;
     setPortAndAddress(port, addr, &aa, &sockAddrSize);
 
-    qInfo() << "calling ::connect : " << addr.toString() << ":" << port;
-#ifdef __amigaos4__
-    // int connectResult = ISocket->connect (socket, (struct sockaddr *)&sa, sizeof(sa));
-    int connectResult = ISocket->connect(socketDescriptor, &aa.a, sockAddrSize);
-#else
     int connectResult = qt_safe_connect(socketDescriptor, &aa.a, sockAddrSize);
-#endif
-    if(connectResult < 0) {
-        printf("connect failed\n");
-    } else printf("success\n");
-/*
-    ISocket->CloseSocket(socket);
-    return false;
-*/
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     int ecopy = errno;
 #endif
     if (connectResult == -1) {
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch (errno) {
-#endif
         case EISCONN:
             socketState = QAbstractSocket::ConnectedState;
             break;
@@ -559,7 +466,6 @@ bool QNativeSocketEnginePrivate::nativeConnect(const QHostAddress &addr, quint16
             break;
         case EACCES:
         case EPERM:
-qInfo() << "qt_safe_connect failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             socketState = QAbstractSocket::UnconnectedState;
             break;
@@ -608,9 +514,6 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
     }
 #endif
 
-#ifdef __amigaos4__
-    int bindResult = ISocket->bind(socketDescriptor, &aa.a, sockAddrSize);
-#else
     int bindResult = QT_SOCKET_BIND(socketDescriptor, &aa.a, sockAddrSize);
     if (bindResult < 0 && errno == EAFNOSUPPORT && address.protocol() == QAbstractSocket::AnyIPProtocol) {
         // retry with v4
@@ -620,19 +523,12 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
         sockAddrSize = sizeof(aa.a4);
         bindResult = QT_SOCKET_BIND(socketDescriptor, &aa.a, sockAddrSize);
     }
-#endif
 
     if (bindResult < 0) {
 #if defined (QNATIVESOCKETENGINE_DEBUG)
         int ecopy = errno;
 #endif
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch(errno) {
-#endif
         case EADDRINUSE:
             setError(QAbstractSocket::AddressInUseError, AddressInuseErrorString);
             break;
@@ -667,21 +563,11 @@ bool QNativeSocketEnginePrivate::nativeBind(const QHostAddress &address, quint16
 
 bool QNativeSocketEnginePrivate::nativeListen(int backlog)
 {
-#ifdef __amigaos4__
-	if (ISocket->listen(socketDescriptor, backlog) < 0) {
-#else
     if (qt_safe_listen(socketDescriptor, backlog) < 0) {
-#endif
 #if defined (QNATIVESOCKETENGINE_DEBUG)
         int ecopy = errno;
 #endif
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch (errno) {
-#endif
         case EADDRINUSE:
             setError(QAbstractSocket::AddressInUseError,
                      PortInuseErrorString);
@@ -707,21 +593,9 @@ bool QNativeSocketEnginePrivate::nativeListen(int backlog)
 
 int QNativeSocketEnginePrivate::nativeAccept()
 {
-#ifdef __amigaos4__
-    qInfo() << "calling accept";
-    int acceptedDescriptor = ISocket->accept(socketDescriptor, nullptr, nullptr);
-    qInfo() << "accept returned";
-#else
     int acceptedDescriptor = qt_safe_accept(socketDescriptor, nullptr, nullptr);
-#endif
     if (acceptedDescriptor == -1) {
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch (errno) {
-#endif
         case EBADF:
         case EOPNOTSUPP:
             setError(QAbstractSocket::UnsupportedSocketOperationError, InvalidSocketErrorString);
@@ -749,7 +623,6 @@ int QNativeSocketEnginePrivate::nativeAccept()
             break;
         case EACCES:
         case EPERM:
-qInfo() << "qt_safe_accept failed";
             setError(QAbstractSocket::SocketAccessError, AccessErrorString);
             break;
 #if EAGAIN != EWOULDBLOCK
@@ -781,7 +654,6 @@ static bool multicastMembershipHelper(QNativeSocketEnginePrivate *d,
     int sockArgSize;
 
     ip_mreq mreq4;
-#ifndef __amigaos4__
     ipv6_mreq mreq6;
 
     if (groupAddress.protocol() == QAbstractSocket::IPv6Protocol) {
@@ -793,9 +665,7 @@ static bool multicastMembershipHelper(QNativeSocketEnginePrivate *d,
         Q_IPV6ADDR ip6 = groupAddress.toIPv6Address();
         memcpy(&mreq6.ipv6mr_multiaddr, &ip6, sizeof(ip6));
         mreq6.ipv6mr_interface = interface.index();
-    } else
-#endif
-    if (groupAddress.protocol() == QAbstractSocket::IPv4Protocol) {
+    } else if (groupAddress.protocol() == QAbstractSocket::IPv4Protocol) {
         level = IPPROTO_IP;
         sockOpt = how4;
         sockArg = &mreq4;
@@ -853,34 +723,25 @@ static bool multicastMembershipHelper(QNativeSocketEnginePrivate *d,
 bool QNativeSocketEnginePrivate::nativeJoinMulticastGroup(const QHostAddress &groupAddress,
                                                           const QNetworkInterface &interface)
 {
-#ifdef __amigaos4__
-    return false;
-#else
     return multicastMembershipHelper(this,
                                      IPV6_JOIN_GROUP,
                                      IP_ADD_MEMBERSHIP,
                                      groupAddress,
                                      interface);
-#endif
 }
 
 bool QNativeSocketEnginePrivate::nativeLeaveMulticastGroup(const QHostAddress &groupAddress,
                                                            const QNetworkInterface &interface)
 {
-#ifdef __amigaos4__
-    return false;
-#else
     return multicastMembershipHelper(this,
                                      IPV6_LEAVE_GROUP,
                                      IP_DROP_MEMBERSHIP,
                                      groupAddress,
                                      interface);
-#endif
 }
 
 QNetworkInterface QNativeSocketEnginePrivate::nativeMulticastInterface() const
 {
-#ifndef __amigaos4__
     if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
         uint v;
         QT_SOCKOPTLEN_T sizeofv = sizeof(v);
@@ -888,7 +749,6 @@ QNetworkInterface QNativeSocketEnginePrivate::nativeMulticastInterface() const
             return QNetworkInterface();
         return QNetworkInterface::interfaceFromIndex(v);
     }
-#endif
 
 #if defined(Q_OS_SOLARIS)
     struct in_addr v = { 0, 0, 0, 0};
@@ -916,12 +776,10 @@ QNetworkInterface QNativeSocketEnginePrivate::nativeMulticastInterface() const
 
 bool QNativeSocketEnginePrivate::nativeSetMulticastInterface(const QNetworkInterface &iface)
 {
-#ifndef __amigaos4__
     if (socketProtocol == QAbstractSocket::IPv6Protocol || socketProtocol == QAbstractSocket::AnyIPProtocol) {
         uint v = iface.index();
         return (::setsockopt(socketDescriptor, IPPROTO_IPV6, IPV6_MULTICAST_IF, &v, sizeof(v)) != -1);
     }
-#endif
 
     struct in_addr v;
     if (iface.isValid()) {
@@ -959,11 +817,7 @@ qint64 QNativeSocketEnginePrivate::nativeBytesAvailable() const
     }
 #endif
 
-#ifdef __amigaos4__
-	if (ISocket->IoctlSocket(socketDescriptor, FIONREAD, (char *) &nbytes) >= 0)	
-#else
     if (available == -1 && qt_safe_ioctl(socketDescriptor, FIONREAD, (char *) &nbytes) >= 0)
-#endif
         available = nbytes;
 
 #if defined (QNATIVESOCKETENGINE_DEBUG)
@@ -974,41 +828,14 @@ qint64 QNativeSocketEnginePrivate::nativeBytesAvailable() const
 
 bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 {
-    qInfo() << "nativeHasPendingDatagrams : operation not supported";
-
     // Peek 1 bytes into the next message.
     ssize_t readBytes;
-#ifdef __amigaos4__
-    qt_sockaddr storage;
-    QT_SOCKLEN_T storageSize = sizeof(storage);
-    memset(&storage, 0, storageSize);
-
-	bool done = false;
-	int error = 0;
-    while(!done)
-    {
-        char c;
-        readBytes = ISocket->recvfrom(socketDescriptor, &c, 1, MSG_PEEK, &storage.a, &storageSize);
-        if(readBytes >= 0)
-        	done = true;
-        else
-        {
-        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        	if(error != EINTR)
-        		done = true;
-       	}
-    }
-#else
     char c;
     EINTR_LOOP(readBytes, ::recv(socketDescriptor, &c, 1, MSG_PEEK));
-#endif
+
     // If there's no error, or if our buffer was too small, there must be a
     // pending datagram.
-#ifdef __amigaos4__
-    bool result = (readBytes != -1) || error == EMSGSIZE;
-#else
     bool result = (readBytes != -1) || errno == EMSGSIZE;
-#endif
 
 #if defined (QNATIVESOCKETENGINE_DEBUG)
     qDebug("QNativeSocketEnginePrivate::nativeHasPendingDatagrams() == %s",
@@ -1019,9 +846,8 @@ bool QNativeSocketEnginePrivate::nativeHasPendingDatagrams() const
 
 qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 {
-    qInfo() << "nativePendingDatagramSize : operation not supported";
     ssize_t recvResult = -1;
-#if defined(Q_OS_LINUX)
+#ifdef Q_OS_LINUX
     // Linux can return the actual datagram size if we use MSG_TRUNC
     char c;
     EINTR_LOOP(recvResult, ::recv(socketDescriptor, &c, 1, MSG_PEEK | MSG_TRUNC));
@@ -1051,20 +877,9 @@ qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
         // the data written to udpMessagePeekBuffer is discarded, so
         // this function is still reentrant although it might not look
         // so.
-#ifdef __amigaos4__
-        recvResult = ISocket->recvmsg(socketDescriptor, &msg, MSG_PEEK);
-        if(recvResult == -1)
-        {
-        	int error = 0;
-        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        	if(error == EINTR)
-        		continue;
-       	}
-#else
-       recvResult = ::recvmsg(socketDescriptor, &msg, MSG_PEEK);
+        recvResult = ::recvmsg(socketDescriptor, &msg, MSG_PEEK);
         if (recvResult == -1 && errno == EINTR)
             continue;
-#endif
 
         // was the result truncated?
         if ((msg.msg_flags & MSG_TRUNC) == 0)
@@ -1092,9 +907,6 @@ qint64 QNativeSocketEnginePrivate::nativePendingDatagramSize() const
 qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxSize, QIpPacketHeader *header,
                                                          QAbstractSocketEngine::PacketHeaderOptions options)
 {
-    qInfo() << "nativeReceiveDatagram : operation not supported";
-
-#ifndef __amigaos4__
     // we use quintptr to force the alignment
     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
 #if !defined(IP_PKTINFO) && defined(IP_RECVIF) && defined(Q_OS_BSD4)
@@ -1128,28 +940,9 @@ qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxS
     }
 
     ssize_t recvResult = 0;
-#ifdef __amigaos4__
-	bool done = false;
-	int error = 0;
-    while(!done)
-    {
-        char c;
-        recvFromResult = ISocket->recvfrom(socketDescriptor, maxSize ? data : &c, maxSize ? maxSize : 1,
-                                    0, &aa.a, &sz);
-        if(recvFromResult >= 0)
-        	done = true;
-        else
-        {
-        	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        	if(error != EINTR)
-        		done = true;
-       	}
-    }
-#else
     do {
         recvResult = ::recvmsg(socketDescriptor, &msg, 0);
     } while (recvResult == -1 && errno == EINTR);
-#endif
 
     if (recvResult == -1) {
         switch (errno) {
@@ -1245,16 +1038,10 @@ qint64 QNativeSocketEnginePrivate::nativeReceiveDatagram(char *data, qint64 maxS
 #endif
 
     return qint64((maxSize || recvResult < 0) ? recvResult : Q_INT64_C(0));
-#else
-    return 0;
-#endif
 }
 
 qint64 QNativeSocketEnginePrivate::nativeSendDatagram(const char *data, qint64 len, const QIpPacketHeader &header)
 {
-    qInfo() << "nativeSendDatagram : operation not supported";
-
-#ifndef __amigaos4__
     // we use quintptr to force the alignment
     quintptr cbuf[(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int))
 #ifndef QT_NO_SCTP
@@ -1378,9 +1165,6 @@ qint64 QNativeSocketEnginePrivate::nativeSendDatagram(const char *data, qint64 l
 #endif
 
     return qint64(sentBytes);
-#else
-    return 0;
-#endif
 }
 
 bool QNativeSocketEnginePrivate::fetchConnectionParameters()
@@ -1399,11 +1183,7 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
 
     // Determine local address
     memset(&sa, 0, sizeof(sa));
-#ifdef __amigaos4__
-    if (ISocket->getsockname(socketDescriptor, &sa.a, &sockAddrSize) == 0) {
-#else
     if (::getsockname(socketDescriptor, &sa.a, &sockAddrSize) == 0) {
-#endif
         qt_socket_getPortAndAddress(&sa, &localPort, &localAddress);
 
         // Determine protocol family
@@ -1411,32 +1191,19 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
         case AF_INET:
             socketProtocol = QAbstractSocket::IPv4Protocol;
             break;
-#ifndef __amigaos4__
         case AF_INET6:
             socketProtocol = QAbstractSocket::IPv6Protocol;
             break;
-#endif
         default:
             socketProtocol = QAbstractSocket::UnknownNetworkLayerProtocol;
             break;
         }
 
-#ifdef __amigaos4__
-    } else
-    {
-    	int error = 0;
-    	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-    	if(error == EBADF)
-    	{
-#else
     } else if (errno == EBADF) {
-#endif
         setError(QAbstractSocket::UnsupportedSocketOperationError, InvalidSocketErrorString);
         return false;
     }
-#ifdef __amigaos4__
-    }
-#endif
+
 #if defined (IPV6_V6ONLY)
     // determine if local address is dual mode
     // On linux, these are returned as "::" (==AnyIPv6)
@@ -1457,11 +1224,7 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
 #endif
 
     // Determine the remote address
-#ifdef __amigaos4__
-    bool connected = ISocket->getpeername(socketDescriptor, &sa.a, &sockAddrSize);
-#else
     bool connected = ::getpeername(socketDescriptor, &sa.a, &sockAddrSize) == 0;
-#endif
     if (connected) {
         qt_socket_getPortAndAddress(&sa, &peerPort, &peerAddress);
         inboundStreamCount = outboundStreamCount = 1;
@@ -1470,11 +1233,7 @@ bool QNativeSocketEnginePrivate::fetchConnectionParameters()
     // Determine the socket type (UDP/TCP/SCTP)
     int value = 0;
     QT_SOCKOPTLEN_T valueSize = sizeof(int);
-#ifdef __amigaos4__
-    if (ISocket->getsockopt(socketDescriptor, SOL_SOCKET, SO_TYPE, &value, &valueSize) == 0) {
-#else
     if (::getsockopt(socketDescriptor, SOL_SOCKET, SO_TYPE, &value, &valueSize) == 0) {
-#endif
         if (value == SOCK_STREAM) {
 #ifndef QT_NO_SCTP
             if (option(QNativeSocketEngine::MaxStreamsSocketOption) != -1) {
@@ -1536,11 +1295,7 @@ void QNativeSocketEnginePrivate::nativeClose()
     qDebug("QNativeSocketEngine::nativeClose()");
 #endif
 
-#ifdef __amigaos4__
-	ISocket->CloseSocket(socketDescriptor);
-#else
     qt_safe_close(socketDescriptor);
-#endif
 }
 
 qint64 QNativeSocketEnginePrivate::nativeWrite(const char *data, qint64 len)
@@ -1548,22 +1303,10 @@ qint64 QNativeSocketEnginePrivate::nativeWrite(const char *data, qint64 len)
     Q_Q(QNativeSocketEngine);
 
     ssize_t writtenBytes;
-#ifdef __amigaos4__
-    qInfo() << "calling send";
-    writtenBytes = ISocket->send(socketDescriptor, (APTR)data, len, 0);
-    qInfo() << "back from send";
-#else
     writtenBytes = qt_safe_write_nosignal(socketDescriptor, data, len);
-#endif
 
     if (writtenBytes < 0) {
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch (errno) {
-#endif
         case EPIPE:
         case ECONNRESET:
             writtenBytes = -1;
@@ -1599,27 +1342,11 @@ qint64 QNativeSocketEnginePrivate::nativeRead(char *data, qint64 maxSize)
     }
 
     ssize_t r = 0;
-#ifdef __amigaos4__
-    qInfo() << "calling recv";
-    int error = 0;
-    do {                      \
-        r = ISocket->recv(socketDescriptor, data, maxSize, 0);
-        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-    } while (r == -1 && error == EINTR);
-    qInfo() << "recv returned";
-#else
     r = qt_safe_read(socketDescriptor, data, maxSize);
-#endif
 
     if (r < 0) {
         r = -1;
-#ifdef __amigaos4__
-		int error = 0;
-		ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-		switch(error) {
-#else
         switch (errno) {
-#endif
 #if EWOULDBLOCK-0 && EWOULDBLOCK != EAGAIN
         case EWOULDBLOCK:
 #endif
@@ -1672,13 +1399,7 @@ int QNativeSocketEnginePrivate::nativeSelect(int timeout, bool checkRead, bool c
     if (checkWrite)
         pfd.events |= POLLOUT;
 
-#ifdef __amigaos4__
-    ULONG listenSignals = 0;
-    const int ret = qt_poll_msecs(&pfd, 1, timeout, &listenSignals);
-#else
     const int ret = qt_poll_msecs(&pfd, 1, timeout);
-#endif
-
     if (ret <= 0)
         return ret;
 

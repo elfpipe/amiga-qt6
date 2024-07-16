@@ -57,18 +57,13 @@ public:
         if (d->interrupt.loadRelaxed())
             return false;
 
-        struct TimeVal wait_tm = { 0, 0 };
+        timespec *tm = nullptr;
+        timespec wait_tm = { 0, 0 };
 
         unsigned int listenSignals = 0;
-        if (!canWait || (include_timers && d->timerList.timerWait(wait_tm))) {
-            d->timerRequest->Request.io_Command = TR_ADDREQUEST;
-            d->timerRequest->Time = wait_tm;
 
-    //        printf("Sending IO Request to timer.device. Seconds : %lu , Microseconds : %lu\n", wait_tm.Seconds, wait_tm.Microseconds);
-
-            IExec->SendIO((struct IORequest *)d->timerRequest);
-            listenSignals |= 1 << d->timerPort->mp_SigBit;
-        }
+        if (!canWait || (include_timers && d->timerList.timerWait(wait_tm)))
+            tm = &wait_tm;
 
         struct MsgPort *intuitionPort = QAmigaIntegration::messagePort();
         if (intuitionPort) {
@@ -77,22 +72,65 @@ public:
 
         listenSignals |= 1 << d->wakeupSignal;
 
+        d->pollfds.clear();
+        d->pollfds.reserve(1 + (include_notifiers ? d->socketNotifiers.size() : 0));
+
+        if (include_notifiers)
+            for (auto it = d->socketNotifiers.cbegin(); it != d->socketNotifiers.cend(); ++it)
+                d->pollfds.append(qt_make_pollfd(it.key(), it.value().events()));
+
         int nevents = 0;
 
-        unsigned int caughtSignals = IExec->Wait(listenSignals);
 
-        if (caughtSignals & 1 << d->wakeupSignal)
-            ; //printf("WAKE UP!!!!\n");
 
-        if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
-            IExec->AbortIO((struct IORequest *)d->timerRequest);
 
-        if (include_timers && caughtSignals | 1 << d->timerPort->mp_SigBit) {
+        
+
+
+        // unsigned int caughtSignals = IExec->Wait(listenSignals);
+
+
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
+    case -1:
+        perror("qt_safe_poll");
+        break;
+    case 0:
+        break;
+    default:
+        // nevents += d->threadPipe.check(d->pollfds.takeLast());
+        if (include_notifiers)
+            nevents += d->activateSocketNotifiers();
+        break;
+    }
+
+
+
+
+
+
+
+
+
+
+
+        if (listenSignals & 1 << d->wakeupSignal)
+            {} //printf("WAKE UP!!!!\n");
+
+        // if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
+        //     IExec->AbortIO((struct IORequest *)d->timerRequest);
+
+
+        if (include_timers)
             nevents += d->activateTimers();
-        }
+
+
+        if (include_notifiers)
+            nevents += d->activateSocketNotifiers();
+
+
 
         if(intuitionPort) {
-            if (caughtSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
+            if (listenSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
                 while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
                     for(int i = 0; i < windows.size(); i++) {
                         QAmigaWindow *current = windows.at(i);

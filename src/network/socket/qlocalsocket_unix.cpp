@@ -43,7 +43,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
-// #include <sys/un.h>
+#include <sys/un.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -289,66 +289,66 @@ void QLocalSocketPrivate::_q_connectToSocket()
     QLocalSocket::SocketOptions options = optionsForPlatform(socketOptions);
     const QString connectingPathName = pathNameForConnection(connectingName, options);
     const QByteArray encodedConnectingPathName = QFile::encodeName(connectingPathName);
-    // struct ::sockaddr_un addr;
-    // addr.sun_family = PF_UNIX;
-    // memset(addr.sun_path, 0, sizeof(addr.sun_path));
+    struct ::sockaddr_un addr;
+    addr.sun_family = PF_UNIX;
+    memset(addr.sun_path, 0, sizeof(addr.sun_path));
 
     // for abstract socket add 2 to length, to take into account trailing AND leading null
     constexpr unsigned int extraCharacters = PlatformSupportsAbstractNamespace ? 2 : 1;
 
-    // if (sizeof(addr.sun_path) < static_cast<size_t>(encodedConnectingPathName.size() + extraCharacters)) {
-    //     QString function = QLatin1String("QLocalSocket::connectToServer");
-    //     setErrorAndEmit(QLocalSocket::ServerNotFoundError, function);
-    //     return;
-    // }
-
-    // QT_SOCKLEN_T addrSize = sizeof(::sockaddr_un);
-    if (options.testFlag(QLocalSocket::AbstractNamespaceOption)) {
-        // ::memcpy(addr.sun_path + 1, encodedConnectingPathName.constData(),
-        //          encodedConnectingPathName.size() + 1);
-        // addrSize = offsetof(::sockaddr_un, sun_path) + encodedConnectingPathName.size() + 1;
-    } else {
-        // ::memcpy(addr.sun_path, encodedConnectingPathName.constData(),
-        //          encodedConnectingPathName.size() + 1);
+    if (sizeof(addr.sun_path) < static_cast<size_t>(encodedConnectingPathName.size() + extraCharacters)) {
+        QString function = QLatin1String("QLocalSocket::connectToServer");
+        setErrorAndEmit(QLocalSocket::ServerNotFoundError, function);
+        return;
     }
-    // if (-1 == qt_safe_connect(connectingSocket, (struct sockaddr *)&addr, addrSize)) {
-    //     QString function = QLatin1String("QLocalSocket::connectToServer");
-    //     switch (errno)
-    //     {
-    //     case EINVAL:
-    //     case ECONNREFUSED:
-    //         setErrorAndEmit(QLocalSocket::ConnectionRefusedError, function);
-    //         break;
-    //     case ENOENT:
-    //         setErrorAndEmit(QLocalSocket::ServerNotFoundError, function);
-    //         break;
-    //     case EACCES:
-    //     case EPERM:
-    //         setErrorAndEmit(QLocalSocket::SocketAccessError, function);
-    //         break;
-    //     case ETIMEDOUT:
-    //         setErrorAndEmit(QLocalSocket::SocketTimeoutError, function);
-    //         break;
-    //     case EAGAIN:
-    //         // Try again later, all of the sockets listening are full
-    //         if (!delayConnect) {
-    //             delayConnect = new QSocketNotifier(connectingSocket, QSocketNotifier::Write, q);
-    //             q->connect(delayConnect, SIGNAL(activated(QSocketDescriptor)), q, SLOT(_q_connectToSocket()));
-    //         }
-    //         if (!connectTimer) {
-    //             connectTimer = new QTimer(q);
-    //             q->connect(connectTimer, SIGNAL(timeout()),
-    //                              q, SLOT(_q_abortConnectionAttempt()),
-    //                              Qt::DirectConnection);
-    //             connectTimer->start(QT_CONNECT_TIMEOUT);
-    //         }
-    //         delayConnect->setEnabled(true);
-    //         break;
-    //     default:
-    //         setErrorAndEmit(QLocalSocket::UnknownSocketError, function);
-    //     }
-    //     return;
-    // }
+
+    QT_SOCKLEN_T addrSize = sizeof(::sockaddr_un);
+    if (options.testFlag(QLocalSocket::AbstractNamespaceOption)) {
+        ::memcpy(addr.sun_path + 1, encodedConnectingPathName.constData(),
+                 encodedConnectingPathName.size() + 1);
+        addrSize = offsetof(::sockaddr_un, sun_path) + encodedConnectingPathName.size() + 1;
+    } else {
+        ::memcpy(addr.sun_path, encodedConnectingPathName.constData(),
+                 encodedConnectingPathName.size() + 1);
+    }
+    if (-1 == qt_safe_connect(connectingSocket, (struct sockaddr *)&addr, addrSize)) {
+        QString function = QLatin1String("QLocalSocket::connectToServer");
+        switch (errno)
+        {
+        case EINVAL:
+        case ECONNREFUSED:
+            setErrorAndEmit(QLocalSocket::ConnectionRefusedError, function);
+            break;
+        case ENOENT:
+            setErrorAndEmit(QLocalSocket::ServerNotFoundError, function);
+            break;
+        case EACCES:
+        case EPERM:
+            setErrorAndEmit(QLocalSocket::SocketAccessError, function);
+            break;
+        case ETIMEDOUT:
+            setErrorAndEmit(QLocalSocket::SocketTimeoutError, function);
+            break;
+        case EAGAIN:
+            // Try again later, all of the sockets listening are full
+            if (!delayConnect) {
+                delayConnect = new QSocketNotifier(connectingSocket, QSocketNotifier::Write, q);
+                q->connect(delayConnect, SIGNAL(activated(QSocketDescriptor)), q, SLOT(_q_connectToSocket()));
+            }
+            if (!connectTimer) {
+                connectTimer = new QTimer(q);
+                q->connect(connectTimer, SIGNAL(timeout()),
+                                 q, SLOT(_q_abortConnectionAttempt()),
+                                 Qt::DirectConnection);
+                connectTimer->start(QT_CONNECT_TIMEOUT);
+            }
+            delayConnect->setEnabled(true);
+            break;
+        default:
+            setErrorAndEmit(QLocalSocket::UnknownSocketError, function);
+        }
+        return;
+    }
 
     // connected!
     cancelDelayedConnect();
@@ -357,7 +357,7 @@ void QLocalSocketPrivate::_q_connectToSocket()
     fullServerName = connectingPathName;
     if (unixSocket.setSocketDescriptor(connectingSocket,
         QAbstractSocket::ConnectedState, connectingOpenMode)) {
-        q->QIODevice::open(connectingOpenMode);
+        q->QIODevice::open(connectingOpenMode | QIODevice::Unbuffered);
         q->emit connected();
     } else {
         QString function = QLatin1String("QLocalSocket::connectToServer");
@@ -396,9 +396,6 @@ bool QLocalSocket::setSocketDescriptor(qintptr socketDescriptor,
 
 void QLocalSocketPrivate::describeSocket(qintptr socketDescriptor)
 {
-#ifdef __amigaos4__
-    qInfo() << "describeSocket : operation not supported";
-#else
     bool abstractAddress = false;
 
     struct ::sockaddr_un addr;
@@ -415,7 +412,6 @@ void QLocalSocketPrivate::describeSocket(qintptr socketDescriptor)
         QLocalSocket::SocketOptions options = socketOptions.value();
         socketOptions = options.setFlag(QLocalSocket::AbstractNamespaceOption, abstractAddress);
     }
-#endif
 }
 
 bool QLocalSocketPrivate::parseSockaddr(const struct ::sockaddr_un &addr,
@@ -424,35 +420,35 @@ bool QLocalSocketPrivate::parseSockaddr(const struct ::sockaddr_un &addr,
                                         QString &serverName,
                                         bool &abstractNamespace)
 {
-    // if (len <= offsetof(::sockaddr_un, sun_path))
-    //     return false;
-    // len -= offsetof(::sockaddr_un, sun_path);
-    // // check for abstract socket address
-    // abstractNamespace = PlatformSupportsAbstractNamespace
-    //                              && (addr.sun_family == PF_UNIX && addr.sun_path[0] == 0);
+    if (len <= offsetof(::sockaddr_un, sun_path))
+        return false;
+    len -= offsetof(::sockaddr_un, sun_path);
+    // check for abstract socket address
+    abstractNamespace = PlatformSupportsAbstractNamespace
+                                 && (addr.sun_family == PF_UNIX && addr.sun_path[0] == 0);
     QStringDecoder toUtf16(QStringDecoder::System, QStringDecoder::Flag::Stateless);
     // An abstract socket address can be arbitrary binary. To properly handle such a case,
     // we'd have to add new access functions for this very specific case. Instead, we just
     // attempt to decode it according to OS text encoding. If it fails we ignore the result.
-    // QByteArrayView textData(addr.sun_path + (abstractNamespace ? 1 : 0),
-    //                         len - (abstractNamespace ? 1 : 0));
-    // QString name = toUtf16(textData);
-    // if (!name.isEmpty() && !toUtf16.hasError()) {
-    //     //conversion encodes the trailing zeros. So, in case of non-abstract namespace we
-    //     //chop them off as \0 character is not allowed in filenames
-    //     if (!abstractNamespace && (name.at(name.length() - 1) == QChar::fromLatin1('\0'))) {
-    //         int truncPos = name.length() - 1;
-    //         while (truncPos > 0 && name.at(truncPos - 1) == QChar::fromLatin1('\0'))
-    //             truncPos--;
-    //         name.truncate(truncPos);
-    //     }
-    //     fullServerName = name;
-    //     serverName = abstractNamespace
-    //                  ? name
-    //                  : fullServerName.mid(fullServerName.lastIndexOf(QLatin1Char('/')) + 1);
-    //     if (serverName.isEmpty())
-    //         serverName = fullServerName;
-    // }
+    QByteArrayView textData(addr.sun_path + (abstractNamespace ? 1 : 0),
+                            len - (abstractNamespace ? 1 : 0));
+    QString name = toUtf16(textData);
+    if (!name.isEmpty() && !toUtf16.hasError()) {
+        //conversion encodes the trailing zeros. So, in case of non-abstract namespace we
+        //chop them off as \0 character is not allowed in filenames
+        if (!abstractNamespace && (name.at(name.length() - 1) == QChar::fromLatin1('\0'))) {
+            int truncPos = name.length() - 1;
+            while (truncPos > 0 && name.at(truncPos - 1) == QChar::fromLatin1('\0'))
+                truncPos--;
+            name.truncate(truncPos);
+        }
+        fullServerName = name;
+        serverName = abstractNamespace
+                     ? name
+                     : fullServerName.mid(fullServerName.lastIndexOf(QLatin1Char('/')) + 1);
+        if (serverName.isEmpty())
+            serverName = fullServerName;
+    }
     return true;
 }
 
@@ -484,16 +480,6 @@ qint64 QLocalSocket::readData(char *data, qint64 c)
 {
     Q_D(QLocalSocket);
     return d->unixSocket.read(data, c);
-}
-
-qint64 QLocalSocket::readLineData(char *data, qint64 maxSize)
-{
-    if (!maxSize)
-        return 0;
-
-    // QIODevice::readLine() reserves space for the trailing '\0' byte,
-    // so we must read 'maxSize + 1' bytes.
-    return d_func()->unixSocket.readLine(data, maxSize + 1);
 }
 
 qint64 QLocalSocket::skipData(qint64 maxSize)
@@ -630,12 +616,8 @@ bool QLocalSocket::waitForConnected(int msec)
 
     do {
         const int timeout = (msec > 0) ? qMax(msec - timer.elapsed(), Q_INT64_C(0)) : msec;
-#ifdef __amigaos4__
-        ULONG listenSignals = 0;
-        const int result = qt_poll_msecs(&pfd, 1, timeout, &listenSignals);
-#else
         const int result = qt_poll_msecs(&pfd, 1, timeout);
-#endif
+
         if (result == -1)
             d->setErrorAndEmit(QLocalSocket::UnknownSocketError,
                                QLatin1String("QLocalSocket::waitForConnected"));

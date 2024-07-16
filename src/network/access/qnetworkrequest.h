@@ -97,7 +97,6 @@ public:
         Http2DirectAttribute,
         ResourceTypeAttribute, // internal
         AutoDeleteReplyOnFinishAttribute,
-        ConnectionCacheExpiryTimeoutSecondsAttribute,
 
         User = 1000,
         UserMax = 32767

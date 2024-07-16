@@ -56,7 +56,7 @@
 #include "private/qabstracteventdispatcher_p.h"
 #include "private/qcore_unix_p.h"
 #include "QtCore/qvarlengtharray.h"
-#include "private/qtimerinfo_amiga_p.h"
+#include "private/qtimerinfo_unix_p.h"
 
 #include <proto/exec.h>
 #include <devices/timer.h>

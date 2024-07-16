@@ -147,8 +147,7 @@ QT_BEGIN_NAMESPACE
 
     \list
         \li On Windows, the returned value is a
-        \l{https://msdn.microsoft.com/en-us/library/windows/desktop/ms740522(v=vs.85).aspx}
-        {Winsock 2 Socket Handle}.
+        \l{Winsock 2 Socket Handle}.
 
         \li On INTEGRITY, the returned value is the
         QTcpSocket socket descriptor and the type is defined by
@@ -163,11 +162,6 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn qint64 QLocalSocket::readData(char *data, qint64 c)
-    \reimp
-*/
-
-/*!
-    \fn qint64 QLocalSocket::readLineData(char *data, qint64 maxSize)
     \reimp
 */
 
@@ -208,14 +202,7 @@ QT_BEGIN_NAMESPACE
 
 /*!
     \fn void QLocalSocket::close()
-
-    Closes the I/O device for the socket and calls disconnectFromServer()
-    to close the socket's connection.
-
-    See QIODevice::close() for a description of the actions that occur when an I/O
-    device is closed.
-
-    \sa abort()
+    \reimp
 */
 
 /*!
@@ -396,8 +383,6 @@ QLocalSocket::QLocalSocket(QObject * parent)
     : QIODevice(*new QLocalSocketPrivate, parent)
 {
     Q_D(QLocalSocket);
-
-    d->readBufferChunkSize = 0; // force QIODevice unbuffered mode
     d->init();
 }
 
@@ -406,7 +391,7 @@ QLocalSocket::QLocalSocket(QObject * parent)
  */
 QLocalSocket::~QLocalSocket()
 {
-    abort();
+    QLocalSocket::close();
 #if !defined(Q_OS_WIN) && !defined(QT_LOCALSOCKET_TCP)
     Q_D(QLocalSocket);
     d->unixSocket.setParent(nullptr);

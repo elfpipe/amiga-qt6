@@ -322,27 +322,6 @@ QNetworkReplyPrivate::QNetworkReplyPrivate()
 */
 
 /*!
-    \fn void QNetworkReply::socketConnecting()
-    \since 6.3
-
-    This signal is emitted 0 or more times, when the socket
-    is connecting, before sending the request. Useful for
-    custom progress or timeout handling.
-
-    \sa metaDataChanged(), requestSent()
-*/
-
-/*!
-    \fn void QNetworkReply::requestSent()
-    \since 6.3
-
-    This signal is emitted 1 or more times when the request was
-    sent. Useful for custom progress or timeout handling.
-
-    \sa metaDataChanged(), socketConnecting()
-*/
-
-/*!
     \fn void QNetworkReply::metaDataChanged()
 
     \omit FIXME: Update name? \endomit

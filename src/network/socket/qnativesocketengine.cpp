@@ -689,7 +689,7 @@ bool QNativeSocketEngine::bind(const QHostAddress &address, quint16 port)
 
     \sa bind(), accept()
 */
-bool QNativeSocketEngine::listen(int backlog)
+bool QNativeSocketEngine::listen()
 {
     Q_D(QNativeSocketEngine);
     Q_CHECK_VALID_SOCKETLAYER(QNativeSocketEngine::listen(), false);
@@ -701,7 +701,11 @@ bool QNativeSocketEngine::listen(int backlog)
     Q_CHECK_TYPE(QNativeSocketEngine::listen(), QAbstractSocket::TcpSocket, false);
 #endif
 
-    return d->nativeListen(backlog);
+    // We're using a backlog of 50. Most modern kernels support TCP
+    // syncookies by default, and if they do, the backlog is ignored.
+    // When there is no support for TCP syncookies, this value is
+    // fine.
+    return d->nativeListen(50);
 }
 
 /*!
@@ -1267,7 +1271,6 @@ protected:
 bool QReadNotifier::event(QEvent *e)
 {
     if (e->type() == QEvent::SockAct) {
-        qInfo() << "SockAct received";
         engine->readNotification();
         return true;
     } else if (e->type() == QEvent::SockClose) {

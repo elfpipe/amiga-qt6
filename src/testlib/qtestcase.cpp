@@ -191,7 +191,7 @@ static void disableCoreDump()
     bool ok = false;
     const int disableCoreDump = qEnvironmentVariableIntValue("QTEST_DISABLE_CORE_DUMP", &ok);
     if (ok && disableCoreDump) {
-#if defined(Q_OS_UNIX) && !defined(Q_OS_INTEGRITY) && !defined(__amigaos4__)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_INTEGRITY)
         struct rlimit limit;
         limit.rlim_cur = 0;
         limit.rlim_max = 0;

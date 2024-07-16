@@ -1347,7 +1347,7 @@ private:
         // If defined, at runtime it can only be greater than this, so this is a safe bet:
         return SYMLOOP_MAX;
 #elif defined(__amigaos4__)
-        return 0;
+        return 8;
 #else
         errno = 0;
         long result = sysconf(_SC_SYMLOOP_MAX);

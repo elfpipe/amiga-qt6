@@ -107,7 +107,7 @@ Q_GLOBAL_STATIC(QNetworkAccessDebugPipeBackendFactory, debugpipeBackend)
 
 Q_GLOBAL_STATIC_WITH_ARGS(QFactoryLoader, loader,
                           (QNetworkAccessBackendFactory_iid,
-                           QLatin1String("/networkaccessbackends")))
+                           QLatin1String("/networkaccess")))
 #if defined(Q_OS_MACOS)
 bool getProxyAuth(const QString& proxyHostname, const QString &scheme, QString& username, QString& password)
 {
@@ -1156,7 +1156,6 @@ QNetworkReply *QNetworkAccessManager::createRequest(QNetworkAccessManager::Opera
     bool isLocalFile = req.url().isLocalFile();
     QString scheme = req.url().scheme();
 
-#ifndef Q_OS_WASM
 
     // fast path for GET on file:// URLs
     // The QNetworkAccessFileBackend will right now only be used for PUT
@@ -1191,7 +1190,6 @@ QNetworkReply *QNetworkAccessManager::createRequest(QNetworkAccessManager::Opera
             return reply;
         }
     }
-#endif
     QNetworkRequest request = req;
 #ifndef Q_OS_WASM // Content-length header is not allowed to be set by user in wasm
     if (!request.header(QNetworkRequest::ContentLengthHeader).isValid() &&

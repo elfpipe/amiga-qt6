@@ -54,11 +54,6 @@
 #include <mach/mach_time.h>
 #endif
 
-#ifdef __amigaos4__
-#  include <poll.h>
-#  include <proto/bsdsocket.h>
-#endif
-
 QT_BEGIN_NAMESPACE
 
 QByteArray qt_readlink(const char *path)
@@ -129,30 +124,32 @@ static inline int timespecToMillisecs(const struct timespec *ts)
 #endif
 
 // defined in qpoll.cpp
-#ifdef __amigaos4__
-int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals);
-
-static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals)
-#else
 int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts);
 
 static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
-#endif
 {
 #if QT_CONFIG(poll_ppoll) || QT_CONFIG(poll_pollts)
     return ::ppoll(fds, nfds, timeout_ts, nullptr);
 #elif QT_CONFIG(poll_poll)
     return ::poll(fds, nfds, timespecToMillisecs(timeout_ts));
 #elif QT_CONFIG(poll_select)
-#ifdef __amigaos4__
-    return qt_poll(fds, nfds, timeout_ts, listenSignals);
-#else
     return qt_poll(fds, nfds, timeout_ts);
-#endif
 #else
     // configure.json reports an error when everything is not available
 #endif
 }
+
+#ifdef __amigaos4__ //overload
+int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals);
+
+static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals)
+{
+    return ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals);
+#if 0 //def __amigaos4__
+    return qt_poll(fds, nfds, timeout_ts, listenSignals); //no need to use ::select anymore
+#endif
+}
+#endif
 
 
 /*!
@@ -162,20 +159,12 @@ static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespe
     using select(2) where necessary. In that case, returns -1 and sets errno
     to EINVAL if passed any descriptor greater than or equal to FD_SETSIZE.
 */
-#ifdef __amigaos4__
-int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals)
-#else
 int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts)
-#endif
 {
     if (!timeout_ts) {
         // no timeout -> block forever
         int ret;
-#ifdef __amigaos4__
-        ret = qt_ppoll(fds, nfds, nullptr, listenSignals);
-#else
-        EINTR_LOOP(ret, qt_ppoll(fds, nfds, nullptr, listenSignals));
-#endif
+        EINTR_LOOP(ret, qt_ppoll(fds, nfds, nullptr));
         return ret;
     }
 
@@ -184,14 +173,8 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
 
     // loop and recalculate the timeout as needed
     forever {
-        const int ret = qt_ppoll(fds, nfds, &timeout, listenSignals);
-#ifdef __amigaos4__
-        int error = 0;
-        ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-        if (ret != -1 || error != EINTR)
-#else
+        const int ret = qt_ppoll(fds, nfds, &timeout);
         if (ret != -1 || errno != EINTR)
-#endif
             return ret;
 
         // recalculate the timeout
@@ -202,6 +185,35 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
         }
     }
 }
+
+#ifdef __amigaos4__
+int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals)
+{
+    if (!timeout_ts) {
+        // no timeout -> block forever
+        int ret;
+        EINTR_LOOP(ret, qt_ppoll(fds, nfds, nullptr));
+        return ret;
+    }
+
+    timespec start = qt_gettime();
+    timespec timeout = *timeout_ts;
+
+    // loop and recalculate the timeout as needed
+    forever {
+        const int ret = qt_ppoll(fds, nfds, &timeout, listenSignals);
+        if (ret != -1 || errno != EINTR)
+            return ret;
+
+        // recalculate the timeout
+        if (!time_update(&timeout, start, *timeout_ts)) {
+            // timeout during update
+            // or clock reset, fake timeout error
+            return 0;
+        }
+    }
+}
+#endif //amiga
 
 #endif // QT_BOOTSTRAPPED
 

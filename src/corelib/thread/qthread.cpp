@@ -62,12 +62,10 @@ QThreadData::QThreadData(int initialRefCount)
       eventDispatcher(nullptr),
       quitNow(false), canWait(true), isAdopted(false), requiresCoreApplication(true)
 {
-    // fprintf(stderr, "QThreadData %p created\n", this);
 }
 
 QThreadData::~QThreadData()
 {
-    printf("~QThreadData : 0x%x\n", (void *)this);
 #if QT_CONFIG(thread)
     Q_ASSERT(_ref.loadRelaxed() == 0);
 #endif
@@ -105,7 +103,6 @@ QThreadData::~QThreadData()
         }
     }
 
-    // fprintf(stderr, "QThreadData %p destroyed\n", this);
 }
 
 void QThreadData::ref()
@@ -145,13 +142,10 @@ QAdoptedThread::QAdoptedThread(QThreadData *data)
     d_func()->finished = false;
     init();
 #endif
-
-    // fprintf(stderr, "new QAdoptedThread = %p\n", this);
 }
 
 QAdoptedThread::~QAdoptedThread()
 {
-    // fprintf(stderr, "~QAdoptedThread = %p\n", this);
 }
 
 #if QT_CONFIG(thread)
@@ -198,7 +192,6 @@ QThreadPrivate::QThreadPrivate(QThreadData *d)
 
 QThreadPrivate::~QThreadPrivate()
 {
-    printf("~QThreadPrivate : 0x%x\n", (void *)this);
     data->deref();
 }
 
@@ -419,7 +412,6 @@ QThread::QThread(QObject *parent)
     : QObject(*(new QThreadPrivate), parent)
 {
     Q_D(QThread);
-    // fprintf(stderr, "QThreadData %p created for thread %p\n", d->data, this);
     d->data->thread.storeRelaxed(this);
 }
 
@@ -430,7 +422,6 @@ QThread::QThread(QThreadPrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
     Q_D(QThread);
-    // fprintf(stderr, "QThreadData %p taken from private data for thread %p\n", d->data, this);
     d->data->thread.storeRelaxed(this);
 }
 
@@ -927,7 +918,6 @@ QThread::QThread(QThreadPrivate &dd, QObject *parent)
     : QObject(dd, parent)
 {
     Q_D(QThread);
-    // fprintf(stderr, "QThreadData %p taken from private data for thread %p\n", d->data, this);
     d->data->thread.storeRelaxed(this);
 }
 

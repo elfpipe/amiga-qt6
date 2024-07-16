@@ -493,7 +493,7 @@ QMakeEvaluator::writeFile(const QString &ctx, const QString &fn, QIODevice::Open
     return ReturnTrue;
 }
 
-#if QT_CONFIG(process) && !defined(__amigaos4__)
+#if QT_CONFIG(process)
 void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
 {
     proc->setWorkingDirectory(currentDirectory());
@@ -504,6 +504,9 @@ void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
 # ifdef Q_OS_WIN
     proc->setNativeArguments(QLatin1String("/v:off /s /c \"") + command + QLatin1Char('"'));
     proc->start(m_option->getEnv(QLatin1String("COMSPEC")), QStringList());
+# elif defined(__amigaos4__)
+    // Not ready yet...
+printf("runProcess not implemented.\n");
 # else
     proc->start(QLatin1String("/bin/sh"), QStringList() << QLatin1String("-c") << command);
 # endif
@@ -514,7 +517,7 @@ void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
 QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) const
 {
     QByteArray out;
-#if QT_CONFIG(process) && !defined(__amigaos4__)
+#if QT_CONFIG(process)
     QProcess proc;
     runProcess(&proc, args);
     *exitCode = (proc.exitStatus() == QProcess::NormalExit) ? proc.exitCode() : -1;
@@ -1824,7 +1827,7 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinConditional(
 #ifdef PROEVALUATOR_FULL
         if (m_cumulative) // Anything else would be insanity
             return ReturnFalse;
-#if QT_CONFIG(process) && !defined(__amigaos4__)
+#if QT_CONFIG(process)
         QProcess proc;
         proc.setProcessChannelMode(QProcess::ForwardedChannels);
         runProcess(&proc, args.at(0).toQString());

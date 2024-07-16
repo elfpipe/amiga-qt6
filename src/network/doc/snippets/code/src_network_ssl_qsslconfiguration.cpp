@@ -50,7 +50,7 @@
 
 //! [0]
 QSslConfiguration config = sslSocket.sslConfiguration();
-config.setProtocol(QSsl::TlsV1_2);
+config.setProtocol(QSsl::TlsV1_0);
 sslSocket.setSslConfiguration(config);
 //! [0]
 

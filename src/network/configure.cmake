@@ -6,13 +6,13 @@
 
 #### Libraries
 
-# qt_find_package(WrapBrotli PROVIDED_TARGETS WrapBrotli::WrapBrotliDec MODULE_NAME network QMAKE_LIB brotli)
+qt_find_package(WrapBrotli PROVIDED_TARGETS WrapBrotli::WrapBrotliDec MODULE_NAME network QMAKE_LIB brotli)
 qt_find_package(Libproxy PROVIDED_TARGETS PkgConfig::Libproxy MODULE_NAME network QMAKE_LIB libproxy)
-qt_find_package(WrapOpenSSLHeaders PROVIDED_TARGETS WrapOpenSSLHeaders::WrapOpenSSLHeaders MODULE_NAME network QMAKE_LIB openssl/nolink)
+qt_find_package(WrapOpenSSLHeaders PROVIDED_TARGETS WrapOpenSSLHeaders::WrapOpenSSLHeaders MODULE_NAME network)
 # openssl_headers
 qt_config_compile_test(openssl_headers
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/opensslv.h>
@@ -35,7 +35,7 @@ qt_find_package(WrapOpenSSL PROVIDED_TARGETS WrapOpenSSL::WrapOpenSSL MODULE_NAM
 # openssl
 qt_config_compile_test(openssl
     LIBRARIES
-        WrapOpenSSL::WrapOpenSSL ssl crypto
+        WrapOpenSSL::WrapOpenSSL
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/opensslv.h>
@@ -170,7 +170,7 @@ socklen_t sctpInitMsgSize = sizeof(sctpInitMsg);
 qt_config_compile_test(dtls
     LABEL "DTLS support in OpenSSL"
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders
     CODE
 "#include <openssl/ssl.h>
 #if defined(OPENSSL_NO_DTLS) || !defined(DTLS1_2_VERSION)
@@ -189,7 +189,7 @@ int main(void)
 qt_config_compile_test(ocsp
     LABEL "OCSP stapling support in OpenSSL"
     LIBRARIES
-        WrapOpenSSLHeaders::WrapOpenSSLHeaders ssl crypto
+        WrapOpenSSLHeaders::WrapOpenSSLHeaders
     CODE
 "#include <openssl/ssl.h>
 #include <openssl/ocsp.h>
@@ -424,7 +424,7 @@ qt_configure_add_summary_entry(ARGS "ocsp")
 qt_configure_add_summary_entry(ARGS "sctp")
 qt_configure_add_summary_entry(ARGS "system-proxies")
 qt_configure_add_summary_entry(ARGS "gssapi")
-#qt_configure_add_summary_entry(ARGS "brotli")
+qt_configure_add_summary_entry(ARGS "brotli")
 qt_configure_end_summary_section() # end of "Qt Network" section
 # special case begin
 qt_configure_add_report_entry(

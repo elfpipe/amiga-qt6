@@ -50,7 +50,7 @@
 #include <dirent.h>
 
 #ifdef __amigaos4__
-#include <unistd.h>
+#  include <unistd.h>
 #endif
 
 #if defined(QT_USE_XOPEN_LFS_EXTENSIONS) && defined(QT_LARGEFILE_SUPPORT)
@@ -90,11 +90,7 @@
 
 // File I/O
 #define QT_OPEN                 ::open
-#ifdef __amigaos4__
-#define QT_LSEEK                lseek
-#else
 #define QT_LSEEK                ::lseek
-#endif
 #define QT_FSTAT                ::fstat
 #define QT_FTRUNCATE            ::ftruncate
 

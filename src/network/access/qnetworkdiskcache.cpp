@@ -522,8 +522,8 @@ qint64 QNetworkDiskCache::expire()
     QMultiMap<QDateTime, QString> cacheItems;
     qint64 totalSize = 0;
     while (it.hasNext()) {
-        QFileInfo info = it.nextFileInfo();
-        QString path = info.filePath();
+        QString path = it.next();
+        QFileInfo info = it.fileInfo();
         QString fileName = info.fileName();
         if (fileName.endsWith(CACHE_POSTFIX)) {
             const QDateTime birthTime = info.fileTime(QFile::FileBirthTime);
@@ -592,9 +592,10 @@ QString QNetworkDiskCachePrivate::uniqueFileName(const QUrl &url)
     cleanUrl.setPassword(QString());
     cleanUrl.setFragment(QString());
 
-    const QByteArray hash = QCryptographicHash::hash(cleanUrl.toEncoded(), QCryptographicHash::Sha1);
+    QCryptographicHash hash(QCryptographicHash::Sha1);
+    hash.addData(cleanUrl.toEncoded());
     // convert sha1 to base36 form and return first 8 bytes for use as string
-    const QByteArray id = QByteArray::number(*(qlonglong*)hash.data(), 36).left(8);
+    const QByteArray id = QByteArray::number(*(qlonglong*)hash.result().constData(), 36).left(8);
     // generates <one-char subdir>/<8-char filname.d>
     uint code = (uint)id.at(id.length()-1) % 16;
     QString pathFragment = QString::number(code, 16) + QLatin1Char('/')

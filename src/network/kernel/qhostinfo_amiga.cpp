@@ -193,23 +193,23 @@ QHostInfo QHostInfoAgent::fromName(const QString &hostName)
 {
     QHostInfo results;
 
-// #if defined(QHOSTINFO_DEBUG)
-//     qDebug("QHostInfoAgent::fromName(%s) looking up...",
-//            hostName.toLatin1().constData());
-// #endif
+#if defined(QHOSTINFO_DEBUG)
+    qDebug("QHostInfoAgent::fromName(%s) looking up...",
+           hostName.toLatin1().constData());
+#endif
 
-//     // Load res_init on demand.
-//     resolveLibrary(NeedResInit);
+    // Load res_init on demand.
+    resolveLibrary(NeedResInit);
 
-//     // If res_init is available, poll it.
-//     if (local_res_init)
-//         local_res_init();
+    // If res_init is available, poll it.
+    if (local_res_init)
+        local_res_init();
 
-//     QHostAddress address;
-//     if (address.setAddress(hostName))
-//         return reverseLookup(address);
+    QHostAddress address;
+    if (address.setAddress(hostName))
+        return reverseLookup(address);
 
-//     return lookup(hostName);
+    return lookup(hostName);
 
 	struct hostent *__he = gethostbyname (hostName.toLocal8Bit().constData());
 	if(!__he)
@@ -242,7 +242,7 @@ QHostInfo QHostInfoAgent::fromName(const QString &hostName)
 
 QString QHostInfo::localDomainName()
 {
-#if !defined(Q_OS_VXWORKS) && !defined(Q_OS_ANDROID) && !defined(__amigaos4__)
+#if !defined(Q_OS_VXWORKS) && !defined(Q_OS_ANDROID)
     resolveLibrary(NeedResNInit);
     if (local_res_ninit) {
         // using thread-safe version

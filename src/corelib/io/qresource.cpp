@@ -69,7 +69,7 @@
 #  include <zstd.h>
 #endif
 
-#if !defined(__amigaos4__) && defined(Q_OS_UNIX) && !defined(Q_OS_NACL) && !defined(Q_OS_INTEGRITY)
+#if defined(Q_OS_UNIX) && !defined(Q_OS_NACL) && !defined(Q_OS_INTEGRITY)
 #  define QT_USE_MMAP
 #  include <sys/mman.h>
 #endif

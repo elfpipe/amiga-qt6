@@ -223,11 +223,11 @@ void QTlsBackendOpenSSL::ensureCiphersAndCertsLoaded() const
     QSslSocketPrivate::setRootCertOnDemandLoadingSupported(true);
 #elif defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
     // check whether we can enable on-demand root-cert loading (i.e. check whether the sym links are there)
-    const QList<QByteArray> dirs = QSslSocketPrivate::unixRootCertDirectories();
+    QList<QByteArray> dirs = QSslSocketPrivate::unixRootCertDirectories();
     QStringList symLinkFilter;
     symLinkFilter << QLatin1String("[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f].[0-9]");
-    for (const auto &dir : dirs) {
-        QDirIterator iterator(QLatin1String(dir), symLinkFilter, QDir::Files);
+    for (int a = 0; a < dirs.count(); ++a) {
+        QDirIterator iterator(QLatin1String(dirs.at(a)), symLinkFilter, QDir::Files);
         if (iterator.hasNext()) {
             QSslSocketPrivate::setRootCertOnDemandLoadingSupported(true);
             break;
@@ -291,13 +291,10 @@ QList<QSsl::SslProtocol> QTlsBackendOpenSSL::supportedProtocols() const
 
     protocols << QSsl::AnyProtocol;
     protocols << QSsl::SecureProtocols;
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     protocols << QSsl::TlsV1_0;
     protocols << QSsl::TlsV1_0OrLater;
     protocols << QSsl::TlsV1_1;
     protocols << QSsl::TlsV1_1OrLater;
-QT_WARNING_POP
     protocols << QSsl::TlsV1_2;
     protocols << QSsl::TlsV1_2OrLater;
 
@@ -307,11 +304,8 @@ QT_WARNING_POP
 #endif // TLS1_3_VERSION
 
 #if QT_CONFIG(dtls)
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
     protocols << QSsl::DtlsV1_0;
     protocols << QSsl::DtlsV1_0OrLater;
-QT_WARNING_POP
     protocols << QSsl::DtlsV1_2;
     protocols << QSsl::DtlsV1_2OrLater;
 #endif // dtls
@@ -367,7 +361,6 @@ QTlsPrivate::X509Certificate *QTlsBackendOpenSSL::createCertificate() const
 
 namespace QTlsPrivate {
 
-// TLSTODO: remove.
 #if defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)
 QList<QByteArray> fetchSslCertificateData();
 #endif
@@ -398,29 +391,40 @@ QList<QSslCertificate> systemCaCertificates()
         }
         CertCloseStore(hSystemStore, 0);
     }
-#elif defined(Q_OS_ANDROID)
-    // TODO: find where it hides its system certs !
+#elif defined(Q_OS_ANDROID) && !defined(Q_OS_ANDROID_EMBEDDED)
+    const QList<QByteArray> certData = fetchSslCertificateData();
+    for (auto certDatum : certData)
+        systemCerts.append(QSslCertificate::fromData(certDatum, QSsl::Der));
 #elif defined(Q_OS_UNIX)
+    QSet<QString> certFiles;
+    QDir currentDir;
+    QStringList nameFilters;
+    QList<QByteArray> directories;
+    QSsl::EncodingFormat platformEncodingFormat;
+# ifndef Q_OS_ANDROID
+    directories = QSslSocketPrivate::unixRootCertDirectories();
+    nameFilters << QLatin1String("*.pem") << QLatin1String("*.crt");
+    platformEncodingFormat = QSsl::Pem;
+# endif //Q_OS_ANDROID
     {
-        const QList<QByteArray> directories = QSslSocketPrivate::unixRootCertDirectories();
-        QSet<QString> certFiles = {
-            QStringLiteral("/etc/pki/tls/certs/ca-bundle.crt"), // Fedora, Mandriva
-            QStringLiteral("/usr/local/share/certs/ca-root-nss.crt") // FreeBSD's ca_root_nss
-        };
-        QDir currentDir;
-        currentDir.setNameFilters(QStringList{QStringLiteral("*.pem"), QStringLiteral("*.crt")});
-        for (const auto &directory : directories) {
-            currentDir.setPath(QLatin1String(directory));
+        currentDir.setNameFilters(nameFilters);
+        for (int a = 0; a < directories.count(); a++) {
+            currentDir.setPath(QLatin1String(directories.at(a)));
             QDirIterator it(currentDir);
             while (it.hasNext()) {
+                it.next();
                 // use canonical path here to not load the same certificate twice if symlinked
-                certFiles.insert(it.nextFileInfo().canonicalFilePath());
+                certFiles.insert(it.fileInfo().canonicalFilePath());
             }
         }
         for (const QString& file : qAsConst(certFiles))
-            systemCerts.append(QSslCertificate::fromPath(file, QSsl::Pem));
+            systemCerts.append(QSslCertificate::fromPath(file, platformEncodingFormat));
+# ifndef Q_OS_ANDROID
+        systemCerts.append(QSslCertificate::fromPath(QLatin1String("/etc/pki/tls/certs/ca-bundle.crt"), QSsl::Pem)); // Fedora, Mandriva
+        systemCerts.append(QSslCertificate::fromPath(QLatin1String("/usr/local/share/certs/ca-root-nss.crt"), QSsl::Pem)); // FreeBSD's ca_root_nss
+# endif
     }
-#endif // platform
+#endif
 #ifdef QSSLSOCKET_DEBUG
     qCDebug(lcTlsBackend) << "systemCaCertificates retrieval time " << timer.elapsed() << "ms";
     qCDebug(lcTlsBackend) << "imported " << systemCerts.count() << " certificates";

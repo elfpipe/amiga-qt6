@@ -46,13 +46,11 @@
 
 #include <stddef.h>
 #include <sys/socket.h>
-// #include <sys/un.h>
+#include <sys/un.h>
 
 #include <qdebug.h>
 #include <qdir.h>
 #include <qdatetime.h>
-
-#include <optional>
 
 #ifdef Q_OS_VXWORKS
 #  include <selectLib.h>
@@ -115,11 +113,11 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
 
     QByteArray encodedTempPath;
     const QByteArray encodedFullServerName = QFile::encodeName(fullServerName);
-    std::optional<QTemporaryDir> tempDir;
+    QScopedPointer<QTemporaryDir> tempDir;
 
     if (options & QLocalServer::WorldAccessOption) {
         QFileInfo serverNameFileInfo(fullServerName);
-        tempDir.emplace(serverNameFileInfo.absolutePath() + u'/');
+        tempDir.reset(new QTemporaryDir(serverNameFileInfo.absolutePath() + QLatin1Char('/')));
         if (!tempDir->isValid()) {
             setError(QLatin1String("QLocalServer::listen"));
             return false;
@@ -128,11 +126,7 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     }
 
     // create the unix socket
-#ifdef Q_OS_AMIGA
-    listenSocket = ISocket->socket(AF_INET, SOCK_STREAM, 0);
-#else
     listenSocket = qt_safe_socket(PF_UNIX, SOCK_STREAM, 0);
-#endif
     if (-1 == listenSocket) {
         setError(QLatin1String("QLocalServer::listen"));
         closeServer();
@@ -140,20 +134,12 @@ bool QLocalServerPrivate::listen(const QString &requestedServerName)
     }
 
     // Construct the unix address
-#ifdef Q_OS_AMIGA
-qDebug() << "QLocalServerPrivate::listen()";
-    struct sockaddr_in addr;
-    addr.sin_family = AF_INET;
-qDebug() << "fullServerName:" << fullServerName;
-qDebug() << "serverName:" << serverName;
-	return false;
-#else
     struct ::sockaddr_un addr;
 
     addr.sun_family = PF_UNIX;
     ::memset(addr.sun_path, 0, sizeof(addr.sun_path));
 
-    for abstract namespace add 2 to length, to take into account trailing AND leading null
+    // for abstract namespace add 2 to length, to take into account trailing AND leading null
     constexpr unsigned int extraCharacters = PlatformSupportsAbstractNamespace ? 2 : 1;
 
     if (sizeof(addr.sun_path) < static_cast<size_t>(encodedFullServerName.size() + extraCharacters)) {
@@ -182,7 +168,7 @@ qDebug() << "serverName:" << serverName;
                  encodedFullServerName.size() + 1);
     }
 
-    bind
+    // bind
     if (-1 == QT_SOCKET_BIND(listenSocket, (sockaddr *)&addr, addrSize)) {
         setError(QLatin1String("QLocalServer::listen"));
         // if address is in use already, just close the socket, but do not delete the file
@@ -196,7 +182,7 @@ qDebug() << "serverName:" << serverName;
     }
 
     // listen for connections
-    if (-1 == qt_safe_listen(listenSocket, listenBacklog)) {
+    if (-1 == qt_safe_listen(listenSocket, 50)) {
         setError(QLatin1String("QLocalServer::listen"));
         closeServer();
         return false;
@@ -234,15 +220,10 @@ qDebug() << "serverName:" << serverName;
                q, SLOT(_q_onNewConnection()));
     socketNotifier->setEnabled(maxPendingConnections > 0);
     return true;
-#endif
 }
 
 bool QLocalServerPrivate::listen(qintptr socketDescriptor)
 {
-#ifdef __amigaos4__
-    qInfo() << "listen : Operation not supported";
-    return false;
-#else
     Q_Q(QLocalServer);
 
     // Attach to the localsocket
@@ -270,7 +251,6 @@ bool QLocalServerPrivate::listen(qintptr socketDescriptor)
                q, SLOT(_q_onNewConnection()));
     socketNotifier->setEnabled(maxPendingConnections > 0);
     return true;
-#endif
 }
 
 /*!
@@ -287,11 +267,7 @@ void QLocalServerPrivate::closeServer()
     }
 
     if (-1 != listenSocket)
-#ifdef Q_OS_AMIGA
-        ISocket->CloseSocket(listenSocket);
-#else
         QT_CLOSE(listenSocket);
-#endif
     listenSocket = -1;
 
     if (!fullServerName.isEmpty()
@@ -315,15 +291,9 @@ void QLocalServerPrivate::_q_onNewConnection()
     if (-1 == listenSocket)
         return;
 
-#ifdef Q_OS_AMIGA
-	struct sockaddr addr;
-    QT_SOCKLEN_T length = sizeof(sockaddr);
-    int connectedSocket = ISocket->accept(listenSocket, (sockaddr *)&addr, &length);
-#else
     ::sockaddr_un addr;
     QT_SOCKLEN_T length = sizeof(sockaddr_un);
     int connectedSocket = qt_safe_accept(listenSocket, (sockaddr *)&addr, &length);
-#endif
     if (-1 == connectedSocket) {
         setError(QLatin1String("QLocalSocket::activated"));
         closeServer();
@@ -338,12 +308,7 @@ void QLocalServerPrivate::waitForNewConnection(int msec, bool *timedOut)
 {
     pollfd pfd = qt_make_pollfd(listenSocket, POLLIN);
 
-#ifdef __amigaos4__
-    ULONG listenSignals = 0;
-    switch (qt_poll_msecs(&pfd, 1, msec, &listenSignals)) {
-#else
     switch (qt_poll_msecs(&pfd, 1, msec)) {
-#endif
     case 0:
         if (timedOut)
             *timedOut = true;
@@ -367,19 +332,10 @@ void QLocalServerPrivate::waitForNewConnection(int msec, bool *timedOut)
 
 void QLocalServerPrivate::setError(const QString &function)
 {
-#ifdef Q_OS_AMIGA
-	int error = 0;
-	ISocket->SocketBaseTags(SBTM_GETREF(SBTC_ERRNO), &error, TAG_END);
-	if (error == EAGAIN)
-		return;
-		
-	switch(error) {
-#else
     if (EAGAIN == errno)
         return;
 
     switch (errno) {
-#endif
     case EACCES:
         errorString = QLocalServer::tr("%1: Permission denied").arg(function);
         error = QAbstractSocket::SocketAccessError;

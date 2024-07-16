@@ -28,6 +28,8 @@ cmake \
 -DQT_FEATURE_processenvironment=ON \
 -DQT_FEATURE_systemsemaphore=ON \
 -DQT_FEATURE_brotli=OFF \
+-DQT_FEATURE_libudev=OFF \
+-DQT_FEATURE_evdev=OFF \
 -DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
 ../amiga-qt6
 

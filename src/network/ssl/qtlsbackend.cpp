@@ -87,10 +87,8 @@ public:
 
     bool tryPopulateCollection()
     {
-        qInfo() << "tryPopulateCollection";
-        if (!loader()) {
+        if (!loader())
             return false;
-        }
 
         static QBasicMutex mutex;
         const QMutexLocker locker(&mutex);
@@ -595,10 +593,8 @@ int QTlsBackend::dhParametersFromPem(const QByteArray &pemData, QByteArray *data
 */
 QList<QString> QTlsBackend::availableBackendNames()
 {
-    if (!backends())  {
-        qInfo() << "QTlsBackend: factory loader is null";
+    if (!backends())
         return {};
-    }
 
     return backends->backendNames();
 }
@@ -809,26 +805,17 @@ QSslCipher QTlsBackend::createCiphersuite(const QString &descriptionOneLine, int
         ciph.d->isNull = false;
         ciph.d->name = descriptionList.at(0).toString();
 
-        QStringView protoString = descriptionList.at(1);
-        ciph.d->protocolString = protoString.toString();
+        QString protoString = descriptionList.at(1).toString();
+        ciph.d->protocolString = protoString;
         ciph.d->protocol = QSsl::UnknownProtocol;
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_DEPRECATED
-        if (protoString.startsWith(u"TLSv1")) {
-            QStringView tail = protoString.sliced(5);
-            if (tail.startsWith(u'.')) {
-                tail = tail.sliced(1);
-                if (tail == u"3")
-                    ciph.d->protocol = QSsl::TlsV1_3;
-                else if (tail == u"2")
-                    ciph.d->protocol = QSsl::TlsV1_2;
-                else if (tail == u"1")
-                    ciph.d->protocol = QSsl::TlsV1_1;
-            } else if (tail.isEmpty()) {
-                ciph.d->protocol = QSsl::TlsV1_0;
-            }
-        }
-QT_WARNING_POP
+        if (protoString == QLatin1String("TLSv1"))
+            ciph.d->protocol = QSsl::TlsV1_0;
+        else if (protoString == QLatin1String("TLSv1.1"))
+            ciph.d->protocol = QSsl::TlsV1_1;
+        else if (protoString == QLatin1String("TLSv1.2"))
+            ciph.d->protocol = QSsl::TlsV1_2;
+        else if (protoString == QLatin1String("TLSv1.3"))
+            ciph.d->protocol = QSsl::TlsV1_3;
 
         if (descriptionList.at(2).startsWith(QLatin1String("Kx=")))
             ciph.d->keyExchangeMethod = descriptionList.at(2).mid(3).toString();
@@ -1372,6 +1359,7 @@ namespace QTlsPrivate {
 
 /*!
     \fn QByteArray TlsKey::encrypt(Cipher cipher, const QByteArray &data, const QByteArray &passPhrase, const QByteArray &iv) const
+    \internal
 
     This function is needed to implement QSslKey::toPem() with encryption (for a private
     key). \a cipher names a block cipher to use to encrypt \a data, using
@@ -1868,7 +1856,7 @@ TlsCryptograph::~TlsCryptograph() = default;
 
     \sa sslContext()
 */
-void TlsCryptograph::checkSettingSslContext(std::shared_ptr<QSslContext> tlsContext)
+void TlsCryptograph::checkSettingSslContext(QSharedPointer<QSslContext> tlsContext)
 {
     Q_UNUSED(tlsContext);
 }
@@ -1881,7 +1869,7 @@ void TlsCryptograph::checkSettingSslContext(std::shared_ptr<QSslContext> tlsCont
 
     \sa checkSettingSslContext()
 */
-std::shared_ptr<QSslContext> TlsCryptograph::sslContext() const
+QSharedPointer<QSslContext> TlsCryptograph::sslContext() const
 {
     return {};
 }

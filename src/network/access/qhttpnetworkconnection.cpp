@@ -48,7 +48,6 @@
 #include <qnetworkproxy.h>
 #include <qauthenticator.h>
 #include <qcoreapplication.h>
-#include <private/qdecompresshelper_p.h>
 
 #include <qbuffer.h>
 #include <qpair.h>
@@ -258,9 +257,9 @@ void QHttpNetworkConnectionPrivate::prepareRequest(HttpMessagePair &messagePair)
 
     // add missing fields for the request
     QByteArray value;
-#ifndef Q_OS_WASM
     // check if Content-Length is provided
     QNonContiguousByteDevice* uploadByteDevice = request.uploadByteDevice();
+#ifndef Q_OS_WASM
     if (uploadByteDevice) {
         const qint64 contentLength = request.contentLength();
         const qint64 uploadDeviceSize = uploadByteDevice->size();
@@ -747,15 +746,6 @@ QHttpNetworkRequest QHttpNetworkConnectionPrivate::predictNextRequest() const
     if (!lowPriorityQueue.isEmpty())
         return lowPriorityQueue.last().first;
     return QHttpNetworkRequest();
-}
-
-QHttpNetworkReply* QHttpNetworkConnectionPrivate::predictNextRequestsReply() const
-{
-    if (!highPriorityQueue.isEmpty())
-        return highPriorityQueue.last().second;
-    if (!lowPriorityQueue.isEmpty())
-        return lowPriorityQueue.last().second;
-    return nullptr;
 }
 
 // this is called from _q_startNextRequest and when a request has been sent down a socket from the channel
@@ -1468,13 +1458,13 @@ void QHttpNetworkConnection::setSslConfiguration(const QSslConfiguration &config
         d->channels[i].setSslConfiguration(config);
 }
 
-std::shared_ptr<QSslContext> QHttpNetworkConnection::sslContext()
+QSharedPointer<QSslContext> QHttpNetworkConnection::sslContext()
 {
     Q_D(QHttpNetworkConnection);
     return d->sslContext;
 }
 
-void QHttpNetworkConnection::setSslContext(std::shared_ptr<QSslContext> context)
+void QHttpNetworkConnection::setSslContext(QSharedPointer<QSslContext> context)
 {
     Q_D(QHttpNetworkConnection);
     d->sslContext = std::move(context);

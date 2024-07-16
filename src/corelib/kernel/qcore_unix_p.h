@@ -66,10 +66,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#ifdef __amigaos4__
-#include <pthread.h>
-#endif
-
 #if !defined (Q_OS_VXWORKS)
 # if !defined(Q_OS_HPUX) || defined(__ia64)
 #  include <sys/select.h>
@@ -83,21 +79,13 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID) && !defined(__amigaos4__)
+#if !defined(QT_POSIX_IPC) && !defined(QT_NO_SHAREDMEMORY) && !defined(Q_OS_ANDROID)
 #  include <sys/ipc.h>
 #endif
 
 #if defined(Q_OS_VXWORKS)
 #  include <ioLib.h>
 #endif
-
-#ifdef __amigaos4__
-#include <proto/exec.h>
-#endif
-
-// #if defined(__amigaos4__) && !defined(QT_NO_NATIVE_POLL)
-// #define QT_NO_NATIVE_POLL
-// #endif
  
 #if defined(QT_NO_NATIVE_POLL)
 #  include "qpoll_p.h"
@@ -177,7 +165,6 @@ inline timespec timevalToTimespec(const timeval &tv)
     return ts;
 }
 
-#ifndef __amigaos4__
 inline void qt_ignore_sigpipe()
 {
     // Set to ignore SIGPIPE once only.
@@ -193,7 +180,6 @@ inline void qt_ignore_sigpipe()
         atom.storeRelaxed(1);
     }
 }
-#endif
 
 #if defined(Q_PROCESSOR_X86_32) && defined(__GLIBC__)
 #  if !__GLIBC_PREREQ(2, 22)
@@ -223,7 +209,7 @@ static inline int qt_safe_open(const char *pathname, int flags, mode_t mode = 07
 #undef QT_OPEN
 #define QT_OPEN         qt_safe_open
 
-#if !defined(Q_OS_VXWORKS) && !defined(__amigaos4__) // no POSIX pipes in VxWorks
+#if !defined(Q_OS_VXWORKS) // no POSIX pipes in VxWorks
 // don't call ::pipe
 // call qt_safe_pipe
 static inline int qt_safe_pipe(int pipefd[2], int flags = 0)
@@ -254,7 +240,6 @@ static inline int qt_safe_pipe(int pipefd[2], int flags = 0)
 
 #endif // Q_OS_VXWORKS
 
-#ifndef __amigaos4__
 // don't call dup or fcntl(F_DUPFD)
 static inline int qt_safe_dup(int oldfd, int atleast = 0, int flags = FD_CLOEXEC)
 {
@@ -296,7 +281,6 @@ static inline int qt_safe_dup2(int oldfd, int newfd, int flags = FD_CLOEXEC)
     return 0;
 #endif
 }
-#endif //_amigaos4__
 
 static inline qint64 qt_safe_read(int fd, void *data, qint64 maxlen)
 {
@@ -318,9 +302,7 @@ static inline qint64 qt_safe_write(int fd, const void *data, qint64 len)
 
 static inline qint64 qt_safe_write_nosignal(int fd, const void *data, qint64 len)
 {
-#ifndef __amigaos4__
     qt_ignore_sigpipe();
-#endif
     return qt_safe_write(fd, data, len);
 }
 
@@ -374,7 +356,6 @@ timespec qt_gettime() noexcept;
 void qt_nanosleep(timespec amount);
 QByteArray qt_readlink(const char *path);
 
-#ifndef __amigaos4__
 /* non-static */
 inline bool qt_haveLinuxProcfs()
 {
@@ -389,18 +370,28 @@ inline bool qt_haveLinuxProcfs()
     return false;
 #endif
 }
-#endif //__amigaos4__
 
-#ifdef __amigaos4__
-Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, ULONG *listenSignals);
-
-static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout, ULONG *listenSignals)
-#else
 Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts);
 
 static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout)
-#endif
 {
+    timespec ts, *pts = nullptr;
+
+    if (timeout >= 0) {
+        ts.tv_sec = timeout / 1000;
+        ts.tv_nsec = (timeout % 1000) * 1000 * 1000;
+        pts = &ts;
+    }
+
+    return qt_safe_poll(fds, nfds, pts);
+}
+
+#ifdef __amigaos4__ //enable listening
+Q_CORE_EXPORT int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals);
+
+static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout, uint32_t *listenSignals)
+{
+
     timespec ts, *pts = nullptr;
 
     if (timeout >= 0) {
@@ -411,6 +402,7 @@ static inline int qt_poll_msecs(struct pollfd *fds, nfds_t nfds, int timeout)
 
     return qt_safe_poll(fds, nfds, pts, listenSignals);
 }
+#endif
 
 static inline struct pollfd qt_make_pollfd(int fd, short events)
 {
