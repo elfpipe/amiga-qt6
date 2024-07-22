@@ -341,7 +341,8 @@ static int installFileOrDirectory(const QString &source, const QString &target,
 
         QDirIterator it(source, QDir::AllEntries | QDir::NoDotAndDotDot | QDir::Hidden);
         while (it.hasNext()) {
-            const QFileInfo entry = it.nextFileInfo();
+            it.next();
+            const QFileInfo &entry = it.fileInfo();
             const QString &entryTarget = target + QDir::separator() + entry.fileName();
 
             const int recursionResult = installFileOrDirectory(entry.filePath(), entryTarget, true);
@@ -435,7 +436,6 @@ QString qmake_getpwd()
 {
     if(pwd.isNull())
         pwd = QDir::currentPath();
-    printf("QDir::currentPath() : %s\n", pwd.toLocal8Bit().constData());
     return pwd;
 }
 bool qmake_setpwd(const QString &p)
@@ -507,7 +507,7 @@ int runQMake(int argc, char **argv)
         QString absoluteFilePath = QDir::cleanPath(fi.absoluteFilePath());
         Option::output.setFileName(absoluteFilePath.mid(Option::output_dir.length() + 1));
     }
-printf("output_dir : %s\n", Option::output_dir.toLocal8Bit().constData());
+
     QMakeProperty prop;
     switch (Option::qmake_mode) {
     case Option::QMAKE_QUERY_PROPERTY:

@@ -35,8 +35,13 @@ defineReplace(qtVariablesFromMSVC) {
 }
 
 defineReplace(qtVariablesFromGCC) {
-    ret = $$system("$$1 -E $$system_quote($$PWD/data/macros.cpp) \
-        2>$$QMAKE_SYSTEM_NULL_DEVICE", lines, ec)
+    equals(QMAKE_HOST.os, AmigaOS) {
+        ret = $$system("$$1 -E $$system_quote($$PWD/data/macros.cpp) \
+            *>$$QMAKE_SYSTEM_NULL_DEVICE", lines, ec)
+    } else {
+        ret = $$system("$$1 -E $$system_quote($$PWD/data/macros.cpp) \
+            2>$$QMAKE_SYSTEM_NULL_DEVICE", lines, ec)
+    }
     !equals(ec, 0): qtCompilerError($$1, $$ret)
     return($$ret)
 }
@@ -164,8 +169,67 @@ isEmpty($${target_prefix}.INCDIRS) {
     #
     # Get default include and library paths from compiler
     #
-    wasm {
+    wasm: {
         # wasm compiler does not work here, just use defaults
+    } else: amiga: {
+        output = $$system("$$QMAKE_CXX -E -Wp,-v -xc++ - <nil: *>t:incpaths.txt", lines, ec)
+        !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
+
+        output = $$cat("/t/incpaths.txt", lines)
+
+        # message("output : $$output")
+
+        add_includes = false
+        for (line, output) {
+            line ~= s/^[ \\t]*//  # remove leading spaces
+            contains(line, "$${LITERAL_HASH}include <.*") {  # #include <...> search starts here:
+                add_includes = true
+            } else: contains(line, "End of search.*") {
+                add_includes = false
+            } else: $$add_includes {
+                line = $$replace(line, $$escape_expand(\\n), "")
+                QMAKE_DEFAULT_INCDIRS +=$$clean_path($$line)
+            }
+        }
+        
+        message("QMAKE_DEFAULT_INCDIRS : $$QMAKE_DEFAULT_INCDIRS")
+
+
+
+
+
+        output = $$system("$$QMAKE_CXX -Wl,--verbose -xc++ -o nil:", lines, ec)
+        !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
+
+        # message("output(2) : $$output")
+
+        for (line, output) {
+            # message("[amiga :] line : $$line")
+            contains(line, "SEARCH_DIR.*"): {
+                message("[amiga :] found line")
+                line = $$replace(line, "SEARCH_DIR", "")
+                message("[amiga :] line(2) : $$line")
+                line = $$replace(line, "\"", "")
+                message("[amiga :] line(3) : $$line")
+                line = $$replace(line, "\\(", "")
+                message("[amiga :] line(4) : $$line")
+                line = $$replace(line, "\\)", "")
+                message("[amiga :] line(5) : $$line")
+                line = $$replace(line, " ", "")
+                message("[amiga :] line(6) : $$line")
+                    # keep the ';'
+                paths = $$split(line, ;)
+                for (path, paths): {
+                    QMAKE_DEFAULT_LIBDIRS += $$clean_path($$path)
+                    # QMAKE_DEFAULT_LIBDIRS += $$escape_expand(\\n) Apparently not...
+                }
+            }
+        }
+
+        message("QMAKE_DEFAULT_LIBDIRS : $$QMAKE_DEFAULT_LIBDIRS")
+
+
+
     } else: gcc {
         cmd_suffix = "<$$QMAKE_SYSTEM_NULL_DEVICE >$$QMAKE_SYSTEM_NULL_DEVICE"
         equals(QMAKE_HOST.os, Windows): \

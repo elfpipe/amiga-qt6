@@ -726,10 +726,7 @@
 
     \section2 Creating and Moving Xcode Projects
 
-    Developers on \macos can take advantage of the qmake support for Xcode
-    project files, as described in the \l{Qt for macOS/Additional
-    Command-Line Options}{Qt for \macos} documentation,
-    by running qmake to generate an Xcode project from an existing qmake
+    On \macos, developers can generate Xcode project files from an existing qmake
     project file. For example:
 
     \snippet code/doc_src_qmake-manual.pro 19
@@ -1129,7 +1126,7 @@
     \note This variable applies only to Android targets.
 
     Specifies the target Android API level for the project. By default, this
-    variable is set to API level 29.
+    variable is set to API level 30.
 
     \target ANDROID_VERSION_CODE
     \section1 ANDROID_VERSION_CODE
@@ -1152,8 +1149,6 @@
 
     Specifies project configuration and compiler options. The values are
     recognized internally by qmake and have special meaning.
-
-    \note The values are case-sensitive.
 
     The following \c CONFIG values control compiler and linker flags:
 
@@ -1208,6 +1203,11 @@
     \row    \li c11 \li C11 support is enabled. This option has no effect if
             the compiler does not support C11, or can't select the C standard.
             By default, the compiler default is used.
+    \row    \li c17 \li C17, also known as C18, support is enabled.
+            This option has no effect if the compiler does not support C17, or
+            can't select the C standard.
+            By default, the compiler default is used.
+    \row    \li c18 \li This is an alias for the \c{c17} value.
     \row    \li strict_c \li Disables support for C compiler extensions.
             By default, they are enabled.
     \row    \li c++11 \li C++11 support is enabled. This option has no effect if
@@ -2680,7 +2680,7 @@
 
     Specifies the hard minimum version of \macos that the application supports.
 
-    For more information, see \l{Qt for macOS/Supported Versions}.
+    For more information, see \l{Qt for \macos#Supported Versions}{\macos Supported Versions}.
 
     \section1 QMAKE_MAKEFILE
 

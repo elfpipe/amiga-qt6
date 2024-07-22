@@ -938,15 +938,15 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND WIN32
         io/qprocess_win.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND UNIX AND NOT AMIGA
+qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND UNIX
     SOURCES
         io/qprocess_unix.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND AMIGA
-    SOURCES
-        io/qprocess_amiga.cpp
-)
+# qt_internal_extend_target(Core CONDITION QT_FEATURE_processenvironment AND AMIGA
+#     SOURCES
+#         io/qprocess_amiga.cpp
+# )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_settings
     SOURCES

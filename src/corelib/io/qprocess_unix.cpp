@@ -72,7 +72,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if QT_CONFIG(process)
+#if QT_CONFIG(process) && !defined(__amigaos4__)
 #include <forkfd.h>
 #endif
 
@@ -249,12 +249,11 @@ static int qt_create_pipe(int *pipe)
         qt_safe_close(pipe[0]);
     if (pipe[1] != -1)
         qt_safe_close(pipe[1]);
-    // int pipe_ret = qt_safe_pipe(pipe);
-    // if (pipe_ret != 0) {
-    //     qErrnoWarning("QProcessPrivate::createPipe: Cannot create pipe %p", pipe);
-    // }
-    // return pipe_ret;
-    return 0;
+    int pipe_ret = qt_safe_pipe(pipe);
+    if (pipe_ret != 0) {
+        qErrnoWarning("QProcessPrivate::createPipe: Cannot create pipe %p", pipe);
+    }
+    return pipe_ret;
 }
 
 void QProcessPrivate::destroyPipe(int *pipe)
@@ -394,20 +393,20 @@ bool QProcessPrivate::openChannel(Channel &channel)
 
 void QProcessPrivate::commitChannels()
 {
-    // // copy the stdin socket if asked to (without closing on exec)
-    // if (stdinChannel.pipe[0] != INVALID_Q_PIPE)
-    //     qt_safe_dup2(stdinChannel.pipe[0], STDIN_FILENO, 0);
+    // copy the stdin socket if asked to (without closing on exec)
+    if (stdinChannel.pipe[0] != INVALID_Q_PIPE)
+        qt_safe_dup2(stdinChannel.pipe[0], STDIN_FILENO, 0);
 
-    // // copy the stdout and stderr if asked to
-    // if (stdoutChannel.pipe[1] != INVALID_Q_PIPE)
-    //     qt_safe_dup2(stdoutChannel.pipe[1], STDOUT_FILENO, 0);
-    // if (stderrChannel.pipe[1] != INVALID_Q_PIPE) {
-    //     qt_safe_dup2(stderrChannel.pipe[1], STDERR_FILENO, 0);
-    // } else {
-    //     // merge stdout and stderr if asked to
-    //     if (processChannelMode == QProcess::MergedChannels)
-    //         qt_safe_dup2(STDOUT_FILENO, STDERR_FILENO, 0);
-    // }
+    // copy the stdout and stderr if asked to
+    if (stdoutChannel.pipe[1] != INVALID_Q_PIPE)
+        qt_safe_dup2(stdoutChannel.pipe[1], STDOUT_FILENO, 0);
+    if (stderrChannel.pipe[1] != INVALID_Q_PIPE) {
+        qt_safe_dup2(stderrChannel.pipe[1], STDERR_FILENO, 0);
+    } else {
+        // merge stdout and stderr if asked to
+        if (processChannelMode == QProcess::MergedChannels)
+            qt_safe_dup2(STDOUT_FILENO, STDERR_FILENO, 0);
+    }
 }
 
 static QString resolveExecutable(const QString &program)
@@ -485,6 +484,7 @@ void QProcessPrivate::startProcess()
         workingDirPtr = encodedWorkingDirectory.constData();
     }
 
+#if !defined(__amigaos4__)
     int ffdflags = FFD_CLOEXEC;
 
     // QTBUG-86285
@@ -543,6 +543,7 @@ void QProcessPrivate::startProcess()
     }
     if (stderrChannel.pipe[0] != -1)
         ::fcntl(stderrChannel.pipe[0], F_SETFL, ::fcntl(stderrChannel.pipe[0], F_GETFL) | O_NONBLOCK);
+#endif //__amigaos4__
 }
 
 void QProcessPrivate::execChild(const char *workingDir, char **argv, char **envp)
@@ -909,6 +910,7 @@ bool QProcessPrivate::waitForFinished(const QDeadlineTimer &deadline)
 
 void QProcessPrivate::waitForDeadChild()
 {
+#ifndef __amigaos4__
     Q_ASSERT(forkfd != -1);
 
     // read the process information from our fd
@@ -927,6 +929,7 @@ void QProcessPrivate::waitForDeadChild()
 #if defined QPROCESS_DEBUG
     qDebug() << "QProcessPrivate::waitForDeadChild() dead with exitCode"
              << exitCode << ", crashed?" << crashed;
+#endif
 #endif
 }
 
@@ -952,53 +955,55 @@ bool QProcessPrivate::startDetached(qint64 *pid)
     const CharPointerList argv(resolveExecutable(program), arguments);
     const CharPointerList envp(environment.d.constData());
 
-    // pid_t childPid = fork();
-    // childPid == 0) {
-    //     ::signal(SIGPIPE, SIG_DFL);     // reset the signal that we ignored
-    //     ::setsid();
+#ifndef __amigaos4__
+    pid_t childPid = fork();
+    childPid == 0) {
+        ::signal(SIGPIPE, SIG_DFL);     // reset the signal that we ignored
+        ::setsid();
 
-    //     qt_safe_close(startedPipe[0]);
-    //     qt_safe_close(pidPipe[0]);
+        qt_safe_close(startedPipe[0]);
+        qt_safe_close(pidPipe[0]);
 
-    //     auto reportFailed = [&](const char *function) {
-    //         childStatus.code = errno;
-    //         strcpy(childStatus.function, function);
-    //         qt_safe_write(startedPipe[1], &childStatus, sizeof(childStatus));
-    //         ::_exit(1);
-    //     };
+        auto reportFailed = [&](const char *function) {
+            childStatus.code = errno;
+            strcpy(childStatus.function, function);
+            qt_safe_write(startedPipe[1], &childStatus, sizeof(childStatus));
+            ::_exit(1);
+        };
 
-    //     if (!encodedWorkingDirectory.isEmpty()) {
-    //         if (QT_CHDIR(encodedWorkingDirectory.constData()) < 0)
-    //             reportFailed("chdir: ");
-    //     }
+        if (!encodedWorkingDirectory.isEmpty()) {
+            if (QT_CHDIR(encodedWorkingDirectory.constData()) < 0)
+                reportFailed("chdir: ");
+        }
 
-    //     pid_t doubleForkPid = fork();
-    //     if (doubleForkPid == 0) {
-    //         // Render channels configuration.
-    //         commitChannels();
+        pid_t doubleForkPid = fork();
+        if (doubleForkPid == 0) {
+            // Render channels configuration.
+            commitChannels();
 
-    //         if (envp.pointers)
-    //             qt_safe_execve(argv.pointers[0], argv.pointers.get(), envp.pointers.get());
-    //         else
-    //             qt_safe_execv(argv.pointers[0], argv.pointers.get());
+            if (envp.pointers)
+                qt_safe_execve(argv.pointers[0], argv.pointers.get(), envp.pointers.get());
+            else
+                qt_safe_execv(argv.pointers[0], argv.pointers.get());
 
-    //         reportFailed("execv: ");
-    //     } else if (doubleForkPid == -1) {
-    //         reportFailed("fork: ");
-    //     }
+            reportFailed("execv: ");
+        } else if (doubleForkPid == -1) {
+            reportFailed("fork: ");
+        }
 
-    //     // success
-    //     qt_safe_write(pidPipe[1], &doubleForkPid, sizeof(pid_t));
-    //     ::_exit(1);
-    // }
-
+        // success
+        qt_safe_write(pidPipe[1], &doubleForkPid, sizeof(pid_t));
+        ::_exit(1);
+    }
+    
     int savedErrno = errno;
     closeChannels();
 
-    // if (childPid == -1) {
-    //     setErrorAndEmit(QProcess::FailedToStart, QLatin1String("fork: ") + qt_error_string(savedErrno));
-    //     return false;
-    // }
+    if (childPid == -1) {
+        setErrorAndEmit(QProcess::FailedToStart, QLatin1String("fork: ") + qt_error_string(savedErrno));
+        return false;
+    }
+#endif
 
     // close the writing ends of the pipes so we can properly get EOFs
     qt_safe_close(pidPipe[1]);
@@ -1012,9 +1017,11 @@ bool QProcessPrivate::startDetached(qint64 *pid)
     // values should not happen.
     ssize_t startResult = qt_safe_read(startedPipe[0], &childStatus, sizeof(childStatus));
 
+#ifndef __amigaos4__
     // reap the intermediate child
     int result;
-    // qt_safe_waitpid(childPid, &result, 0);
+    qt_safe_waitpid(childPid, &result, 0);
+#endif
 
     bool success = (startResult == 0);  // nothing written -> no error
     if (success && pid) {

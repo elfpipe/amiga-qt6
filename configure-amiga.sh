@@ -7,9 +7,9 @@ cmake \
 -DCMAKE_CXX_COMPILER="ppc-amigaos-g++" \
 -DCMAKE_ASM_COMPILER="ppc-amigaos-as" \
 -DCMAKE_MAKE_PROGRAM="make" \
--DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native" \
--DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native" \
--DCMAKE_EXE_LINKER_FLAGS="-use-dynld -Wl,--verbose" \
+-DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
+-DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
+-DCMAKE_EXE_LINKER_FLAGS="-use-dynld -Wl,--verbose -gstabs" \
 -DUNIX=1 -DAMIGA=1 \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \

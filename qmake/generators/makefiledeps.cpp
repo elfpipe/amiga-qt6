@@ -63,6 +63,7 @@ inline bool qmake_endOfLine(const char &c) { return (c == '\r' || c == '\n'); }
 QMakeLocalFileName::QMakeLocalFileName(const QString &name)
     : real_name(name)
 {
+    // printf("####### [QMakeLocalFileName :] real_name : %s\n", name.toLocal8Bit().constData());
 }
 const QString
 &QMakeLocalFileName::local() const
@@ -221,6 +222,7 @@ QStringList QMakeSourceFileInfo::dependencies(const QString &file)
                 for(int i = 0; i < place.used_nodes; i++) {
                     place.children[i]->traversed = false; //reset flag
                     ret.append(place.children[i]->file.real());
+// printf("####### [%s] : %s\n", file.toLocal8Bit().constData(), place.children[i]->file.real().toLocal8Bit().constData());
                 }
            }
        }

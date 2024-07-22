@@ -1118,24 +1118,36 @@ bool QMakeEvaluator::prepareProject(const QString &inDir)
             if (m_outputDir.isEmpty())
                 goto no_cache;
             superdir = m_outputDir;
-            printf("superdir : %s\n", superdir.toLocal8Bit().constData());
             forever {
-                QString superfile = superdir + QLatin1String("/.qmake.super");
-                printf("superfile : %s\n", superfile.toLocal8Bit().constData());
-                if (m_vfs->exists(superfile, flags)) {
-                    m_superfile = QDir::cleanPath(superfile);
-                    break;
-                }
+#ifdef __amigaos4__
+                // amiga has no root
                 QFileInfo qdfi(superdir);
                 if (qdfi.isRoot()) {
                     superdir.clear();
                     break;
                 }
+#endif
+                QString superfile = superdir + QLatin1String("/.qmake.super");                
+                if (m_vfs->exists(superfile, flags)) {
+                    m_superfile = QDir::cleanPath(superfile);
+                    break;
+                }
+#ifndef __amigaos4__
+                QFileInfo qdfi(superdir);
+                if (qdfi.isRoot()) {
+                    superdir.clear();
+                    break;
+                }
+#endif
                 superdir = qdfi.path();
             }
             QString sdir = inDir;
             QString dir = m_outputDir;
             forever {
+#ifdef __amigaos4__
+                QFileInfo _qsdfi(sdir);
+                if (_qsdfi.isRoot()) break;
+#endif      
                 conffile = sdir + QLatin1String("/.qmake.conf");
                 if (!m_vfs->exists(conffile, flags))
                     conffile.clear();
@@ -1167,14 +1179,22 @@ bool QMakeEvaluator::prepareProject(const QString &inDir)
 
     QString dir = m_outputDir;
     forever {
+#ifdef __amigaos4__
+        // amiga has no root
+        QFileInfo qdfi(dir);
+        if (qdfi.isRoot())
+            break;
+#endif
         QString stashfile = dir + QLatin1String("/.qmake.stash");
         if (dir == (!superdir.isEmpty() ? superdir : m_buildRoot) || m_vfs->exists(stashfile, flags)) {
             m_stashfile = QDir::cleanPath(stashfile);
             break;
         }
+#ifndef __amigaos4__
         QFileInfo qdfi(dir);
         if (qdfi.isRoot())
             break;
+#endif
         dir = qdfi.path();
     }
 

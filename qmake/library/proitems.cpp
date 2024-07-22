@@ -404,7 +404,8 @@ void ProStringList::removeEmpty()
 
 void ProStringList::removeDuplicates()
 {
-    QDuplicateTracker<ProString> seen(size());
+    QDuplicateTracker<ProString> seen;
+    seen.reserve(size());
     removeIf([&](const ProString &s) { return seen.hasSeen(s); });
 }
 

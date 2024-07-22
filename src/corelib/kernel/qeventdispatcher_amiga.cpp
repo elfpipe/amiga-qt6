@@ -82,12 +82,11 @@ static const char *socketType(QSocketNotifier::Type type)
 
 QEventDispatcherAMIGAPrivate::QEventDispatcherAMIGAPrivate()
 {
-    printf("Creating EventDispatcherPrivate.\n");
-    timerPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
-    if(timerPort == 0) {
-        qWarning("Failed to allocate message port for timer.device communication. Exit.\n");
-        QCoreApplication::quit();
-    }
+    // timerPort = (struct MsgPort *)IExec->AllocSysObjectTags(ASOT_PORT, TAG_END);
+    // if(timerPort == 0) {
+    //     qWarning("Failed to allocate message port for timer.device communication. Exit.\n");
+    //     QCoreApplication::quit();
+    // }
     // timerRequest = (struct TimeRequest *)IExec->AllocSysObjectTags(ASOT_IOREQUEST,
     //     ASOIOR_Size, sizeof(struct TimeRequest),
     //     ASOIOR_ReplyPort, timerPort,

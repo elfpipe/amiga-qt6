@@ -70,10 +70,10 @@ QT_REQUIRE_CONFIG(processenvironment);
 #include "QtCore/qt_windows.h"
 typedef HANDLE Q_PIPE;
 #define INVALID_Q_PIPE INVALID_HANDLE_VALUE
-#elif defined (__amigaos4__)
-#  include <proto/dos.h>
-  typedef BPTR Q_PIPE;
-#  define INVALID_Q_PIPE 0
+// #elif defined (__amigaos4__)
+// #  include <proto/dos.h>
+//   typedef BPTR Q_PIPE;
+// #  define INVALID_Q_PIPE 0
 #else
 typedef int Q_PIPE;
 #define INVALID_Q_PIPE -1
@@ -228,17 +228,17 @@ template<> Q_INLINE_TEMPLATE void QSharedDataPointer<QProcessEnvironmentPrivate>
 
 #if QT_CONFIG(process)
 
-#ifdef Q_OS_AMIGA
-class QAmigaPipeNotifier : public QObject {
-	Q_OBJECT
-public:
-	void setEnabled(bool) {}
-	virtual ~QAmigaPipeNotifier();
-signals:
-	void activated();
-	friend class QProcessManager;
-};
-#endif
+// #ifdef Q_OS_AMIGA
+// class QAmigaPipeNotifier : public QObject {
+// 	Q_OBJECT
+// public:
+// 	void setEnabled(bool) {}
+// 	virtual ~QAmigaPipeNotifier();
+// signals:
+// 	void activated();
+// 	friend class QProcessManager;
+// };
+// #endif
 
 class QProcessPrivate : public QIODevicePrivate
 {
@@ -279,8 +279,8 @@ public:
 
         QString file;
         QProcessPrivate *process = nullptr;
-#if defined Q_OS_AMIGA
-		QAmigaPipeNotifier *notifier;
+#if 0 //defined Q_OS_AMIGA
+		// QAmigaPipeNotifier *notifier;
 #elif defined Q_OS_UNIX
         QSocketNotifier *notifier = nullptr;
 #else
@@ -348,14 +348,14 @@ public:
 #else
     std::function<void(void)> childProcessModifier;
 #endif
-#if defined(Q_OS_AMIGA)
-	char *fullCommand;
-#endif
+// #if defined(Q_OS_AMIGA)
+// 	char *fullCommand;
+// #endif
     QProcessEnvironment environment;
 
-#ifdef __amigaos4__
-Q_PIPE deathPipe[2];
-#endif
+// #ifdef __amigaos4__
+// Q_PIPE deathPipe[2];
+// #endif
 #ifdef Q_OS_UNIX
     Q_PIPE childStartedPipe[2] = {INVALID_Q_PIPE, INVALID_Q_PIPE};
     QSocketNotifier *stateNotifier = nullptr;
@@ -390,9 +390,9 @@ Q_PIPE deathPipe[2];
     QProcess::ExitStatus exitStatus = QProcess::NormalExit;
     bool crashed = false;
 
-#ifdef __amigaos4__
-    int serial;
-#endif
+// #ifdef __amigaos4__
+//     int serial;
+// #endif
 
     bool waitForStarted(const QDeadlineTimer &deadline);
     bool waitForReadyRead(const QDeadlineTimer &deadline);
@@ -406,10 +406,10 @@ Q_PIPE deathPipe[2];
     void cleanup();
     void setError(QProcess::ProcessError error, const QString &description = QString());
     void setErrorAndEmit(QProcess::ProcessError error, const QString &description = QString());
-#ifdef Q_OS_AMIGA
-	QAmigaPipeNotifier *deathnotifier;
-    static void initializeProcessManager();
-#endif
+// #ifdef Q_OS_AMIGA
+// 	QAmigaPipeNotifier *deathnotifier;
+//     static void initializeProcessManager();
+// #endif
 };
 
 #endif // QT_CONFIG(process)

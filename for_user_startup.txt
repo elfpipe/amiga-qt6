@@ -1,0 +1,5 @@
+;BEGIN qt6-amiga
+assign qt6-amiga: work4.1:qt6-amiga
+path qt6-amiga:bin add
+assign sobjs: qt6-amiga:lib add
+;END qt6-amiga

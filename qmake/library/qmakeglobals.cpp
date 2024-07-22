@@ -277,7 +277,7 @@ QStringList QMakeGlobals::splitPathList(const QString &val) const
 
 QString QMakeGlobals::getEnv(const QString &var) const
 {
-#if defined(PROEVALUATOR_SETENV)
+#ifdef PROEVALUATOR_SETENV
     return environment.value(var);
 #else
     return QString::fromLocal8Bit(qgetenv(var.toLocal8Bit().constData()));

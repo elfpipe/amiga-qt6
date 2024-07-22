@@ -495,7 +495,7 @@ QMakeEvaluator::writeFile(const QString &ctx, const QString &fn, QIODevice::Open
 
 #if QT_CONFIG(process)
 void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
-{
+{    
     proc->setWorkingDirectory(currentDirectory());
 # ifdef PROEVALUATOR_SETENV
     if (!m_option->environment.isEmpty())
@@ -506,7 +506,7 @@ void QMakeEvaluator::runProcess(QProcess *proc, const QString &command) const
     proc->start(m_option->getEnv(QLatin1String("COMSPEC")), QStringList());
 # elif defined(__amigaos4__)
     // Not ready yet...
-printf("runProcess not implemented.\n");
+printf("runProcess not implemented : %s\n", command.toLocal8Bit().constData());
 # else
     proc->start(QLatin1String("/bin/sh"), QStringList() << QLatin1String("-c") << command);
 # endif
@@ -517,7 +517,7 @@ printf("runProcess not implemented.\n");
 QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) const
 {
     QByteArray out;
-#if QT_CONFIG(process)
+#if 0 //QT_CONFIG(process)
     QProcess proc;
     runProcess(&proc, args);
     *exitCode = (proc.exitStatus() == QProcess::NormalExit) ? proc.exitCode() : -1;
@@ -540,14 +540,21 @@ QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) 
     out.replace("\r\n", "\n");
 # endif
 #else
+#ifdef __amigaos4__
+    printf("[QMakeEvaluator::getCommandOutput :] popen : %s\n", args.toLocal8Bit().constData());
+    if (FILE *proc = QT_POPEN(args.toLocal8Bit().constData(), QT_POPEN_READ)) {
+#else
     if (FILE *proc = QT_POPEN(QString(QLatin1String("cd ")
                                + IoUtils::shellQuote(QDir::toNativeSeparators(currentDirectory()))
                                + QLatin1String(" && ") + args).toLocal8Bit().constData(), QT_POPEN_READ)) {
+#endif
+int i = 0;
         while (!feof(proc)) {
             char buff[10 * 1024];
             int read_in = int(fread(buff, 1, sizeof(buff), proc));
             if (!read_in)
                 break;
+            buff[read_in+1] = '\0';
             out += QByteArray(buff, read_in);
         }
         int ec = QT_PCLOSE(proc);
@@ -858,6 +865,7 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinExpand(
                 lines = true;
         }
         QString fn = filePathEnvArg0(args);
+printf("[E_CAT(*) :] fn : %s\n", fn.toLocal8Bit().constData());
         QFile qfile(fn);
         if (qfile.open(QIODevice::ReadOnly)) {
             QTextStream stream(&qfile);
@@ -867,6 +875,7 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinExpand(
                 while (!stream.atEnd()) {
                     if (lines) {
                         ret += ProString(stream.readLine());
+                        ret += ProString(QString("\r\n")); // __amigaos4__ *** Why do birds...?
                     } else {
                         const QString &line = stream.readLine();
                         ret += split_value_list(QStringView(line).trimmed());
@@ -932,8 +941,10 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinExpand(
         }
         if (lines) {
             QTextStream stream(bytes);
-            while (!stream.atEnd())
+            while (!stream.atEnd()) {
                 ret += ProString(stream.readLine());
+                ret += ProString(QString("\r\n")); // __amigaos4__ *** Why do birds...?
+            }
         } else {
             QString output = QString::fromLocal8Bit(bytes);
             if (blob) {
@@ -1415,17 +1426,13 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::testFunc_cache(const ProStringList &
     QMakeVfs::VfsFlags flags = (m_cumulative ? QMakeVfs::VfsCumulative : QMakeVfs::VfsExact);
     if (target == TargetSuper) {
         if (m_superfile.isEmpty()) {
-            printf("m_superfile : m_outputDir : %s\n", m_outputDir.toLocal8Bit().constData());
             m_superfile = QDir::cleanPath(m_outputDir + QLatin1String("/.qmake.super"));
-            printf("m_superfile : %s\n", m_superfile.toLocal8Bit().constData());
-            printf("Info: creating super cache file %s\n", qPrintable(QDir::toNativeSeparators(m_superfile)));
             valuesRef(ProKey("_QMAKE_SUPER_CACHE_")) << ProString(m_superfile);
         }
         fn = m_superfile;
     } else if (target == TargetCache) {
         if (m_cachefile.isEmpty()) {
             m_cachefile = QDir::cleanPath(m_outputDir + QLatin1String("/.qmake.cache"));
-            printf("Info: creating cache file %s\n", qPrintable(QDir::toNativeSeparators(m_cachefile)));
             valuesRef(ProKey("_QMAKE_CACHE_")) << ProString(m_cachefile);
             // We could update m_{source,build}Root and m_featureRoots here, or even
             // "re-home" our rootEnv, but this doesn't sound too useful - if somebody
@@ -1436,10 +1443,9 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::testFunc_cache(const ProStringList &
         fn = m_cachefile;
     } else {
         fn = m_stashfile;
-        if (fn.isEmpty())
+        if (fn.isEmpty() && !m_outputDir.isEmpty()) // __amigaos4__
             fn = QDir::cleanPath(m_outputDir + QLatin1String("/.qmake.stash"));
         if (!m_vfs->exists(fn, flags)) {
-            printf("Info: creating stash file %s\n", qPrintable(QDir::toNativeSeparators(fn)));
             valuesRef(ProKey("_QMAKE_STASH_")) << ProString(fn);
         }
     }

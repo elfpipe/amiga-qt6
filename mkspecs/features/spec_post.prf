@@ -126,5 +126,9 @@ equals(QMAKE_HOST.os, Windows) {
 } else {
     QMAKE_SYMBOLIC_LINK      = ln -f -s
     QMAKE_LN_SHLIB           = ln -s
-    QMAKE_SYSTEM_NULL_DEVICE = /dev/null
+    equals(QMAKE_HOST.os, AmigaOS) {
+        QMAKE_SYSTEM_NULL_DEVICE = NIL:
+    } else {
+        QMAKE_SYSTEM_NULL_DEVICE = /dev/null
+    }
 }
