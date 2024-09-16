@@ -67,8 +67,6 @@ QInputDeviceManager::QInputDeviceManager(QObject *parent)
     qRegisterMetaType<DeviceType>();
 }
 
-QInputDeviceManager::~QInputDeviceManager() = default;
-
 int QInputDeviceManager::deviceCount(DeviceType type) const
 {
     Q_D(const QInputDeviceManager);

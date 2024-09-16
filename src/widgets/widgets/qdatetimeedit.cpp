@@ -223,9 +223,7 @@ QDateTimeEdit::QDateTimeEdit(QTime time, QWidget *parent)
   \internal
 */
 QDateTimeEdit::QDateTimeEdit(const QVariant &var, QMetaType::Type parserType, QWidget *parent)
-    : QAbstractSpinBox(*new QDateTimeEditPrivate(
-                           parserType == QMetaType::QDateTime ? Qt::LocalTime : Qt::UTC),
-                       parent)
+    : QAbstractSpinBox(*new QDateTimeEditPrivate, parent)
 {
     Q_D(QDateTimeEdit);
     d->parserType = parserType;
@@ -1736,17 +1734,16 @@ QDateEdit::~QDateEdit()
 */
 
 
-QDateTimeEditPrivate::QDateTimeEditPrivate(Qt::TimeSpec timeSpec)
-    : QDateTimeParser(QMetaType::QDateTime, QDateTimeParser::DateTimeEdit, QCalendar()),
-      spec(timeSpec)
+QDateTimeEditPrivate::QDateTimeEditPrivate()
+    : QDateTimeParser(QMetaType::QDateTime, QDateTimeParser::DateTimeEdit, QCalendar())
 {
     fixday = true;
     type = QMetaType::QDateTime;
     currentSectionIndex = FirstSectionIndex;
 
     first.pos = 0;
-    minimum = QDATETIMEEDIT_COMPAT_DATE_MIN.startOfDay(spec);
-    maximum = QDATETIMEEDIT_DATE_MAX.endOfDay(spec);
+    minimum = QDATETIMEEDIT_COMPAT_DATE_MIN.startOfDay();
+    maximum = QDATETIMEEDIT_DATE_MAX.endOfDay();
     readLocaleSettings();
 }
 
@@ -2104,45 +2101,15 @@ QDateTime QDateTimeEditPrivate::stepBy(int sectionIndex, int steps, bool test) c
         v = q->dateTimeFromText(str);
     int val = getDigit(v, sectionIndex);
 
+    val += steps;
+
     const int min = absoluteMin(sectionIndex);
     const int max = absoluteMax(sectionIndex, value.toDateTime());
 
-    if (sn.type & DayOfWeekSectionMask) {
-        // Must take locale's first day of week into account when *not*
-        // wrapping; min and max don't help us.
-#ifndef QT_ALWAYS_WRAP_WEEKDAY // (documentation, not an actual define)
-        if (!wrapping) {
-            /* It's not clear this is ever really a desirable behavior.
-
-               It refuses to step backwards from the first day of the week or
-               forwards from the day before, only allowing day-of-week stepping
-               from start to end of one week. That's strictly what non-wrapping
-               behavior must surely mean, when put in locale-neutral terms.
-
-               It is, however, likely that users would prefer the "more natural"
-               behavior of cycling through the week.
-            */
-            const int first = int(locale().firstDayOfWeek()); // Mon = 1 through 7 = Sun
-            val = qBound(val < first ? first - 7 : first,
-                         val + steps,
-                         val < first ? first - 1 : first + 6);
-        } else
-#endif
-        {
-            val += steps;
-        }
-
-        // Restore to range from 1 through 7:
-        val = val % 7;
-        if (val <= 0)
-            val += 7;
-    } else {
-        val += steps;
-        const int span = max - min + 1;
-        if (val < min)
-            val = wrapping ? val + span : min;
-        else if (val > max)
-            val = wrapping ? val - span : max;
+    if (val < min) {
+        val = (wrapping ? max - (min - val) + 1 : min);
+    } else if (val > max) {
+        val = (wrapping ? min + val - max - 1 : max);
     }
 
     const int oldDay = v.date().day(calendar);
@@ -2165,8 +2132,7 @@ QDateTime QDateTimeEditPrivate::stepBy(int sectionIndex, int steps, bool test) c
     const QDateTime minimumDateTime = minimum.toDateTime();
     const QDateTime maximumDateTime = maximum.toDateTime();
     // changing one section should only modify that section, if possible
-    if (sn.type != AmPmSection && !(sn.type & DayOfWeekSectionMask)
-        && (v < minimumDateTime || v > maximumDateTime)) {
+    if (sn.type != AmPmSection && (v < minimumDateTime || v > maximumDateTime)) {
         const int localmin = getDigit(minimumDateTime, sectionIndex);
         const int localmax = getDigit(maximumDateTime, sectionIndex);
 

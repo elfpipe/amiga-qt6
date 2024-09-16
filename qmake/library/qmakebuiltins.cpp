@@ -548,13 +548,14 @@ QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) 
                                + IoUtils::shellQuote(QDir::toNativeSeparators(currentDirectory()))
                                + QLatin1String(" && ") + args).toLocal8Bit().constData(), QT_POPEN_READ)) {
 #endif
-int i = 0;
+printf("[QMakeEvaluator::getCommandOutput :] popen returned.\n");
         while (!feof(proc)) {
             char buff[10 * 1024];
+printf("[QMakeEvaluator::getCommandOutput :] Calling fread\n");
             int read_in = int(fread(buff, 1, sizeof(buff), proc));
+printf("[QMakeEvaluator::getCommandOutput :] fread returned.\n");
             if (!read_in)
                 break;
-            buff[read_in+1] = '\0';
             out += QByteArray(buff, read_in);
         }
         int ec = QT_PCLOSE(proc);
@@ -865,7 +866,6 @@ QMakeEvaluator::VisitReturn QMakeEvaluator::evaluateBuiltinExpand(
                 lines = true;
         }
         QString fn = filePathEnvArg0(args);
-printf("[E_CAT(*) :] fn : %s\n", fn.toLocal8Bit().constData());
         QFile qfile(fn);
         if (qfile.open(QIODevice::ReadOnly)) {
             QTextStream stream(&qfile);

@@ -85,7 +85,7 @@ QT_BEGIN_NAMESPACE
 #  define RCC_FEATURE_SYMBOL(feature)   \
     extern Q_CORE_EXPORT const quint8 qt_resourceFeature ## feature; \
     const quint8 qt_resourceFeature ## feature = 0;
-    #else
+#else
 #  define RCC_FEATURE_SYMBOL(feature)   \
     Q_CORE_EXPORT quint8 qResourceFeature ## feature() { return 0; }
 #endif
@@ -416,7 +416,8 @@ void QResourcePrivate::ensureChildren() const
     QString path = absoluteFilePath, k;
     if (path.startsWith(QLatin1Char(':')))
         path = path.mid(1);
-    QDuplicateTracker<QString> kids(related.size());
+    QDuplicateTracker<QString> kids;
+    kids.reserve(related.size());
     QString cleaned = cleanPath(path);
     for (int i = 0; i < related.size(); ++i) {
         QResourceRoot *res = related.at(i);

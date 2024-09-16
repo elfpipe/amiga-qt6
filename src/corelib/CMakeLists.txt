@@ -34,7 +34,7 @@ qt_internal_add_module(Core
     NO_GENERATE_METATYPES # metatypes are extracted manually below
     EXCEPTIONS
     SOURCES
-        compat/removed_api.cpp
+        # compat/removed_api.cpp
         global/archdetect.cpp
         global/qcompare_impl.h
         global/qcompare.h
@@ -275,7 +275,7 @@ qt_internal_add_module(Core
 )
 
 set(corelib_no_pch_sources
-    compat/removed_api.cpp
+    # compat/removed_api.cpp
     kernel/qmetatype.cpp
 )
 

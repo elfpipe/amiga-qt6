@@ -91,29 +91,47 @@ public:
         Id128           = 3
     };
 
+#if defined(Q_COMPILER_UNIFORM_INIT) && !defined(Q_CLANG_QDOC)
+
     constexpr QUuid() noexcept : data1(0), data2(0), data3(0), data4{0,0,0,0,0,0,0,0} {}
 
     constexpr QUuid(uint l, ushort w1, ushort w2, uchar b1, uchar b2, uchar b3,
                            uchar b4, uchar b5, uchar b6, uchar b7, uchar b8) noexcept
         : data1(l), data2(w1), data3(w2), data4{b1, b2, b3, b4, b5, b6, b7, b8} {}
+#else
+    QUuid() noexcept
+    {
+        data1 = 0;
+        data2 = 0;
+        data3 = 0;
+        for (int i = 0; i < 8; i++)
+            data4[i] = 0;
+    }
+    QUuid(uint l, ushort w1, ushort w2, uchar b1, uchar b2, uchar b3, uchar b4, uchar b5, uchar b6, uchar b7, uchar b8) noexcept
+    {
+        data1 = l;
+        data2 = w1;
+        data3 = w2;
+        data4[0] = b1;
+        data4[1] = b2;
+        data4[2] = b3;
+        data4[3] = b4;
+        data4[4] = b5;
+        data4[5] = b6;
+        data4[6] = b7;
+        data4[7] = b8;
+    }
+#endif
 
-    explicit QUuid(QAnyStringView string) noexcept
-        : QUuid{fromString(string)} {}
-    static QUuid fromString(QAnyStringView string) noexcept;
-#if QT_REMOVED_SINCE(6, 3)
     explicit QUuid(const QString &);
     static QUuid fromString(QStringView string) noexcept;
     static QUuid fromString(QLatin1String string) noexcept;
     explicit QUuid(const char *);
-    explicit QUuid(const QByteArray &);
-#endif
     QString toString(StringFormat mode = WithBraces) const;
+    explicit QUuid(const QByteArray &);
     QByteArray toByteArray(StringFormat mode = WithBraces) const;
     QByteArray toRfc4122() const;
-#if QT_REMOVED_SINCE(6, 3)
     static QUuid fromRfc4122(const QByteArray &);
-#endif
-    static QUuid fromRfc4122(QByteArrayView) noexcept;
     bool isNull() const noexcept;
 
     constexpr bool operator==(const QUuid &orig) const noexcept
@@ -140,10 +158,21 @@ public:
 #if defined(Q_OS_WIN) || defined(Q_CLANG_QDOC)
     // On Windows we have a type GUID that is used by the platform API, so we
     // provide convenience operators to cast from and to this type.
+#if defined(Q_COMPILER_UNIFORM_INIT) && !defined(Q_CLANG_QDOC)
     constexpr QUuid(const GUID &guid) noexcept
         : data1(guid.Data1), data2(guid.Data2), data3(guid.Data3),
           data4{guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
                 guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]} {}
+#else
+    QUuid(const GUID &guid) noexcept
+    {
+        data1 = guid.Data1;
+        data2 = guid.Data2;
+        data3 = guid.Data3;
+        for (int i = 0; i < 8; i++)
+            data4[i] = guid.Data4[i];
+    }
+#endif
 
     constexpr QUuid &operator=(const GUID &guid) noexcept
     {

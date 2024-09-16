@@ -1460,7 +1460,6 @@ namespace Qt {
     enum LayoutDirection {
         LeftToRight,
         RightToLeft,
-        // ### Qt 7: make auto the first one (with value 0)
         LayoutDirectionAuto
     };
 

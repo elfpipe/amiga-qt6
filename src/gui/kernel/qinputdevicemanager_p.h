@@ -74,8 +74,7 @@ public:
         NumDeviceTypes
     };
 
-    explicit QInputDeviceManager(QObject *parent = nullptr);
-    ~QInputDeviceManager() override;
+    QInputDeviceManager(QObject *parent = nullptr);
 
     int deviceCount(DeviceType type) const;
 
@@ -84,7 +83,7 @@ public:
     Qt::KeyboardModifiers keyboardModifiers() const;
     void setKeyboardModifiers(Qt::KeyboardModifiers mods);
 
-Q_SIGNALS:
+signals:
     void deviceListChanged(QInputDeviceManager::DeviceType type);
     void cursorPositionChangeRequested(const QPoint &pos);
 };

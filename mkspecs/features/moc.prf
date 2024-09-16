@@ -48,8 +48,21 @@ defineReplace(mocCmdBase) {
         incvar = @$$shell_quote($$WIN_INCLUDETEMP)
     } else {
         incvar =
-        for (inc, MOC_INCLUDEPATH): \
-            incvar += -I$$shell_quote($$inc)
+        # On amiga, gmake don't tolerate empty quotes, if $$inc is empty
+        amiga:{
+            for (inc, MOC_INCLUDEPATH): {
+                s = $$str_size($$inc)
+                # message("s == $$s")
+                equals(s, 1) {
+                    incvar += -I.
+                } else {
+                    incvar += -I$$inc
+                }
+            }
+        } else {
+            for (inc, MOC_INCLUDEPATH): \
+                incvar += -I$$shell_quote($$inc)
+        }
         incvar += $$QMAKE_FRAMEWORKPATH_FLAGS
     }
 

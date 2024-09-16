@@ -77,7 +77,6 @@
 
 #include <qtgui_tracepoints_p.h>
 
-
 QT_BEGIN_NAMESPACE
 
 // MSVC 19.28 does show spurious warning "C4723: potential divide by 0" for code that divides
@@ -2145,7 +2144,6 @@ QImage::Format QImage::format() const
     \sa convertTo(), {Image Formats}
 */
 
-#include <stdio.h>
 /*!
     \internal
 */

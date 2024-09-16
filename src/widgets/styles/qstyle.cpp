@@ -1519,9 +1519,6 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
     \value PM_LineEditIconSize The default size for icons in a line edit.
            This enum value has been introduced in Qt 6.2.
 
-    \value PM_LineEditIconMargin The margin around icons in a line edit.
-           This enum value has been introduced in Qt 6.3.
-
     \value PM_CustomBase Base value for custom pixel metrics.  Custom
     values must be greater than this value.
 
@@ -2016,11 +2013,6 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
            of a QTabBar.
            This enum value has been introduced in Qt 6.1.
 
-    \value SH_Table_AlwaysDrawLeftTopGridLines
-           Determines if the far left and top grid lines are drawn in a table or
-           not when the header is hidden. Defaults to false.
-           This enum value has been introduced in Qt 6.2.
-
     \sa styleHint()
 */
 
@@ -2127,8 +2119,6 @@ void QStyle::drawItemPixmap(QPainter *painter, const QRect &rect, int alignment,
        This enum value was added in Qt 5.14.
     \value SP_RestoreDefaultsButton Icon for a standard RestoreDefaults button in a QDialogButtonBox.
        This enum value was added in Qt 5.14.
-    \value SP_TabCloseButton Icon for the close button in the tab of a QTabBar.
-       This enum value was added in Qt 6.3.
     \value SP_CustomBase  Base value for custom standard pixmaps;
     custom values must be greater than this value.
 

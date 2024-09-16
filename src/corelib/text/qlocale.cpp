@@ -934,11 +934,11 @@ QLocale::QLocale(QLocalePrivate &dd)
     \endlist
 
     The separator can be either underscore \c{'_'} (U+005F, "low line") or a
-    dash \c{'-'} (U+002D, "hyphen-minus"). If the string violates the locale
+    dash \c{'-'} (U+002D, "hyphen-minus"). If QLocale has no data for the
+    specified combination of language, script, and territory, then it uses the
+    most suitable match it can find instead. If the string violates the locale
     format, or no suitable data can be found for the specified keys, the "C"
-    locale is used instead. If QLocale has no data for the specified combination
-    of language, script and territory, the it uses most suitable match it can
-    find instead.
+    locale is used instead.
 
     This constructor is much slower than QLocale(Language, Script, Territory) or
     QLocale(Language, Territory).
@@ -2945,8 +2945,8 @@ QString QCalendarBackend::standaloneWeekDayName(const QLocale &locale, int day,
 #ifndef QT_NO_SYSTEMLOCALE
     if (locale.d->m_data == &systemLocaleData) {
         QVariant res = systemLocale()->query(format == QLocale::LongFormat
-                                             ? QSystemLocale::DayNameLong
-                                             : QSystemLocale::DayNameShort,
+                                             ? QSystemLocale::StandaloneDayNameLong
+                                             : QSystemLocale::StandaloneDayNameShort,
                                              day);
         if (!res.isNull())
             return res.toString();
@@ -3429,8 +3429,7 @@ QString QLocaleData::doubleToString(double d, int precision, DoubleForm form,
     const QString prefix = signPrefix(negative && !isZero(d), flags);
     QString numStr;
 
-    if (length == 3
-        && (qstrncmp(buf.data(), "inf", 3) == 0 || qstrncmp(buf.data(), "nan", 3) == 0)) {
+    if (qstrncmp(buf.data(), "inf", 3) == 0 || qstrncmp(buf.data(), "nan", 3) == 0) {
         numStr = QString::fromLatin1(buf.data(), length);
     } else { // Handle finite values
         const QString zero = zeroDigit();
@@ -3438,9 +3437,6 @@ QString QLocaleData::doubleToString(double d, int precision, DoubleForm form,
 
         if (zero == u"0") {
             // No need to convert digits.
-            Q_ASSERT(std::all_of(buf.cbegin(), buf.cbegin() + length, [](char ch)
-                                 { return '0' <= ch && ch <= '9'; }));
-            // That check is taken care of in unicodeForDigits, below.
         } else if (zero.size() == 2 && zero.at(0).isHighSurrogate()) {
             const char32_t zeroUcs4 = QChar::surrogateToUcs4(zero.at(0), zero.at(1));
             QString converted;

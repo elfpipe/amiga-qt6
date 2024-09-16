@@ -1759,75 +1759,162 @@ QMenu::~QMenu()
     hideTearOffMenu();
 }
 
-#if QT_DEPRECATED_SINCE(6, 4)
 /*!
-    \fn QAction *QMenu::addAction(const QString &text, const QObject *receiver, const char* member, const QKeySequence &shortcut)
-    \obsolete
+    This convenience function creates a new action with \a text.
+    The function adds the newly created action to the menu's
+    list of actions, and returns it.
 
-    Use \c{QWidget::addAction(text, shortcut, receiver, member)} instead.
+    QMenu takes ownership of the returned QAction.
+
+    \sa QWidget::addAction()
 */
-#if QT_CONFIG(shortcut)
-QAction *QMenu::addAction(const QString &text, const QObject *receiver, const char* member, const QKeySequence &shortcut)
+QAction *QMenu::addAction(const QString &text)
 {
-    return QWidget::addAction(text, shortcut, receiver, member);
+    QAction *ret = new QAction(text, this);
+    addAction(ret);
+    return ret;
 }
-#endif
 
 /*!
-    \fn template<typename Functor> QAction *QMenu::addAction(const QString &text, Functor functor, const QKeySequence &shortcut)
+    \overload
 
-    \since 5.6
-    \obsolete
+    This convenience function creates a new action with an \a icon
+    and some \a text. The function adds the newly created action to
+    the menu's list of actions, and returns it.
 
-    Use QWidget::addAction(text, shortcut, functor) instead.
+    QMenu takes ownership of the returned QAction.
+
+    \sa QWidget::addAction()
 */
-
-/*!
-    \fn template<typename Functor> QAction *QMenu::addAction(const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut)
-
-    \since 5.6
-    \obsolete
-
-    Use QWidget::addAction(text, shortcut, context, functor) instead.
-*/
-
-/*!
-    \fn template<typename Functor> QAction *QMenu::addAction(const QIcon &icon, const QString &text, Functor functor, const QKeySequence &shortcut)
-
-    \since 5.6
-    \obsolete
-
-    Use QWidget::addAction(icon, text, shortcut, functor) instead.
-*/
-
-/*!
-    \fn template<typename Functor> QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut)
-
-    \since 5.6
-    \obsolete
-
-    Use QWidget::addAction(icon, text, shortcut, context, functor) instead.
-*/
-
-/*!
-    \fn QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *receiver, const char* member, const QKeySequence &shortcut)
-
-    \obsolete
-
-    Use QWidget::addAction(icon, text, shortcut, receiver, member) instead.
-*/
-#if QT_CONFIG(shortcut)
-QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *receiver,
-                          const char* member, const QKeySequence &shortcut)
+QAction *QMenu::addAction(const QIcon &icon, const QString &text)
 {
-    QAction *action = new QAction(icon, text, this);
+    QAction *ret = new QAction(icon, text, this);
+    addAction(ret);
+    return ret;
+}
+
+/*!
+    \overload
+
+    This convenience function creates a new action with the text \a
+    text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a receiver's \a member slot. The function adds the newly created
+    action to the menu's list of actions and returns it.
+
+    QMenu takes ownership of the returned QAction.
+
+    \sa QWidget::addAction()
+*/
+QAction *QMenu::addAction(const QString &text, const QObject *receiver, const char* member
+#if QT_CONFIG(shortcut)
+                          , const QKeySequence &shortcut
+#endif
+                          )
+{
+    QAction *action = new QAction(text, this);
+#if QT_CONFIG(shortcut)
     action->setShortcut(shortcut);
+#endif
     QObject::connect(action, SIGNAL(triggered(bool)), receiver, member);
     addAction(action);
     return action;
 }
+
+/*!\fn template<typename Functor> QAction *QMenu::addAction(const QString &text, Functor functor, const QKeySequence &shortcut = 0)
+
+    \since 5.6
+
+    \overload
+
+    This convenience function creates a new action with the text \a
+    text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a functor. The function adds the newly created
+    action to the menu's list of actions and returns it.
+
+    QMenu takes ownership of the returned QAction.
+*/
+
+/*!\fn template<typename Functor> QAction *QMenu::addAction(const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut)
+
+    \since 5.6
+
+    \overload
+
+    This convenience function creates a new action with the text \a
+    text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a functor. The functor can be a pointer to a member function of
+    the \a context object. The newly created action is added to the
+    menu's list of actions and a pointer to it is returned.
+
+    If the \a context object is destroyed, the functor will not be called.
+
+    QMenu takes ownership of the returned QAction.
+*/
+
+/*!\fn template<typename Functor> QAction *QMenu::addAction(const QIcon &icon, const QString &text, Functor functor, const QKeySequence &shortcut = 0)
+
+    \since 5.6
+
+    \overload
+
+    This convenience function creates a new action with an \a icon
+    and some \a text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a functor. The function adds the newly created
+    action to the menu's list of actions and returns it.
+
+    QMenu takes ownership of the returned QAction.
+*/
+
+/*!\fn template<typename Functor> QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *context, Functor functor, const QKeySequence &shortcut)
+
+    \since 5.6
+
+    \overload
+
+    This convenience function creates a new action with an \a icon
+    and some \a text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a functor. The \a functor can be a pointer to a member function
+    of the \a context object. The newly created action is added to the
+    menu's list of actions and a pointer to it is returned.
+
+    If \a context is destroyed, the functor will not be called.
+
+    QMenu takes ownership of the returned QAction.
+*/
+
+/*!
+    \overload
+
+    This convenience function creates a new action with an \a icon and
+    some \a text and an optional shortcut \a shortcut. The action's
+    \l{QAction::triggered()}{triggered()} signal is connected to the
+    \a member slot of the \a receiver object. The function adds the
+    newly created action to the menu's list of actions, and returns it.
+
+    QMenu takes ownership of the returned QAction.
+
+    \sa QWidget::addAction()
+*/
+QAction *QMenu::addAction(const QIcon &icon, const QString &text, const QObject *receiver,
+                          const char* member
+#if QT_CONFIG(shortcut)
+                          , const QKeySequence &shortcut
 #endif
-#endif // QT_DEPRECATED_SINCE(6, 4)
+                          )
+{
+    QAction *action = new QAction(icon, text, this);
+#if QT_CONFIG(shortcut)
+    action->setShortcut(shortcut);
+#endif
+    QObject::connect(action, SIGNAL(triggered(bool)), receiver, member);
+    addAction(action);
+    return action;
+}
 
 /*!
     This convenience function adds \a menu as a submenu to this menu.

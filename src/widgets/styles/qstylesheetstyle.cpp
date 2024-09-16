@@ -2653,7 +2653,8 @@ void QStyleSheetStyle::setProperties(QWidget *w)
 
     {
         // scan decls for final occurrence of each "qproperty"
-        QDuplicateTracker<QString> propertySet(decls.size());
+        QDuplicateTracker<QString> propertySet;
+        propertySet.reserve(decls.size());
         for (int i = decls.count() - 1; i >= 0; --i) {
             const QString property = decls.at(i).d->property;
             if (!property.startsWith(QLatin1String("qproperty-"), Qt::CaseInsensitive))

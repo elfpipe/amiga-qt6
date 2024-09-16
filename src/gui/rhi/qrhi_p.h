@@ -284,8 +284,6 @@ private:
     friend Q_GUI_EXPORT QDebug operator<<(QDebug, const QRhiVertexInputLayout &);
 };
 
-Q_DECLARE_TYPEINFO(QRhiVertexInputLayout, Q_RELOCATABLE_TYPE);
-
 Q_GUI_EXPORT bool operator==(const QRhiVertexInputLayout &a, const QRhiVertexInputLayout &b) noexcept;
 Q_GUI_EXPORT bool operator!=(const QRhiVertexInputLayout &a, const QRhiVertexInputLayout &b) noexcept;
 Q_GUI_EXPORT size_t qHash(const QRhiVertexInputLayout &v, size_t seed = 0) noexcept;
@@ -411,10 +409,34 @@ public:
             StorageImageData simage;
             StorageBufferData sbuf;
         } u;
+
+        template<typename Output>
+        Output serialize(Output dst) const
+        {
+            // must write out exactly LAYOUT_DESC_ENTRIES_PER_BINDING elements here
+            *dst++ = quint32(binding);
+            *dst++ = quint32(stage);
+            *dst++ = quint32(type);
+            *dst++ = quint32(type == QRhiShaderResourceBinding::SampledTexture ? u.stex.count : 1);
+            return dst;
+        }
     };
 
     Data *data() { return &d; }
     const Data *data() const { return &d; }
+
+    static const int LAYOUT_DESC_ENTRIES_PER_BINDING = 4;
+
+    template<typename Output>
+    static void serializeLayoutDescription(const QRhiShaderResourceBinding *first,
+                                           const QRhiShaderResourceBinding *last,
+                                           Output dst)
+    {
+        while (first != last) {
+            dst = first->data()->serialize(dst);
+            ++first;
+        }
+    }
 
 private:
     Data d;
@@ -502,8 +524,6 @@ private:
     QRhiTexture *m_depthTexture = nullptr;
 };
 
-Q_DECLARE_TYPEINFO(QRhiTextureRenderTargetDescription, Q_RELOCATABLE_TYPE);
-
 class Q_GUI_EXPORT QRhiTextureSubresourceUploadDescription
 {
 public:
@@ -584,8 +604,6 @@ public:
 private:
     QVarLengthArray<QRhiTextureUploadEntry, 16> m_entries;
 };
-
-Q_DECLARE_TYPEINFO(QRhiTextureUploadDescription, Q_RELOCATABLE_TYPE);
 
 class Q_GUI_EXPORT QRhiTextureCopyDescription
 {
@@ -1037,18 +1055,33 @@ public:
 
     bool isLayoutCompatible(const QRhiShaderResourceBindings *other) const;
 
+    QVector<quint32> serializedLayoutDescription() const { return m_layoutDesc; }
+
     virtual bool create() = 0;
 
+    enum UpdateFlag {
+        BindingsAreSorted = 0x01
+    };
+    Q_DECLARE_FLAGS(UpdateFlags, UpdateFlag)
+
+    virtual void updateResources(UpdateFlags flags = {}) = 0;
+
 protected:
+    static const int BINDING_PREALLOC = 12;
     QRhiShaderResourceBindings(QRhiImplementation *rhi);
-    QVarLengthArray<QRhiShaderResourceBinding, 16> m_bindings;
-    uint m_layoutDescHash = 0;
-    QVarLengthArray<uint, 16 * 3> m_layoutDesc;
+    QVarLengthArray<QRhiShaderResourceBinding, BINDING_PREALLOC> m_bindings;
+    size_t m_layoutDescHash = 0;
+    // Intentionally not using QVLA for m_layoutDesc: clients like Qt Quick are much
+    // better served with an implicitly shared container here, because they will likely
+    // throw this directly into structs serving as cache keys.
+    QVector<quint32> m_layoutDesc;
     friend class QRhiImplementation;
 #ifndef QT_NO_DEBUG_STREAM
     friend Q_GUI_EXPORT QDebug operator<<(QDebug, const QRhiShaderResourceBindings &);
 #endif
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QRhiShaderResourceBindings::UpdateFlags)
 
 #ifndef QT_NO_DEBUG_STREAM
 Q_GUI_EXPORT QDebug operator<<(QDebug, const QRhiShaderResourceBindings &);
@@ -1428,7 +1461,7 @@ struct Q_GUI_EXPORT QRhiReadbackResult
     QRhiTexture::Format format;
     QSize pixelSize;
     QByteArray data;
-}; // non-movable due to the std::function
+};
 
 struct Q_GUI_EXPORT QRhiBufferReadbackResult
 {

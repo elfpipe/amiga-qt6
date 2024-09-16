@@ -88,7 +88,6 @@ int QCollator::compare(QStringView s1, QStringView s2) const
     QVarLengthArray<wchar_t> array1, array2;
     stringToWCharArray(array1, s1);
     stringToWCharArray(array2, s2);
-
     return std::wcscoll(array1.constData(), array2.constData());
 }
 
@@ -100,7 +99,6 @@ QCollatorSortKey QCollator::sortKey(const QString &string) const
     QVarLengthArray<wchar_t> original;
     stringToWCharArray(original, string);
     QList<wchar_t> result(original.size());
-
     if (d->isC()) {
         std::copy(original.cbegin(), original.cend(), result.begin());
     } else {

@@ -71,8 +71,10 @@ Q_LOGGING_CATEGORY(lcQtGuiDrawHelper, "qt.gui.drawhelper")
   constants and structures
 */
 
-constexpr int fixed_scale = 1 << 16;
-constexpr int half_point = 1 << 15;
+enum {
+    fixed_scale = 1 << 16,
+    half_point = 1 << 15
+};
 
 template <QPixelLayout::BPP bpp> static
 inline uint QT_FASTCALL fetch1Pixel(const uchar *, int)
@@ -888,8 +890,8 @@ static inline bool canUseFastMatrixPath(const qreal cx, const qreal cy, const qs
     qreal fy = (data->m22 * cy + data->m12 * cx + data->dy) * fixed_scale;
     qreal minc = std::min(fx, fy);
     qreal maxc = std::max(fx, fy);
-    fx += trunc(data->m11 * fixed_scale) * length;
-    fy += trunc(data->m12 * fixed_scale) * length;
+    fx += std::trunc(data->m11 * fixed_scale) * length;
+    fy += std::trunc(data->m12 * fixed_scale) * length;
     minc = std::min(minc, std::min(fx, fy));
     maxc = std::max(maxc, std::max(fx, fy));
 

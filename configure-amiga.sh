@@ -10,6 +10,7 @@ cmake \
 -DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
 -DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
 -DCMAKE_EXE_LINKER_FLAGS="-use-dynld -Wl,--verbose -gstabs" \
+-DBUILD_WITH_PCH=OFF \
 -DUNIX=1 -DAMIGA=1 \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \

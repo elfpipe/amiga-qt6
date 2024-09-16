@@ -42,11 +42,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <qglobal.h>
 /*
     Define the container allocation functions in a separate file, so that our
     users can easily override them.
 */
+
+#include "qnamespace.h"
 
 QT_BEGIN_NAMESPACE
 

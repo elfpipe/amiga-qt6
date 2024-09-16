@@ -53,8 +53,6 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include <limits>
-
 #if defined(Q_OS_LINUX) && !defined(__UCLIBC__)
 #    include <fenv.h>
 #endif
@@ -462,54 +460,6 @@ qstrtoll(const char * nptr, const char **endptr, int base, bool *ok)
     return result;
 }
 
-template <typename Char>
-static Q_ALWAYS_INLINE void qulltoString_helper(qulonglong number, int base, Char *&p)
-{
-    // Performance-optimized code. Compiler can generate faster code when base is known.
-    switch (base) {
-#define BIG_BASE_LOOP(b)                                  \
-    do {                                                  \
-        const int r = number % b;                         \
-        *--p = Char((r < 10 ? '0' : 'a' - 10) + r); \
-        number /= b;                                      \
-    } while (number)
-#ifndef __OPTIMIZE_SIZE__
-#    define SMALL_BASE_LOOP(b)             \
-        do {                               \
-            *--p = Char('0' + number % b); \
-            number /= b;                   \
-        } while (number)
-
-    case 2: SMALL_BASE_LOOP(2); break;
-    case 8: SMALL_BASE_LOOP(8); break;
-    case 10: SMALL_BASE_LOOP(10); break;
-    case 16: BIG_BASE_LOOP(16); break;
-#undef SMALL_BASE_LOOP
-#endif
-    default: BIG_BASE_LOOP(base); break;
-#undef BIG_BASE_LOOP
-    }
-}
-
-// This is technically "qulonglong to ascii", but that name's taken
-QString qulltoBasicLatin(qulonglong number, int base, bool negative)
-{
-    if (number == 0)
-        return QStringLiteral("0");
-    // Length of MIN_LLONG with the sign in front is 65; we never need surrogate pairs.
-    // We do not need a terminator.
-    const unsigned maxlen = 65;
-    static_assert(CHAR_BIT * sizeof(number) + 1 <= maxlen);
-    char16_t buff[maxlen];
-    char16_t *const end = buff + maxlen, *p = end;
-
-    qulltoString_helper<char16_t>(number, base, p);
-    if (negative)
-        *--p = u'-';
-
-    return QString(reinterpret_cast<QChar *>(p), end - p);
-}
-
 QString qulltoa(qulonglong number, int base, const QStringView zero)
 {
     // Length of MAX_ULLONG in base 2 is 64; and we may need a surrogate pair
@@ -519,8 +469,51 @@ QString qulltoa(qulonglong number, int base, const QStringView zero)
     char16_t buff[maxlen];
     char16_t *const end = buff + maxlen, *p = end;
 
+    // Performance-optimized code. Compiler can generate faster code when base is known.
     if (base != 10 || zero == u"0") {
-        qulltoString_helper<char16_t>(number, base, p);
+        switch (base) {
+#ifndef __OPTIMIZE_SIZE__
+        case 10:
+            while (number != 0) {
+                const int c = number % 10;
+                const qulonglong temp = number / 10;
+                *--p = '0' + c;
+                number = temp;
+            }
+            break;
+        case 2:
+            while (number != 0) {
+                const int c = number % 2;
+                const qulonglong temp = number / 2;
+                *--p = '0' + c;
+                number = temp;
+            }
+            break;
+        case 8:
+            while (number != 0) {
+                const int c = number % 8;
+                const qulonglong temp = number / 8;
+                *--p = '0' + c;
+                number = temp;
+            }
+            break;
+        case 16:
+            while (number != 0) {
+                const int c = number % 16;
+                const qulonglong temp = number / 16;
+                *--p = c < 10 ? '0' + c : c - 10 + 'a';
+                number = temp;
+            }
+            break;
+#endif
+        default:
+            while (number != 0) {
+                const int c = number % base;
+                const qulonglong temp = number / base;
+                *--p = c < 10 ? '0' + c : c - 10 + 'a';
+                number = temp;
+            }
+        }
     } else if (zero.size() && !zero.at(0).isSurrogate()) {
         const char16_t zeroUcs2 = zero.at(0).unicode();
         while (number != 0) {
@@ -581,212 +574,6 @@ QString qdtoa(qreal d, int *decpt, int *sign)
         *decpt = nonNullDecpt;
 
     return QLatin1String(result, length);
-}
-
-static QLocaleData::DoubleForm resolveFormat(int precision, int decpt, qsizetype length)
-{
-    bool useDecimal;
-    if (precision == QLocale::FloatingPointShortest) {
-        // Find out which representation is shorter.
-        // Set bias to everything added to exponent form but not
-        // decimal, minus the converse.
-
-        // Exponent adds separator, sign and two exponents:
-        int bias = 2 + 2;
-        if (length <= decpt && length > 1)
-            ++bias;
-        else if (length == 1 && decpt <= 0)
-            --bias;
-
-        // When 0 < decpt <= length, the forms have equal digit
-        // counts, plus things bias has taken into account;
-        // otherwise decimal form's digit count is right-padded with
-        // zeros to decpt, when decpt is positive, otherwise it's
-        // left-padded with 1 - decpt zeros.
-        if (decpt <= 0)
-            useDecimal = 1 - decpt <= bias;
-        else if (decpt <= length)
-            useDecimal = true;
-        else
-            useDecimal = decpt <= length + bias;
-    } else {
-        // X == decpt - 1, POSIX's P; -4 <= X < P iff -4 < decpt <= P
-        Q_ASSERT(precision >= 0);
-        useDecimal = decpt > -4 && decpt <= (precision ? precision : 1);
-    }
-    return useDecimal ? QLocaleData::DFDecimal : QLocaleData::DFExponent;
-}
-
-static constexpr int digits(int number)
-{
-    Q_ASSERT(number >= 0);
-    if (Q_LIKELY(number < 1000))
-        return number < 10 ? 1 : number < 100 ? 2 : 3;
-    int i = 3;
-    for (number /= 1000; number; number /= 10)
-        ++i;
-    return i;
-}
-
-// Used generically for both QString and QByteArray
-template <typename T>
-static T dtoString(double d, QLocaleData::DoubleForm form, int precision, bool uppercase)
-{
-    // Undocumented: aside from F.P.Shortest, precision < 0 is treated as
-    // default, 6 - same as printf().
-    if (precision != QLocale::FloatingPointShortest && precision < 0)
-        precision = 6;
-
-    using D = std::numeric_limits<double>;
-    // 1 is for the null-terminator
-    constexpr int MaxDigits = 1 + qMax(D::max_exponent10, D::digits10 - D::min_exponent10);
-
-    // "maxDigits" above is a reasonable estimate, though we may need more due to extra precision
-    int bufSize = 1;
-    if (precision == QLocale::FloatingPointShortest)
-        bufSize += D::max_digits10;
-    else if (form == QLocaleData::DFDecimal && qIsFinite(d))
-        bufSize += wholePartSpace(qAbs(d)) + precision;
-    else // Add extra digit due to different interpretations of precision.
-        bufSize += qMax(2, precision) + 1; // Must also be big enough for "nan" or "inf"
-
-    // Reserve `MaxDigits` on the stack, which is a reasonable estimate;
-    // but we may need more due to extra precision, which we cannot know at compile-time.
-    QVarLengthArray<char, MaxDigits> buffer(bufSize);
-    bool negative = false;
-    int length = 0;
-    int decpt = 0;
-    qt_doubleToAscii(d, form, precision, buffer.data(), buffer.length(), negative, length, decpt);
-    QLatin1String view(buffer.data(), buffer.data() + length);
-    const bool succinct = form == QLocaleData::DFSignificantDigits;
-    qsizetype total = (negative ? 1 : 0) + length;
-    if (qIsFinite(d)) {
-        if (succinct)
-            form = resolveFormat(precision, decpt, view.size());
-
-        switch (form) {
-        case QLocaleData::DFExponent:
-            total += 3; // (.e+) The '.' may not be needed, but we would only overestimate by 1 char
-            // Exponents: we guarantee at least 2
-            total += std::max(2, digits(std::abs(decpt - 1)));
-            // "length - 1" because one of the digits will always be before the decimal point
-            if (int extraPrecision = precision - (length - 1); extraPrecision > 0 && !succinct)
-                total += extraPrecision; // some requested zero-padding
-            break;
-        case QLocaleData::DFDecimal:
-            if (decpt <= 0) // leading "0." and zeros
-                total += 2 - decpt;
-            else if (decpt < length) // just the dot
-                total += 1;
-            else // trailing zeros (and no dot, unless we require extra precision):
-                total += decpt - length;
-
-            if (precision > 0 && !succinct) {
-                // May need trailing zeros to satisfy precision:
-                if (decpt < length)
-                    total += std::max(0, precision - length + decpt);
-                else // and a dot to separate them:
-                    total += 1 + precision;
-            }
-            break;
-        case QLocaleData::DFSignificantDigits:
-            Q_UNREACHABLE(); // Handled earlier
-        }
-    }
-
-    constexpr bool IsQString = std::is_same_v<T, QString>;
-    using Char = std::conditional_t<IsQString, char16_t, char>;
-
-    T result;
-    result.reserve(total);
-
-    if (negative && !isZero(d)) // We don't return "-0"
-        result.append(Char('-'));
-    if (!qIsFinite(d)) {
-        result.append(view);
-        if (uppercase)
-            result = std::move(result).toUpper();
-    } else {
-        switch (form) {
-        case QLocaleData::DFExponent: {
-            result.append(view.first(1));
-            view = view.sliced(1);
-            if (!view.isEmpty() || (!succinct && precision > 0)) {
-                result.append(Char('.'));
-                result.append(view);
-                if (qsizetype pad = precision - view.size(); !succinct && pad > 0) {
-                    for (int i = 0; i < pad; ++i)
-                        result.append(Char('0'));
-                }
-            }
-            int exponent = decpt - 1;
-            result.append(Char(uppercase ? 'E' : 'e'));
-            result.append(Char(exponent < 0 ? '-' : '+'));
-            exponent = std::abs(exponent);
-            Q_ASSUME(exponent <= D::max_exponent10 + D::max_digits10);
-            int exponentDigits = digits(exponent);
-            // C's printf guarantees a two-digit exponent, and so do we:
-            if (exponentDigits == 1)
-                result.append(Char('0'));
-            result.resize(result.size() + exponentDigits);
-            auto location = reinterpret_cast<Char *>(result.end());
-            qulltoString_helper<Char>(exponent, 10, location);
-            break;
-        }
-        case QLocaleData::DFDecimal:
-            if (decpt < 0) {
-                if constexpr (IsQString)
-                    result.append(u"0.0");
-                else
-                    result.append("0.0");
-                while (++decpt < 0)
-                    result.append(Char('0'));
-                result.append(view);
-                if (!succinct) {
-                    auto numDecimals = result.size() - 2 - (negative ? 1 : 0);
-                    for (qsizetype i = numDecimals; i < precision; ++i)
-                        result.append(Char('0'));
-                }
-            } else {
-                if (decpt > view.size()) {
-                    result.append(view);
-                    const int sign = negative ? 1 : 0;
-                    while (result.size() - sign < decpt)
-                        result.append(Char('0'));
-                    view = {};
-                } else if (decpt) {
-                    result.append(view.first(decpt));
-                    view = view.sliced(decpt);
-                } else {
-                    result.append(Char('0'));
-                }
-                if (!view.isEmpty() || (!succinct && view.size() < precision)) {
-                    result.append(Char('.'));
-                    result.append(view);
-                    if (!succinct) {
-                        for (qsizetype i = view.size(); i < precision; ++i)
-                            result.append(Char('0'));
-                    }
-                }
-            }
-            break;
-        case QLocaleData::DFSignificantDigits:
-            Q_UNREACHABLE(); // taken care of earlier
-            break;
-        }
-    }
-    Q_ASSERT(total >= result.size()); // No reallocations are needed
-    return result;
-}
-
-QString qdtoBasicLatin(double d, QLocaleData::DoubleForm form, int precision, bool uppercase)
-{
-    return dtoString<QString>(d, form, precision, uppercase);
-}
-
-QByteArray qdtoAscii(double d, QLocaleData::DoubleForm form, int precision, bool uppercase)
-{
-    return dtoString<QByteArray>(d, form, precision, uppercase);
 }
 
 QT_END_NAMESPACE

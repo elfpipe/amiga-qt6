@@ -648,7 +648,8 @@ qsizetype QtPrivate::QStringList_lastIndexOf(const QStringList *that, const QReg
 */
 qsizetype QtPrivate::QStringList_removeDuplicates(QStringList *that)
 {
-    QDuplicateTracker<QString> seen(that->size());
+    QDuplicateTracker<QString> seen;
+    seen.reserve(that->size());
     return that->removeIf([&](const QString &s) { return seen.hasSeen(s); });
 }
 

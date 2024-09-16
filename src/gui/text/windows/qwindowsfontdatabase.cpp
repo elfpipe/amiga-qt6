@@ -51,7 +51,6 @@
 #include <QtCore/QDebug>
 #include <QtCore/QFile>
 #include <QtCore/QtEndian>
-#include <QtCore/private/qduplicatetracker_p.h>
 #include <QtCore/private/qsystemlibrary_p.h>
 #include <QtCore/private/qwinregistry_p.h>
 
@@ -500,7 +499,7 @@ namespace {
         {}
 
         QString populatedFontFamily;
-        QDuplicateTracker<FontAndStyle> foundFontAndStyles;
+        QSet<FontAndStyle> foundFontAndStyles;
         QWindowsFontDatabase *windowsFontDatabase;
     };
 }
@@ -643,8 +642,10 @@ static int QT_WIN_CALLBACK storeFont(const LOGFONT *logFont, const TEXTMETRIC *t
         signature = &reinterpret_cast<const NEWTEXTMETRICEX *>(textmetric)->ntmFontSig;
         // We get a callback for each script-type supported, but we register them all
         // at once using the signature, so we only need one call to addFontToDatabase().
-        if (sfp->foundFontAndStyles.hasSeen({familyName, styleName}))
+        FontAndStyle fontAndStyle = {familyName, styleName};
+        if (sfp->foundFontAndStyles.contains(fontAndStyle))
             return 1;
+        sfp->foundFontAndStyles.insert(fontAndStyle);
     }
     addFontToDatabase(familyName, styleName, *logFont, textmetric, signature, type, sfp);
 

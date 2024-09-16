@@ -48,7 +48,6 @@
 #include "../../corelib/global/qt_pch.h"
 
 #if defined __cplusplus
-#include <qtguiexports.h>
 #include <qtguiglobal.h>
 #include <qguiapplication.h>
 #include <qbitmap.h>

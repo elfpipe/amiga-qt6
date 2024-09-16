@@ -651,7 +651,13 @@ int runMoc(int argc, char **argv)
 
 QT_END_NAMESPACE
 
+#ifdef __amigaos4__
+#include <unistd.h>
+#endif
 int main(int _argc, char **_argv)
 {
+#ifdef __amigaos4__
+    enableUnixPaths();
+#endif
     return QT_PREPEND_NAMESPACE(runMoc)(_argc, _argv);
 }

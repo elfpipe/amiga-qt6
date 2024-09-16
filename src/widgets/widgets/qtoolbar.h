@@ -90,13 +90,58 @@ public:
     void clear();
 
     using QWidget::addAction;
-#if QT_REMOVED_SINCE(6, 3)
     QAction *addAction(const QString &text);
     QAction *addAction(const QIcon &icon, const QString &text);
     QAction *addAction(const QString &text, const QObject *receiver, const char* member);
     QAction *addAction(const QIcon &icon, const QString &text,
                        const QObject *receiver, const char* member);
-#endif
+#ifdef Q_CLANG_QDOC
+    template<typename Functor>
+    QAction *addAction(const QString &text, Functor functor);
+    template<typename Functor>
+    QAction *addAction(const QString &text, const QObject *context, Functor functor);
+    template<typename Functor>
+    QAction *addAction(const QIcon &icon, const QString &text, Functor functor);
+    template<typename Functor>
+    QAction *addAction(const QIcon &icon, const QString &text, const QObject *context, Functor functor);
+#else
+    // addAction(QString): Connect to a QObject slot / functor or function pointer (with context)
+    template<class Obj, typename Func1>
+    inline typename std::enable_if<!std::is_same<const char*, Func1>::value
+        && QtPrivate::IsPointerToTypeDerivedFromQObject<Obj*>::Value, QAction *>::type
+        addAction(const QString &text, const Obj *object, Func1 slot)
+    {
+        QAction *result = addAction(text);
+        connect(result, &QAction::triggered, object, std::move(slot));
+        return result;
+    }
+    // addAction(QString): Connect to a functor or function pointer (without context)
+    template <typename Func1>
+    inline QAction *addAction(const QString &text, Func1 slot)
+    {
+        QAction *result = addAction(text);
+        connect(result, &QAction::triggered, slot);
+        return result;
+    }
+    // addAction(QString): Connect to a QObject slot / functor or function pointer (with context)
+    template<class Obj, typename Func1>
+    inline typename std::enable_if<!std::is_same<const char*, Func1>::value
+        && QtPrivate::IsPointerToTypeDerivedFromQObject<Obj*>::Value, QAction *>::type
+        addAction(const QIcon &actionIcon, const QString &text, const Obj *object, Func1 slot)
+    {
+        QAction *result = addAction(actionIcon, text);
+        connect(result, &QAction::triggered, object, std::move(slot));
+        return result;
+    }
+    // addAction(QIcon, QString): Connect to a functor or function pointer (without context)
+    template <typename Func1>
+    inline QAction *addAction(const QIcon &actionIcon, const QString &text, Func1 slot)
+    {
+        QAction *result = addAction(actionIcon, text);
+        connect(result, &QAction::triggered, slot);
+        return result;
+    }
+#endif // !Q_CLANG_QDOC
 
     QAction *addSeparator();
     QAction *insertSeparator(QAction *before);

@@ -599,6 +599,9 @@ QT_END_NAMESPACE
 
 int main(int argc, char **argv)
 {
+#ifdef __amigaos4__
+    enableUnixPaths();
+#endif
     // Set name of the qmake application in QCoreApplication instance
     QT_PREPEND_NAMESPACE(QCoreApplication) app(argc, argv);
     return QT_PREPEND_NAMESPACE(runQMake)(argc, argv);

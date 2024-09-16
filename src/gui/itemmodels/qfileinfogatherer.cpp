@@ -310,7 +310,6 @@ void QFileInfoGatherer::list(const QString &directoryPath)
 */
 void QFileInfoGatherer::run()
 {
-    printf("QFileInfoGatherer::run() pthread_self() == 0x%x", currentThreadId());
     forever {
         QMutexLocker locker(&mutex);
         while (!abort.loadRelaxed() && path.isEmpty())
@@ -402,7 +401,8 @@ void QFileInfoGatherer::getFileInfos(const QString &path, const QStringList &fil
     if (files.isEmpty()) {
         QDirIterator dirIt(path, QDir::AllEntries | QDir::System | QDir::Hidden);
         while (!abort.loadRelaxed() && dirIt.hasNext()) {
-            fileInfo = dirIt.nextFileInfo();
+            dirIt.next();
+            fileInfo = dirIt.fileInfo();
             fileInfo.stat();
             allFiles.append(fileInfo.fileName());
             fetch(fileInfo, base, firstTime, updatedFiles, path);

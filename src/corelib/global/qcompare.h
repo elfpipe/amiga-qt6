@@ -45,7 +45,6 @@
 #endif
 
 #include <QtCore/qglobal.h>
-#include <QtCore/qcompare_impl.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,6 +65,16 @@ enum class Uncomparable : CompareUnderlyingType
     Unordered = -127
 };
 
+// [cmp.categories.pre] / 3, but using a safe bool trick
+// and also rejecting std::nullptr_t (unlike the example)
+class CompareAgainstLiteralZero {
+public:
+    using SafeZero = void (CompareAgainstLiteralZero::*)();
+    Q_IMPLICIT constexpr CompareAgainstLiteralZero(SafeZero) noexcept {}
+
+    template <typename T, std::enable_if_t<!std::is_same_v<T, int>, bool> = false>
+    CompareAgainstLiteralZero(T) = delete;
+};
 } // namespace QtPrivate
 
 // [cmp.partialord]

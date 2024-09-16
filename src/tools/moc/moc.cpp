@@ -1832,7 +1832,7 @@ void Moc::checkProperties(ClassDef *cdef)
     // specify get function, for compatibiliy we accept functions
     // returning pointers, or const char * for QByteArray.
     //
-    QDuplicateTracker<QByteArray> definedProperties(cdef->propertyList.count());
+    QDuplicateTracker<QByteArray> definedProperties;
     for (int i = 0; i < cdef->propertyList.count(); ++i) {
         PropertyDef &p = cdef->propertyList[i];
         if (definedProperties.hasSeen(p.name)) {

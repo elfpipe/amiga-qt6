@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef STORE_H
-#define STORE_H
+#ifndef QPLATFORMBACKINGSTORE_H
+#define QPLATFORMBACKINGSTORE_H
 
 //
 //  W A R N I N G

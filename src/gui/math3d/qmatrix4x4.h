@@ -47,8 +47,6 @@
 #include <QtGui/qgenericmatrix.h>
 #include <QtCore/qrect.h>
 
-class tst_QMatrixNxN;
-
 QT_BEGIN_NAMESPACE
 
 
@@ -212,8 +210,6 @@ private:
     Flags flagBits;
 
     QMatrix4x4 orthonormalInverse() const;
-
-    friend class ::tst_QMatrixNxN; // for access to flagBits
 };
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(QMatrix4x4::Flags)

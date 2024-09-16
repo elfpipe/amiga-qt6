@@ -91,12 +91,17 @@ static QByteArray ianaId(const QWindowsData *windowsData)
 }
 
 // Return the IANA ID literal for a given QZoneData
-static QByteArrayView ianaId(const QZoneData *zoneData)
+static QByteArray ianaId(const QZoneData *zoneData)
 {
     return (ianaIdData + zoneData->ianaIdIndex);
 }
 
-static QByteArrayView utcId(const QUtcData *utcData)
+static QByteArrayView ianaIdView(const QZoneData *zoneData)
+{
+    return (ianaIdData + zoneData->ianaIdIndex);
+}
+
+static QByteArray utcId(const QUtcData *utcData)
 {
     return (ianaIdData + utcData->ianaIdIndex);
 }
@@ -171,10 +176,13 @@ QLocale::Territory QTimeZonePrivate::territory() const
     // Default fall-back mode, use the zoneTable to find Region of known Zones
     for (int i = 0; i < zoneDataTableSize; ++i) {
         const QZoneData *data = zoneData(i);
-        QLatin1String view(ianaId(data));
-        for (QLatin1String token : view.tokenize(QLatin1String(" "))) {
-            if (token == QLatin1String(m_id.data(), m_id.size()))
-                return QLocale::Territory(data->territory);
+        QByteArrayView idView = ianaIdView(data);
+        while (!idView.isEmpty()) {
+            qsizetype index = idView.indexOf(' ');
+            QByteArrayView next = index == -1 ? idView : idView.first(index);
+            if (next == m_id)
+                return (QLocale::Territory)data->territory;
+            idView = index == -1 ? QByteArrayView() : idView.sliced(index + 1);
         }
     }
     return QLocale::AnyTerritory;
@@ -376,28 +384,33 @@ QTimeZonePrivate::Data QTimeZonePrivate::dataForLocalTime(qint64 forLocalMSecs, 
 
         // Check we do *really* have transitions for this zone:
         if (tran.atMSecsSinceEpoch != invalidMSecs()) {
-
-            /*
-              So now tran is definitely before and nextTran is either after or
-              only slightly before.  We're going to interpret one as standard
-              time, the other as DST (although the transition might in fact by a
-              change in standard offset, or a chance in DST offset, e.g. to/from
-              double-DST).  Our hint tells us which of those to use (defaulting
-              to standard if no hint): try it first; if that fails, try the
-              other; if both fail, life's tricky.
-            */
+            /* So now tran is definitely before ... */
             Q_ASSERT(forLocalMSecs < 0
                      || forLocalMSecs - tran.offsetFromUtc * 1000 > tran.atMSecsSinceEpoch);
-            const qint64 nextStart = nextTran.atMSecsSinceEpoch;
-            // Work out the UTC values it might make sense to return:
-            nextTran.atMSecsSinceEpoch = forLocalMSecs - nextTran.offsetFromUtc * 1000;
+            // Work out the UTC value it would make sense to return if using tran:
             tran.atMSecsSinceEpoch = forLocalMSecs - tran.offsetFromUtc * 1000;
+            // If we know of no transition after it, the answer is easy:
+            const qint64 nextStart = nextTran.atMSecsSinceEpoch;
+            if (nextStart == invalidMSecs())
+                return tran;
+
+            /*
+              ... and nextTran is either after or only slightly before. We're
+              going to interpret one as standard time, the other as DST
+              (although the transition might in fact be a change in standard
+              offset, or a change in DST offset, e.g. to/from double-DST). Our
+              hint tells us which of those to use (defaulting to standard if no
+              hint): try it first; if that fails, try the other; if both fail,
+              life's tricky.
+            */
+            // Work out the UTC value it would make sense to return if using nextTran:
+            nextTran.atMSecsSinceEpoch = forLocalMSecs - nextTran.offsetFromUtc * 1000;
 
             // If both or neither have zero DST, treat the one with lower offset as standard:
             const bool nextIsDst = !nextTran.daylightTimeOffset == !tran.daylightTimeOffset
                 ? tran.offsetFromUtc < nextTran.offsetFromUtc : nextTran.daylightTimeOffset;
             // If that agrees with hint > 0, our first guess is to use nextTran; else tran.
-            const bool nextFirst = nextIsDst == (hint > 0) && nextStart != invalidMSecs();
+            const bool nextFirst = nextIsDst == (hint > 0);
             for (int i = 0; i < 2; i++) {
                 /*
                   On the first pass, the case we consider is what hint told us to expect
@@ -406,12 +419,11 @@ QTimeZonePrivate::Data QTimeZonePrivate::dataForLocalTime(qint64 forLocalMSecs, 
                   by which time the second case, that we're trying, is likely right.
                 */
                 if (nextFirst ? i == 0 : i) {
-                    Q_ASSERT(nextStart != invalidMSecs());
                     if (nextStart <= nextTran.atMSecsSinceEpoch)
                         return nextTran;
                 } else {
                     // If next is invalid, nextFirst is false, to route us here first:
-                    if (nextStart == invalidMSecs() || nextStart > tran.atMSecsSinceEpoch)
+                    if (nextStart > tran.atMSecsSinceEpoch)
                         return tran;
                 }
             }
@@ -527,11 +539,8 @@ QList<QByteArray> QTimeZonePrivate::availableTimeZoneIds(QLocale::Territory terr
 
     // First get all Zones in the Zones table belonging to the Region
     for (int i = 0; i < zoneDataTableSize; ++i) {
-        if (zoneData(i)->territory == territory) {
-            QLatin1String l1Id(ianaId(zoneData(i)));
-            for (auto l1 : l1Id.tokenize(QLatin1String(" ")))
-                regions << QByteArray(l1.data(), l1.size());
-        }
+        if (zoneData(i)->territory == territory)
+            regions += ianaId(zoneData(i)).split(' ');
     }
 
     std::sort(regions.begin(), regions.end());
@@ -556,11 +565,8 @@ QList<QByteArray> QTimeZonePrivate::availableTimeZoneIds(int offsetFromUtc) cons
         if (winData->offsetFromUtc == offsetFromUtc) {
             for (int j = 0; j < zoneDataTableSize; ++j) {
                 const QZoneData *data = zoneData(j);
-                if (data->windowsIdKey == winData->windowsIdKey) {
-                    QLatin1String l1Id(ianaId(data));
-                    for (auto l1 : l1Id.tokenize(QLatin1String(" ")))
-                        offsets << QByteArray(l1.data(), l1.size());
-                }
+                if (data->windowsIdKey == winData->windowsIdKey)
+                    offsets += ianaId(data).split(' ');
             }
         }
     }
@@ -717,10 +723,13 @@ QByteArray QTimeZonePrivate::ianaIdToWindowsId(const QByteArray &id)
 {
     for (int i = 0; i < zoneDataTableSize; ++i) {
         const QZoneData *data = zoneData(i);
-        QLatin1String l1Id(ianaId(data));
-        for (auto l1 : l1Id.tokenize(QLatin1String(" "))) {
-            if (l1 == QByteArrayView(id))
+        QByteArrayView idView = ianaIdView(data);
+        while (!idView.isEmpty()) {
+            qsizetype index = idView.indexOf(' ');
+            QByteArrayView next = index == -1 ? idView : idView.first(index);
+            if (next == id)
                 return toWindowsIdLiteral(data->windowsIdKey);
+            idView = index == -1 ? QByteArrayView() : idView.sliced(index + 1);
         }
     }
     return QByteArray();
@@ -754,11 +763,8 @@ QList<QByteArray> QTimeZonePrivate::windowsIdToIanaIds(const QByteArray &windows
 
     for (int i = 0; i < zoneDataTableSize; ++i) {
         const QZoneData *data = zoneData(i);
-        if (data->windowsIdKey == windowsIdKey) {
-            QLatin1String l1Id(ianaId(data));
-            for (auto l1 : l1Id.tokenize(QLatin1String(" ")))
-                list << QByteArray(l1.data(), l1.size());
-        }
+        if (data->windowsIdKey == windowsIdKey)
+            list << ianaId(data).split(' ');
     }
 
     // Return the full list in alpha order
@@ -773,14 +779,8 @@ QList<QByteArray> QTimeZonePrivate::windowsIdToIanaIds(const QByteArray &windows
     for (int i = 0; i < zoneDataTableSize; ++i) {
         const QZoneData *data = zoneData(i);
         // Return the region matches in preference order
-        if (data->windowsIdKey == windowsIdKey
-            && data->territory == static_cast<quint16>(territory)) {
-            QLatin1String l1Id(ianaId(data));
-            QList<QByteArray> list;
-            for (auto l1 : l1Id.tokenize(QLatin1String(" ")))
-                list << QByteArray(l1.data(), l1.size());
-            return list;
-        }
+        if (data->windowsIdKey == windowsIdKey && data->territory == static_cast<quint16>(territory))
+            return ianaId(data).split(' ');
     }
 
     return QList<QByteArray>();
@@ -810,7 +810,7 @@ QUtcTimeZonePrivate::QUtcTimeZonePrivate(const QByteArray &id)
     // Look for the name in the UTC list, if found set the values
     for (int i = 0; i < utcDataTableSize; ++i) {
         const QUtcData *data = utcData(i);
-        const QByteArrayView uid = utcId(data);
+        const QByteArray uid = utcId(data);
         if (uid == id) {
             QString name = QString::fromUtf8(id);
             init(id, data->offsetFromUtc, name, name, QLocale::AnyTerritory, name);
@@ -975,7 +975,7 @@ QList<QByteArray> QUtcTimeZonePrivate::availableTimeZoneIds() const
     QList<QByteArray> result;
     result.reserve(utcDataTableSize);
     for (int i = 0; i < utcDataTableSize; ++i)
-        result << utcId(utcData(i)).toByteArray();
+        result << utcId(utcData(i));
     // Not guaranteed to be sorted, so sort:
     std::sort(result.begin(), result.end());
     // ### assuming no duplicates
@@ -998,7 +998,7 @@ QList<QByteArray> QUtcTimeZonePrivate::availableTimeZoneIds(qint32 offsetSeconds
     for (int i = 0; i < utcDataTableSize; ++i) {
         const QUtcData *data = utcData(i);
         if (data->offsetFromUtc == offsetSeconds)
-            result << utcId(data).toByteArray();
+            result << utcId(data);
     }
     // Not guaranteed to be sorted, so sort:
     std::sort(result.begin(), result.end());

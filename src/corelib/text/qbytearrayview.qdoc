@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the documentation of the Qt Toolkit.
@@ -332,7 +332,7 @@
 /*!
     \fn const char *QByteArrayView::data() const
 
-    Returns a const \c char pointer to the first byte in the byte array view.
+    Returns a const \c char pointer to the first byte in the byte array.
 
     \note The character array represented by the return value is \e not guaranteed
     to be null-terminated. The returned pointer is only safe to use for accessing
@@ -344,7 +344,7 @@
 /*!
     \fn const char *QByteArrayView::constData() const
 
-    Returns a const \c char pointer to the first byte in the byte array view.
+    Returns a const \c char pointer to the first byte in the byte array.
 
     \note The character array represented by the return value is \e not guaranteed
     to be null-terminated. The returned pointer is only safe to use for accessing
@@ -380,7 +380,7 @@
     \fn QByteArrayView::const_iterator QByteArrayView::begin() const
 
     Returns a const \l{STL-style iterators}{STL-style iterator} pointing to the
-    first byte in the byte array view.
+    first byte in the byte array.
 
     This function is provided for STL compatibility.
 
@@ -401,7 +401,7 @@
     \fn QByteArrayView::const_iterator QByteArrayView::end() const
 
     Returns a const \l{STL-style iterators}{STL-style iterator} pointing
-    just after the last byte in the byte array view.
+    just after the last byte in the byte array.
 
     This function is provided for STL compatibility.
 
@@ -421,7 +421,7 @@
     \fn QByteArrayView::const_reverse_iterator QByteArrayView::rbegin() const
 
     Returns a const \l{STL-style iterators}{STL-style} reverse iterator pointing
-    to the first byte in the byte array view, in reverse order.
+    to the first byte in the byte array, in reverse order.
 
     This function is provided for STL compatibility.
 
@@ -442,7 +442,7 @@
     \fn QByteArrayView::const_reverse_iterator QByteArrayView::rend() const
 
     Returns a \l{STL-style iterators}{STL-style} reverse iterator pointing to one past
-    the last byte in the byte array view, in reverse order.
+    the last byte in the byte array, in reverse order.
 
     This function is provided for STL compatibility.
 
@@ -524,7 +524,7 @@
 /*!
     \fn char QByteArrayView::front() const
 
-    Returns the first byte in the byte array view.
+    Returns the first byte in the byte array.
 
     This function is provided for STL compatibility.
 
@@ -537,7 +537,7 @@
 /*!
     \fn char QByteArrayView::back() const
 
-    Returns the last byte in the byte array view.
+    Returns the last byte in the byte array.
 
     This function is provided for STL compatibility.
 
@@ -628,21 +628,6 @@
     \note The behavior is undefined when \a length < 0 or \a length > size().
 
     \sa sliced(), first(), last(), chopped(), truncate()
-*/
-
-/*!
-    \fn QByteArrayView QByteArrayView::trimmed() const noexcept
-    \since 6.3
-
-    Returns a copy of this byte array view with spacing characters
-    removed from the start and end.
-
-    The spacing characters are those for which the standard C++ \c isspace()
-    function returns \c true in the C locale; these are the ASCII characters
-    tabulation '\\t', line feed '\\n', carriage return '\\r', vertical
-    tabulation '\\v', form feed '\\f', and space ' '.
-
-    \sa QChar::SpecialCharacter, {QByteArray#Spacing Characters}{Spacing Characters}
 */
 
 /*!

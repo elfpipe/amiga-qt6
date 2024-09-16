@@ -180,18 +180,10 @@ public:
     void setWriteChannelCount(int count);
 
     qint64 read(char *data, qint64 maxSize, bool peeking = false);
-    qint64 readLine(char *data, qint64 maxSize);
     virtual qint64 peek(char *data, qint64 maxSize);
     virtual QByteArray peek(qint64 maxSize);
     qint64 skipByReading(qint64 maxSize);
     void write(const char *data, qint64 size);
-
-    inline bool isWriteChunkCached(const char *data, qint64 size) const
-    {
-        return currentWriteChunk != nullptr
-               && currentWriteChunk->constData() == data
-               && currentWriteChunk->size() == size;
-    }
 
 #ifdef QT_NO_QOBJECT
     QIODevice *q_ptr = nullptr;

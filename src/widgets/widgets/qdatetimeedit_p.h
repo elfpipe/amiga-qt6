@@ -70,7 +70,7 @@ class Q_AUTOTEST_EXPORT QDateTimeEditPrivate : public QAbstractSpinBoxPrivate, p
 {
     Q_DECLARE_PUBLIC(QDateTimeEdit)
 public:
-    QDateTimeEditPrivate(Qt::TimeSpec timeSpec = Qt::LocalTime);
+    QDateTimeEditPrivate();
 
     void init(const QVariant &var);
     void readLocaleSettings();
@@ -153,7 +153,7 @@ public:
     bool focusOnButton = false;
 #endif
 
-    Qt::TimeSpec spec;
+    Qt::TimeSpec spec = Qt::LocalTime;
 };
 
 

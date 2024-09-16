@@ -122,7 +122,10 @@ void QMessageAuthenticationCodePrivate::initMessageHash()
     const int blockSize = qt_hash_block_size(method);
 
     if (key.size() > blockSize) {
-        key = QCryptographicHash::hash(key, method);
+        QCryptographicHash hash(method);
+        hash.addData(key);
+        key = hash.result();
+        hash.reset();
     }
 
     if (key.size() < blockSize) {
@@ -137,7 +140,7 @@ void QMessageAuthenticationCodePrivate::initMessageHash()
     for (int i = 0; i < blockSize; ++i)
         iKeyPad[i] = keyData[i] ^ 0x36;
 
-    messageHash.addData(iKeyPad);
+    messageHash.addData(iKeyPad.data(), iKeyPad.size());
 }
 
 /*!
@@ -213,7 +216,7 @@ void QMessageAuthenticationCode::setKey(const QByteArray &key)
 void QMessageAuthenticationCode::addData(const char *data, qsizetype length)
 {
     d->initMessageHash();
-    d->messageHash.addData({data, length});
+    d->messageHash.addData(data, length);
 }
 
 /*!
@@ -251,7 +254,7 @@ QByteArray QMessageAuthenticationCode::result() const
 
     const int blockSize = qt_hash_block_size(d->method);
 
-    QByteArrayView hashedMessage = d->messageHash.resultView();
+    QByteArray hashedMessage = d->messageHash.result();
 
     QVarLengthArray<char> oKeyPad(blockSize);
     const char * const keyData = d->key.constData();
@@ -260,7 +263,7 @@ QByteArray QMessageAuthenticationCode::result() const
         oKeyPad[i] = keyData[i] ^ 0x5c;
 
     QCryptographicHash hash(d->method);
-    hash.addData(oKeyPad);
+    hash.addData(oKeyPad.data(), oKeyPad.size());
     hash.addData(hashedMessage);
 
     d->result = hash.result();

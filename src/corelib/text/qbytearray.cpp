@@ -2506,6 +2506,8 @@ static qsizetype lastIndexOfHelper(const char *haystack, qsizetype l, const char
 
 static inline qsizetype lastIndexOfCharHelper(QByteArrayView haystack, qsizetype from, char needle) noexcept
 {
+    if (haystack.size() == 0)
+        return -1;
     if (from < 0)
         from += haystack.size();
     else if (from > haystack.size())
@@ -3418,13 +3420,6 @@ QByteArray QByteArray::trimmed_helper(QByteArray &a)
     return QStringAlgorithms<QByteArray>::trimmed_helper(a);
 }
 
-QByteArrayView QtPrivate::trimmed(QByteArrayView view) noexcept
-{
-    auto start = view.begin();
-    auto stop = view.end();
-    QStringAlgorithms<QByteArrayView>::trimmed_helper_positions(start, stop);
-    return QByteArrayView(start, stop);
-}
 
 /*!
     Returns a byte array of size \a width that contains this byte array padded
@@ -4024,7 +4019,32 @@ QByteArray &QByteArray::setNum(qulonglong n, int base)
 
 QByteArray &QByteArray::setNum(double n, char format, int precision)
 {
-    return *this = QByteArray::number(n, format, precision);
+    QLocaleData::DoubleForm form = QLocaleData::DFDecimal;
+    uint flags = QLocaleData::ZeroPadExponent;
+
+    char lower = asciiLower(uchar(format));
+    if (format != lower)
+        flags |= QLocaleData::CapitalEorX;
+
+    switch (lower) {
+    case 'f':
+        form = QLocaleData::DFDecimal;
+        break;
+    case 'e':
+        form = QLocaleData::DFExponent;
+        break;
+    case 'g':
+        form = QLocaleData::DFSignificantDigits;
+        break;
+    default:
+#if defined(QT_CHECK_RANGE)
+        qWarning("QByteArray::setNum: Invalid format char '%c'", format);
+#endif
+        break;
+    }
+
+    *this = QLocaleData::c()->doubleToString(n, precision, form, -1, flags).toUtf8();
+    return *this;
 }
 
 /*!
@@ -4137,26 +4157,9 @@ QByteArray QByteArray::number(qulonglong n, int base)
 */
 QByteArray QByteArray::number(double n, char format, int precision)
 {
-    QLocaleData::DoubleForm form = QLocaleData::DFDecimal;
-
-    switch (asciiLower(format)) {
-        case 'f':
-            form = QLocaleData::DFDecimal;
-            break;
-        case 'e':
-            form = QLocaleData::DFExponent;
-            break;
-        case 'g':
-            form = QLocaleData::DFSignificantDigits;
-            break;
-        default:
-#if defined(QT_CHECK_RANGE)
-            qWarning("QByteArray::setNum: Invalid format char '%c'", format);
-#endif
-            break;
-    }
-
-    return qdtoAscii(n, form, precision, isUpperCaseAscii(format));
+    QByteArray s;
+    s.setNum(n, format, precision);
+    return s;
 }
 
 /*!

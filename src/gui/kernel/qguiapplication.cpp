@@ -183,8 +183,8 @@ QPalette *QGuiApplicationPrivate::app_pal = nullptr;        // default applicati
 
 Qt::MouseButton QGuiApplicationPrivate::mousePressButton = Qt::NoButton;
 
-static int mouseDoubleClickDistance = 0;
-static int touchDoubleTapDistance = 0;
+static int mouseDoubleClickDistance = -1;
+static int touchDoubleTapDistance = -1;
 
 QWindow *QGuiApplicationPrivate::currentMousePressWindow = nullptr;
 
@@ -654,7 +654,6 @@ QGuiApplication::QGuiApplication(int &argc, char **argv, int flags)
 #endif
     : QCoreApplication(*new QGuiApplicationPrivate(argc, argv, flags))
 {
-    printf("===================================================hey\n");
     d_func()->init();
 
     QCoreApplicationPrivate::eventDispatcher->startingUp();
@@ -678,7 +677,6 @@ QGuiApplication::~QGuiApplication()
     qt_call_post_routines();
 
     d->eventDispatcher->closingDown();
-    delete d->eventDispatcher;
     d->eventDispatcher = nullptr;
 
 #ifndef QT_NO_CLIPBOARD
@@ -1648,7 +1646,6 @@ void QGuiApplicationPrivate::init()
     // set a global share context when enabled unless there is already one
 #ifndef QT_NO_OPENGL
     if (qApp->testAttribute(Qt::AA_ShareOpenGLContexts) && !qt_gl_global_share_context()) {
-printf("Share OpenGLContext.\n");
         QOpenGLContext *ctx = new QOpenGLContext;
         ctx->setFormat(QSurfaceFormat::defaultFormat());
         ctx->create();
@@ -1737,9 +1734,7 @@ QGuiApplicationPrivate::~QGuiApplicationPrivate()
     }
 #endif
 
-#ifndef __amigaos4__
     platform_integration->destroy();
-#endif
 
     delete platform_theme;
     platform_theme = nullptr;
@@ -4174,8 +4169,10 @@ void QGuiApplicationPrivate::notifyDragStarted(const QDrag *drag)
 const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA8Text()
 {
 #ifdef Q_OS_WIN
-    if (!m_a8ColorProfile)
-        m_a8ColorProfile = QColorTrcLut::fromGamma(2.31); // This is a hard-coded thing for Windows text rendering
+    if (!m_a8ColorProfile){
+        QColorTrcLut *cs = QColorTrcLut::fromGamma(2.31); // This is a hard-coded thing for Windows text rendering
+        m_a8ColorProfile.reset(cs);
+    }
     return m_a8ColorProfile.get();
 #else
     return colorProfileForA32Text();
@@ -4184,8 +4181,10 @@ const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA8Text()
 
 const QColorTrcLut *QGuiApplicationPrivate::colorProfileForA32Text()
 {
-    if (!m_a32ColorProfile)
-        m_a32ColorProfile = QColorTrcLut::fromGamma(fontSmoothingGamma);
+    if (!m_a32ColorProfile) {
+        QColorTrcLut *cs = QColorTrcLut::fromGamma(fontSmoothingGamma);
+        m_a32ColorProfile.reset(cs);
+    }
     return m_a32ColorProfile.get();
 }
 

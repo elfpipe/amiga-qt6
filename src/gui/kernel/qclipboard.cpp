@@ -582,8 +582,9 @@ void QClipboard::emitChanged(Mode mode)
         case FindBuffer:
             emit findBufferChanged();
         break;
+        default:
+        break;
     }
-
     emit changed(mode);
 }
 

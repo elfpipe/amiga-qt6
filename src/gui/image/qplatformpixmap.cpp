@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include <qpa/qplatformpixmap.h>
+#include "qplatformpixmap.h"
 #include <qpa/qplatformintegration.h>
 #include <QtCore/qbuffer.h>
 #include <QtGui/qbitmap.h>

@@ -1415,14 +1415,7 @@ void Generator::generateStaticMetacall()
                 const PropertyDef &p = cdef->propertyList.at(propindex);
                 if (p.bind.isEmpty())
                     continue;
-                QByteArray prefix = "_t->";
-                if (p.inPrivateClass.size()) {
-                    prefix += p.inPrivateClass + "->";
-                }
-                fprintf(out,
-                        "        case %d: *static_cast<QUntypedBindable *>(_a[0]) = %s%s(); "
-                        "break;\n",
-                        propindex, prefix.constData(), p.bind.constData());
+                fprintf(out, "        case %d: *static_cast<QUntypedBindable *>(_a[0]) = _t->%s(); break;\n", propindex, p.bind.constData());
             }
             fprintf(out, "        default: break;\n");
             fprintf(out, "        }\n");

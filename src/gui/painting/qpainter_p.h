@@ -66,7 +66,6 @@
 #include <private/qpen_p.h>
 
 #include <memory>
-#include <stack>
 
 QT_BEGIN_NAMESPACE
 
@@ -194,29 +193,28 @@ class QPainterPrivate
 {
     Q_DECLARE_PUBLIC(QPainter)
 public:
-    explicit QPainterPrivate(QPainter *painter);
+    QPainterPrivate(QPainter *painter)
+    : q_ptr(painter), d_ptrs(nullptr), state(nullptr), dummyState(nullptr), txinv(0), inDestructor(false), d_ptrs_size(0),
+        refcount(1), device(nullptr), original_device(nullptr), helper_device(nullptr), engine(nullptr), emulationEngine(nullptr),
+        extended(nullptr)
+    {
+    }
+
     ~QPainterPrivate();
 
     QPainter *q_ptr;
-    // Allocate space for 4 d-pointers (enough for up to 4 sub-sequent
-    // redirections within the same paintEvent(), which should be enough
-    // in 99% of all cases). E.g: A renders B which renders C which renders D.
-    static constexpr qsizetype NDPtrs = 4;
-    QVarLengthArray<QPainterPrivate*, NDPtrs> d_ptrs;
+    QPainterPrivate **d_ptrs;
 
-    std::unique_ptr<QPainterState> state;
-    template <typename T, std::size_t N = 8>
-    struct SmallStack : std::stack<T, QVarLengthArray<T, N>> {
-        void clear() { this->c.clear(); }
-    };
-    SmallStack<std::unique_ptr<QPainterState>> savedStates;
+    QPainterState *state;
+    QVarLengthArray<QPainterState *, 8> states;
 
     mutable std::unique_ptr<QPainterDummyState> dummyState;
 
     QTransform invMatrix;
     uint txinv:1;
     uint inDestructor : 1;
-    uint refcount = 1;
+    uint d_ptrs_size;
+    uint refcount;
 
     enum DrawOperation { StrokeDraw        = 0x1,
                          FillDraw          = 0x2,
@@ -232,7 +230,6 @@ public:
     void updateEmulationSpecifier(QPainterState *s);
     void updateStateImpl(QPainterState *state);
     void updateState(QPainterState *state);
-    void updateState(std::unique_ptr<QPainterState> &state) { updateState(state.get()); }
 
     void draw_helper(const QPainterPath &path, DrawOperation operation = StrokeAndFillDraw);
     void drawStretchedGradient(const QPainterPath &path, DrawOperation operation);
@@ -262,21 +259,12 @@ public:
     void detachPainterPrivate(QPainter *q);
     void initFrom(const QPaintDevice *device);
 
-    QPaintDevice *device = nullptr;
-    QPaintDevice *original_device = nullptr;
-    QPaintDevice *helper_device = nullptr;
-
-    struct QPaintEngineDestructor {
-        void operator()(QPaintEngine *pe) const noexcept
-        {
-            if (pe && pe->autoDestruct())
-                delete pe;
-        }
-    };
-    std::unique_ptr<QPaintEngine, QPaintEngineDestructor> engine;
-
-    std::unique_ptr<QEmulationPaintEngine> emulationEngine;
-    QPaintEngineEx *extended = nullptr;
+    QPaintDevice *device;
+    QPaintDevice *original_device;
+    QPaintDevice *helper_device;
+    QPaintEngine *engine;
+    QEmulationPaintEngine *emulationEngine;
+    QPaintEngineEx *extended;
     QBrush colorBrush;          // for fill with solid color
 };
 

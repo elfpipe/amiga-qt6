@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2021 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
@@ -77,8 +77,6 @@ void QSystemLocaleData::readEnvironment()
 {
     QWriteLocker locker(&lock);
 
-    // See https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap08.html#tag_08_02
-    // for the semantics of each of these:
     QByteArray all = qgetenv("LC_ALL");
     QByteArray numeric  = all.isEmpty() ? qgetenv("LC_NUMERIC") : all;
     QByteArray time     = all.isEmpty() ? qgetenv("LC_TIME") : all;
@@ -196,6 +194,10 @@ QVariant QSystemLocale::query(QueryType type, QVariant in) const
         return lc_time.dayName(in.toInt(), QLocale::LongFormat);
     case DayNameShort:
         return lc_time.dayName(in.toInt(), QLocale::ShortFormat);
+    case StandaloneDayNameLong:
+        return lc_time.standaloneDayName(in.toInt(), QLocale::LongFormat);
+    case StandaloneDayNameShort:
+        return lc_time.standaloneDayName(in.toInt(), QLocale::ShortFormat);
     case MonthNameLong:
         return lc_time.monthName(in.toInt(), QLocale::LongFormat);
     case MonthNameShort:

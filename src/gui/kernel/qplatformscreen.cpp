@@ -386,7 +386,7 @@ void QPlatformScreen::resizeMaximizedWindows()
 }
 
 // i must be power of two
-static inline int log2(uint i)
+static int log2(uint i)
 {
     if (i == 0)
         return -1;

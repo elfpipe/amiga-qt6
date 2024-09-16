@@ -199,7 +199,7 @@ isEmpty($${target_prefix}.INCDIRS) {
 
 
         output = $$system("$$QMAKE_CXX -Wl,--verbose -xc++ -o nil:", lines, ec)
-        !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
+        # !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
 
         # message("output(2) : $$output")
 

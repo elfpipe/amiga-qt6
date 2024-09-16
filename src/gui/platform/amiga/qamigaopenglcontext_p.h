@@ -218,7 +218,7 @@ public:
 
         if(IOGLES2) {
             ULONG errCode = 0, disp_width, disp_height;
-            aglContext = aglCreateContextTags(&errCode, 
+            aglContext = aglCreateContextTags2(&errCode, 
                 // OGLES2_CCT_WINDOW, window,
                 // OGLES2_CCT_MODEID, 0,
                 OGLES2_CCT_BITMAP, bitmap,

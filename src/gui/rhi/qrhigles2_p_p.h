@@ -251,6 +251,7 @@ struct QGles2ShaderResourceBindings : public QRhiShaderResourceBindings
     ~QGles2ShaderResourceBindings();
     void destroy() override;
     bool create() override;
+    void updateResources(UpdateFlags flags) override;
 
     bool hasDynamicOffset = false;
     uint generation = 0;
@@ -897,6 +898,7 @@ public:
     QSurfaceFormat requestedFormat;
     QSurface *fallbackSurface = nullptr;
     QWindow *maybeWindow = nullptr;
+    QOpenGLContext *maybeShareContext = nullptr;
     mutable bool needsMakeCurrent = false;
     QOpenGLExtensions *f = nullptr;
     uint vao = 0;

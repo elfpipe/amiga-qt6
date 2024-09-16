@@ -698,9 +698,7 @@ void QWidgetWindow::handleTouchEvent(QTouchEvent *event)
         // events instead, which QWidgetWindow::handleMouseEvent will forward correctly:
         event->ignore();
     } else {
-        event->setAccepted(QApplicationPrivate::translateRawTouchEvent(m_widget, event->pointingDevice(),
-                                                                       const_cast<QList<QEventPoint> &>(event->points()),
-                                                                       event->timestamp()));
+        event->setAccepted(QApplicationPrivate::translateRawTouchEvent(m_widget, event));
     }
 }
 
@@ -842,7 +840,9 @@ void QWidgetWindow::handleResizeEvent(QResizeEvent *event)
 
 void QWidgetWindow::handleCloseEvent(QCloseEvent *event)
 {
-    bool is_closing = m_widget->d_func()->close_helper(QWidgetPrivate::CloseWithSpontaneousEvent);
+    Q_D(QWidgetWindow);
+    bool is_closing = m_widget->d_func()->close_helper(d->inClose ? QWidgetPrivate::CloseWithEvent
+                                                                  : QWidgetPrivate::CloseWithSpontaneousEvent);
     event->setAccepted(is_closing);
 }
 

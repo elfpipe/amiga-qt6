@@ -467,35 +467,10 @@ inline void QObjectPrivate::disconnectNotify(const QMetaMethod &signal)
 }
 
 namespace QtPrivate {
-
-template <typename Func>
-struct FunctionStorageByValue
-{
-    Func f;
-    Func &func() noexcept { return f; }
-};
-
-template <typename Func>
-struct FunctionStorageEmptyBaseClassOptimization : Func
-{
-    Func &func() noexcept { return *this; }
-    using Func::Func;
-};
-
-template <typename Func>
-using FunctionStorage = typename std::conditional_t<
-        std::conjunction_v<
-            std::is_empty<Func>,
-            std::negation<std::is_final<Func>>
-        >,
-        FunctionStorageEmptyBaseClassOptimization<Func>,
-        FunctionStorageByValue<Func>
-    >;
-
-template<typename Func, typename Args, typename R>
-class QPrivateSlotObject : public QSlotObjectBase, private FunctionStorage<Func>
+template<typename Func, typename Args, typename R> class QPrivateSlotObject : public QSlotObjectBase
 {
     typedef QtPrivate::FunctionPointer<Func> FuncType;
+    Func function;
     static void impl(int which, QSlotObjectBase *this_, QObject *r, void **a, bool *ret)
     {
         switch (which) {
@@ -503,17 +478,17 @@ class QPrivateSlotObject : public QSlotObjectBase, private FunctionStorage<Func>
                 delete static_cast<QPrivateSlotObject*>(this_);
                 break;
             case Call:
-                FuncType::template call<Args, R>(static_cast<QPrivateSlotObject*>(this_)->func(),
+                FuncType::template call<Args, R>(static_cast<QPrivateSlotObject*>(this_)->function,
                                                  static_cast<typename FuncType::Object *>(QObjectPrivate::get(r)), a);
                 break;
             case Compare:
-                *ret = *reinterpret_cast<Func *>(a) == static_cast<QPrivateSlotObject*>(this_)->func();
+                *ret = *reinterpret_cast<Func *>(a) == static_cast<QPrivateSlotObject*>(this_)->function;
                 break;
             case NumOperations: ;
         }
     }
 public:
-    explicit QPrivateSlotObject(Func f) : QSlotObjectBase(&impl), FunctionStorage<Func>{std::move(f)} {}
+    explicit QPrivateSlotObject(Func f) : QSlotObjectBase(&impl), function(f) {}
 };
 } //namespace QtPrivate
 

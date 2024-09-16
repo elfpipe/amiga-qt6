@@ -810,7 +810,8 @@ QStringList QFontconfigDatabase::fallbacksForFamily(const QString &family, QFont
     FcPatternDestroy(pattern);
 
     if (fontSet) {
-        QDuplicateTracker<QString> duplicates(fontSet->nfont + 1);
+        QDuplicateTracker<QString> duplicates;
+        duplicates.reserve(fontSet->nfont + 1);
         (void)duplicates.hasSeen(family.toCaseFolded());
         for (int i = 0; i < fontSet->nfont; i++) {
             FcChar8 *value = nullptr;

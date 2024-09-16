@@ -112,9 +112,8 @@ public:
 */
 
 QTreeModel::QTreeModel(int columns, QTreeWidget *parent)
-    : QAbstractItemModel(*new QTreeModelPrivate, parent),
-      rootItem(new QTreeWidgetItem),
-      headerItem(new QTreeWidgetItem)
+    : QAbstractItemModel(*new QTreeModelPrivate, parent), rootItem(new QTreeWidgetItem),
+      headerItem(new QTreeWidgetItem), skipPendingSort(false)
 {
     rootItem->view = parent;
     rootItem->itemFlags = Qt::ItemIsDropEnabled;
@@ -128,7 +127,8 @@ QTreeModel::QTreeModel(int columns, QTreeWidget *parent)
 */
 
 QTreeModel::QTreeModel(QTreeModelPrivate &dd, QTreeWidget *parent)
-    : QAbstractItemModel(dd, parent), rootItem(new QTreeWidgetItem), headerItem(new QTreeWidgetItem)
+    : QAbstractItemModel(dd, parent), rootItem(new QTreeWidgetItem),
+      headerItem(new QTreeWidgetItem), skipPendingSort(false)
 {
     rootItem->view = parent;
     rootItem->itemFlags = Qt::ItemIsDropEnabled;
@@ -1387,7 +1387,16 @@ bool QTreeWidgetItem::isFirstColumnSpanned() const
 
     \sa type()
 */
-QTreeWidgetItem::QTreeWidgetItem(int type) : rtti(type), d(new QTreeWidgetItemPrivate(this)) { }
+QTreeWidgetItem::QTreeWidgetItem(int type)
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
+{
+}
+
 
 /*!
     Constructs a tree widget item of the specified \a type. The item
@@ -1398,7 +1407,12 @@ QTreeWidgetItem::QTreeWidgetItem(int type) : rtti(type), d(new QTreeWidgetItemPr
     \sa type()
 */
 QTreeWidgetItem::QTreeWidgetItem(const QStringList &strings, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     for (int i = 0; i < strings.count(); ++i)
         setText(i, strings.at(i));
@@ -1414,7 +1428,12 @@ QTreeWidgetItem::QTreeWidgetItem(const QStringList &strings, int type)
 */
 
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     // do not set this->view here otherwise insertChild() will fail
     if (QTreeModel *model = treeModel(treeview)) {
@@ -1434,7 +1453,12 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, int type)
 */
 
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, const QStringList &strings, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     for (int i = 0; i < strings.count(); ++i)
         setText(i, strings.at(i));
@@ -1454,7 +1478,12 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, const QStringList &strin
     \sa type()
 */
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, QTreeWidgetItem *after, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     // do not set this->view here otherwise insertChild() will fail
     if (QTreeModel *model = treeModel(treeview)) {
@@ -1470,7 +1499,12 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidget *treeview, QTreeWidgetItem *after, 
     \sa type()
 */
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     if (parent)
         parent->addChild(this);
@@ -1483,7 +1517,12 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, int type)
     \sa type()
 */
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &strings, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     for (int i = 0; i < strings.count(); ++i)
         setText(i, strings.at(i));
@@ -1500,7 +1539,12 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, const QStringList &str
     \sa type()
 */
 QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, QTreeWidgetItem *after, int type)
-    : rtti(type), d(new QTreeWidgetItemPrivate(this))
+    : rtti(type), view(nullptr), d(new QTreeWidgetItemPrivate(this)), par(nullptr),
+      itemFlags(Qt::ItemIsSelectable
+                |Qt::ItemIsUserCheckable
+                |Qt::ItemIsEnabled
+                |Qt::ItemIsDragEnabled
+                |Qt::ItemIsDropEnabled)
 {
     if (parent) {
         int i = parent->children.indexOf(after) + 1;
@@ -1519,8 +1563,11 @@ QTreeWidgetItem::QTreeWidgetItem(QTreeWidgetItem *parent, QTreeWidgetItem *after
 QTreeWidgetItem::~QTreeWidgetItem()
 {
     QTreeModel *model = treeModel();
-    QTreeModel::SkipSorting skipSorting(model);
-
+    bool wasSkipSort = false;
+    if (model) {
+        wasSkipSort = model->skipPendingSort;
+        model->skipPendingSort = true;
+    }
     if (par) {
         int i = par->children.indexOf(this);
         if (i >= 0) {
@@ -1559,6 +1606,9 @@ QTreeWidgetItem::~QTreeWidgetItem()
 
     children.clear();
     delete d;
+    if (model) {
+        model->skipPendingSort = wasSkipSort;
+    }
 }
 
 /*!
@@ -1910,9 +1960,8 @@ void QTreeWidgetItem::write(QDataStream &out) const
     \sa data(), flags()
 */
 QTreeWidgetItem::QTreeWidgetItem(const QTreeWidgetItem &other)
-    : rtti(Type),
-      values(other.values),
-      d(new QTreeWidgetItemPrivate(this)),
+    : rtti(Type), values(other.values), view(nullptr),
+      d(new QTreeWidgetItemPrivate(this)), par(nullptr),
       itemFlags(other.itemFlags)
 {
     d->display = other.d->display;
@@ -1959,7 +2008,8 @@ void QTreeWidgetItem::insertChild(int index, QTreeWidgetItem *child)
         return;
 
     if (QTreeModel *model = treeModel()) {
-        QTreeModel::SkipSorting skipSorting(model);
+        const bool wasSkipSort = model->skipPendingSort;
+        model->skipPendingSort = true;
         if (model->rootItem == this)
             child->par = nullptr;
         else
@@ -1983,6 +2033,7 @@ void QTreeWidgetItem::insertChild(int index, QTreeWidgetItem *child)
         children.insert(index, child);
         d->updateHiddenStatus(child, true);
         model->endInsertItems();
+        model->skipPendingSort = wasSkipSort;
     } else {
         child->par = this;
         children.insert(index, child);
@@ -3060,7 +3111,8 @@ QList<QTreeWidgetItem*> QTreeWidget::selectedItems() const
     const QModelIndexList indexes = selectionModel()->selectedIndexes();
     QList<QTreeWidgetItem*> items;
     items.reserve(indexes.count());
-    QDuplicateTracker<QTreeWidgetItem *> seen(indexes.count());
+    QDuplicateTracker<QTreeWidgetItem *> seen;
+    seen.reserve(indexes.count());
     for (const auto &index : indexes) {
         QTreeWidgetItem *item = d->item(index);
         if (item->isHidden() || seen.hasSeen(item))

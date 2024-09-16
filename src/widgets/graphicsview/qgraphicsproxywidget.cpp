@@ -239,6 +239,7 @@ void QGraphicsProxyWidgetPrivate::sendWidgetMouseEvent(QGraphicsSceneHoverEvent 
     mouseEvent.setButton(Qt::NoButton);
     mouseEvent.setButtons({ });
     mouseEvent.setModifiers(event->modifiers());
+    mouseEvent.setTimestamp(event->timestamp());
     sendWidgetMouseEvent(&mouseEvent);
     event->setAccepted(mouseEvent.isAccepted());
 }
@@ -304,6 +305,7 @@ void QGraphicsProxyWidgetPrivate::sendWidgetMouseEvent(QGraphicsSceneMouseEvent 
     QMouseEvent mouseEvent(type, pos, receiver->mapTo(receiver->topLevelWidget(), pos.toPoint()),
                            receiver->mapToGlobal(pos.toPoint()),
                            event->button(), event->buttons(), event->modifiers(), event->source());
+    mouseEvent.setTimestamp(event->timestamp());
 
     QWidget *embeddedMouseGrabberPtr = (QWidget *)embeddedMouseGrabber;
     QApplicationPrivate::sendMouseEvent(receiver, &mouseEvent, alienWidget, widget,
@@ -920,16 +922,13 @@ bool QGraphicsProxyWidget::event(QEvent *event)
     case QEvent::TouchBegin:
     case QEvent::TouchUpdate:
     case QEvent::TouchEnd: {
-        if (event->spontaneous())
-            qt_sendSpontaneousEvent(d->widget, event);
-        else
-            QCoreApplication::sendEvent(d->widget, event);
-
-        if (event->isAccepted())
+        QTouchEvent *touchEvent = static_cast<QTouchEvent *>(event);
+        bool res = QApplicationPrivate::translateRawTouchEvent(d->widget, touchEvent);
+        if (res & touchEvent->isAccepted())
             return true;
 
         break;
-   }
+    }
     default:
         break;
     }
@@ -1048,6 +1047,7 @@ void QGraphicsProxyWidget::contextMenuEvent(QGraphicsSceneContextMenuEvent *even
     // Send mouse event. ### Doesn't propagate the event.
     QContextMenuEvent contextMenuEvent(QContextMenuEvent::Reason(event->reason()),
                                        pos.toPoint(), globalPos, event->modifiers());
+    contextMenuEvent.setTimestamp(event->timestamp());
     QCoreApplication::sendEvent(receiver, &contextMenuEvent);
 
     event->setAccepted(contextMenuEvent.isAccepted());

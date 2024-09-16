@@ -2575,16 +2575,7 @@ void QWidget::setStyleSheet(const QString& styleSheet)
     }
 
     if (proxy) { // style sheet update
-        bool repolish = d->polished;
-        if (!repolish) {
-            const auto childWidgets = findChildren<QWidget*>();
-            for (auto child : childWidgets) {
-                repolish = child->d_func()->polished;
-                if (repolish)
-                    break;
-            }
-        }
-        if (repolish)
+        if (d->polished)
             proxy->repolish(this);
         return;
     }
@@ -2992,9 +2983,9 @@ bool QWidget::isFullScreen() const
 
     Calling this function only affects \l{isWindow()}{windows}.
 
-    To return from full-screen mode, call showNormal().
+    To return from full-screen mode, call showNormal() or close().
 
-    Full-screen mode works fine under Windows, but has certain
+    \note Full-screen mode works fine under Windows, but has certain
     problems under X. These problems are due to limitations of the
     ICCCM protocol that specifies the communication between X11
     clients and the window manager. ICCCM simply does not understand
@@ -3014,7 +3005,14 @@ bool QWidget::isFullScreen() const
     X11 window managers that follow modern post-ICCCM specifications
     support full-screen mode properly.
 
-    \sa showNormal(), showMaximized(), show(), hide(), isVisible()
+    On macOS, showing a window full screen puts the entire application in
+    full-screen mode, providing it with a dedicated desktop. Showing another
+    window while the application runs in full-screen mode might automatically
+    make that window full screen as well. To prevent that, exit full-screen
+    mode by calling showNormal() or by close() on the full screen window
+    before showing another window.
+
+    \sa showNormal(), showMaximized(), show(), isVisible(), close()
 */
 void QWidget::showFullScreen()
 {
@@ -3207,127 +3205,6 @@ QList<QAction*> QWidget::actions() const
     Q_D(const QWidget);
     return d->actions;
 }
-
-/*!
-    \fn QAction *QWidget::addAction(const QString &text);
-    \fn QAction *QWidget::addAction(const QString &text, const QKeySequence &shortcut);
-    \fn QAction *QWidget::addAction(const QIcon &icon, const QString &text);
-    \fn QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QKeySequence &shortcut);
-
-    \since 6.3
-
-    These convenience functions create a new action with text \a text,
-    icon \a icon and shortcut \a shortcut, if any.
-
-    The functions add the newly created action to the widget's
-    list of actions, and return it.
-
-    QWidget takes ownership of the returned QAction.
-*/
-QAction *QWidget::addAction(const QString &text)
-{
-    QAction *ret = new QAction(text, this);
-    addAction(ret);
-    return ret;
-}
-
-QAction *QWidget::addAction(const QIcon &icon, const QString &text)
-{
-    QAction *ret = new QAction(icon, text, this);
-    addAction(ret);
-    return ret;
-}
-
-QAction *QWidget::addAction(const QString &text, const QKeySequence &shortcut)
-{
-    QAction *ret = addAction(text);
-    ret->setShortcut(shortcut);
-    return ret;
-}
-
-QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QKeySequence &shortcut)
-{
-    QAction *ret = addAction(icon, text);
-    ret->setShortcut(shortcut);
-    return ret;
-}
-
-/*!
-    \fn QAction *QWidget::addAction(const QString &text, const QObject *receiver, const char* member, Qt::ConnectionType type)
-    \fn QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QObject *receiver, const char* member, Qt::ConnectionType type)
-    \fn QAction *QWidget::addAction(const QString &text, const QKeySequence &shortcut, const QObject *receiver, const char* member, Qt::ConnectionType type)
-    \fn QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QKeySequence &shortcut, const QObject *receiver, const char* member, Qt::ConnectionType type)
-
-    \overload
-    \since 6.3
-
-    This convenience function creates a new action with the text \a
-    text, icon \a icon, and shortcut \a shortcut, if any.
-
-    The action's \l{QAction::triggered()}{triggered()} signal is connected
-    to the \a receiver's \a member slot. The function adds the newly created
-    action to the widget's list of actions and returns it.
-
-    QWidget takes ownership of the returned QAction.
-*/
-QAction *QWidget::addAction(const QString &text, const QObject *receiver, const char* member,
-                            Qt::ConnectionType type)
-{
-    QAction *action = addAction(text);
-    QObject::connect(action, SIGNAL(triggered(bool)), receiver, member, type);
-    return action;
-}
-
-QAction *QWidget::addAction(const QIcon &icon, const QString &text,
-                            const QObject *receiver, const char* member,
-                            Qt::ConnectionType type)
-{
-    QAction *action = addAction(icon, text);
-    QObject::connect(action, SIGNAL(triggered(bool)), receiver, member, type);
-    return action;
-}
-
-#if QT_CONFIG(shortcut)
-QAction *QWidget::addAction(const QString &text, const QKeySequence &shortcut,
-                            const QObject *receiver, const char* member,
-                            Qt::ConnectionType type)
-{
-    QAction *action = addAction(text, receiver, member, type);
-    action->setShortcut(shortcut);
-    return action;
-}
-
-QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QKeySequence &shortcut,
-                            const QObject *receiver, const char* member,
-                            Qt::ConnectionType type)
-{
-    QAction *action = addAction(icon, text, receiver, member, type);
-    action->setShortcut(shortcut);
-    return action;
-}
-#endif // QT_CONFIG(shortcut)
-
-/*!
-    \fn template<typename...Args> QAction *QWidget::addAction(const QString &text, Args&&...args)
-    \fn template<typename...Args> QAction *QWidget::addAction(const QString &text, const QShortcut &shortcut, Args&&...args)
-    \fn template<typename...Args> QAction *QWidget::addAction(const QIcon &icon, const QString &text, Args&&...args)
-    \fn template<typename...Args> QAction *QWidget::addAction(const QIcon &icon, const QString &text, const QShortcut &shortcut, Args&&...args)
-
-    \since 6.3
-    \overload
-
-    These convenience functions create a new action with the text \a text,
-    icon \a icon, and shortcut \a shortcut, if any.
-
-    The action's \l{QAction::triggered()}{triggered()} signal is connected
-    as if by a call to QObject::connect(action, &QAction::triggered, args...),
-    perfectly forwarding \a args, including a possible Qt::ConnectionType.
-
-    The function adds the newly created action to the widget's list of
-    actions and returns it.
-
-    QWidget takes ownership of the returned QAction.
-*/
 #endif // QT_NO_ACTION
 
 /*!
@@ -8360,6 +8237,24 @@ void QWidgetPrivate::hideChildren(bool spontaneous)
     }
 }
 
+/*!
+    \internal
+
+    For windows, this is called from the QWidgetWindow::handleCloseEvent implementation,
+    which QWidget::close indirectly calls by closing the QWindow. \a mode will be
+    CloseWithEvent if QWidgetWindow::handleCloseEvent is called indirectly by
+    QWindow::close, and CloseWithSpontaneousEvent if the close event originates from the
+    system (i.e. the user clicked the close button in the title bar).
+
+    QDialog calls this method directly in its hide() implementation, which might be
+    called from the QDialog::closeEvent override. \a mode will be set to CloseNoEvent
+    to prevent recursion.
+
+    For non-windows, this is called directly by QWidget::close, and \a mode will be
+    CloseWithEvent.
+
+    The function is also called by the QWidget destructor, with \a mode set to CloseNoEvent.
+*/
 bool QWidgetPrivate::close_helper(CloseMode mode)
 {
     if (data.is_closing)
@@ -8384,6 +8279,7 @@ bool QWidgetPrivate::close_helper(CloseMode mode)
         }
     }
 
+    // even for windows, make sure we deliver a hide event and that all children get hidden
     if (!that.isNull() && !q->isHidden())
         q->hide();
 
@@ -8446,6 +8342,12 @@ bool QWidgetPrivate::close_helper(CloseMode mode)
 
 bool QWidget::close()
 {
+    // Close native widgets via QWindow::close() in order to run QWindow
+    // close code. The QWidget-specific close code in close_helper() will
+    // in this case be called from the Close event handler in QWidgetWindow.
+    if (QWindow *widgetWindow = windowHandle())
+        return widgetWindow->close();
+
     return d_func()->close_helper(QWidgetPrivate::CloseWithEvent);
 }
 

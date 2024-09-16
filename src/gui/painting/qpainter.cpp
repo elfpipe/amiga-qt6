@@ -206,24 +206,24 @@ void QPainterPrivate::checkEmulation()
         return;
 
     if (doEmulation) {
-        if (extended != emulationEngine.get()) {
+        if (extended != emulationEngine) {
             if (!emulationEngine)
-                emulationEngine = std::make_unique<QEmulationPaintEngine>(extended);
-            extended = emulationEngine.get();
-            extended->setState(state.get());
+                emulationEngine = new QEmulationPaintEngine(extended);
+            extended = emulationEngine;
+            extended->setState(state);
         }
-    } else if (emulationEngine.get() == extended) {
+    } else if (emulationEngine == extended) {
         extended = emulationEngine->real_engine;
     }
 }
 
-QPainterPrivate::QPainterPrivate(QPainter *painter)
-    : q_ptr(painter), txinv(0), inDestructor(false)
-{
-}
 
 QPainterPrivate::~QPainterPrivate()
-    = default;
+{
+    delete emulationEngine;
+    qDeleteAll(states);
+}
+
 
 QTransform QPainterPrivate::viewTransform() const
 {
@@ -267,8 +267,20 @@ bool QPainterPrivate::attachPainterPrivate(QPainter *q, QPaintDevice *pdev)
     // Save the current state of the shared painter and assign
     // the current d_ptr to the shared painter's d_ptr.
     sp->save();
-    ++sp->d_ptr->refcount;
-    sp->d_ptr->d_ptrs.push_back(q->d_ptr.data());
+    if (!sp->d_ptr->d_ptrs) {
+        // Allocate space for 4 d-pointers (enough for up to 4 sub-sequent
+        // redirections within the same paintEvent(), which should be enough
+        // in 99% of all cases). E.g: A renders B which renders C which renders D.
+        sp->d_ptr->d_ptrs_size = 4;
+        sp->d_ptr->d_ptrs = (QPainterPrivate **)malloc(4 * sizeof(QPainterPrivate *));
+        Q_CHECK_PTR(sp->d_ptr->d_ptrs);
+    } else if (sp->d_ptr->refcount - 1 == sp->d_ptr->d_ptrs_size) {
+        // However, to support corner cases we grow the array dynamically if needed.
+        sp->d_ptr->d_ptrs_size <<= 1;
+        const int newSize = sp->d_ptr->d_ptrs_size * sizeof(QPainterPrivate *);
+        sp->d_ptr->d_ptrs = q_check_ptr((QPainterPrivate **)realloc(sp->d_ptr->d_ptrs, newSize));
+    }
+    sp->d_ptr->d_ptrs[++sp->d_ptr->refcount - 2] = q->d_ptr.data();
     q->d_ptr.take();
     q->d_ptr.reset(sp->d_ptr.data());
 
@@ -313,9 +325,7 @@ void QPainterPrivate::detachPainterPrivate(QPainter *q)
     Q_ASSERT(refcount > 1);
     Q_ASSERT(q);
 
-    --refcount;
-    QPainterPrivate *original = d_ptrs.back();
-    d_ptrs.pop_back();
+    QPainterPrivate *original = d_ptrs[--refcount - 1];
     if (inDestructor) {
         inDestructor = false;
         if (original)
@@ -324,12 +334,14 @@ void QPainterPrivate::detachPainterPrivate(QPainter *q)
         original = new QPainterPrivate(q);
     }
 
+    d_ptrs[refcount - 1] = nullptr;
     q->restore();
     q->d_ptr.take();
     q->d_ptr.reset(original);
 
     if (emulationEngine) {
         extended = emulationEngine->real_engine;
+        delete emulationEngine;
         emulationEngine = nullptr;
     }
 }
@@ -1504,6 +1516,8 @@ QPainter::~QPainter()
         Q_ASSERT(d_ptr->inDestructor);
         d_ptr->inDestructor = false;
         Q_ASSERT(d_ptr->refcount == 1);
+        if (d_ptr->d_ptrs)
+            free(d_ptr->d_ptrs);
     }
 }
 
@@ -1532,7 +1546,7 @@ QPaintDevice *QPainter::device() const
 bool QPainter::isActive() const
 {
     Q_D(const QPainter);
-    return d->engine != nullptr;
+    return d->engine;
 }
 
 void QPainterPrivate::initFrom(const QPaintDevice *device)
@@ -1574,19 +1588,15 @@ void QPainter::save()
         return;
     }
 
-    std::unique_ptr<QPainterState> prev;
     if (d->extended) {
-        // separate the creation of a new state from the update of d->state, since some
-        // engines access d->state directly (not via createState()'s argument)
-        std::unique_ptr<QPainterState> next(d->extended->createState(d->state.get()));
-        prev = std::exchange(d->state, std::move(next));
-        d->extended->setState(d->state.get());
+        d->state = d->extended->createState(d->states.back());
+        d->extended->setState(d->state);
     } else {
         d->updateState(d->state);
-        prev = std::exchange(d->state, std::make_unique<QPainterState>(d->state.get()));
-        d->engine->state = d->state.get();
+        d->state = new QPainterState(d->states.back());
+        d->engine->state = d->state;
     }
-    d->savedStates.push(std::move(prev));
+    d->states.push_back(d->state);
 }
 
 /*!
@@ -1603,7 +1613,7 @@ void QPainter::restore()
         printf("QPainter::restore()\n");
 #endif
     Q_D(QPainter);
-    if (d->savedStates.empty()) {
+    if (d->states.size()<=1) {
         qWarning("QPainter::restore: Unbalanced save/restore");
         return;
     } else if (!d->engine) {
@@ -1611,13 +1621,15 @@ void QPainter::restore()
         return;
     }
 
-    const auto tmp = std::exchange(d->state, std::move(d->savedStates.top()));
-    d->savedStates.pop();
+    QPainterState *tmp = d->state;
+    d->states.pop_back();
+    d->state = d->states.back();
     d->txinv = false;
 
     if (d->extended) {
         d->checkEmulation();
-        d->extended->setState(d->state.get());
+        d->extended->setState(d->state);
+        delete tmp;
         return;
     }
 
@@ -1655,7 +1667,8 @@ void QPainter::restore()
         tmp->changeFlags |= QPaintEngine::DirtyTransform;
     }
 
-    d->updateState(d->state.get());
+    d->updateState(d->state);
+    delete tmp;
 }
 
 
@@ -1688,7 +1701,8 @@ void QPainter::restore()
 
 static inline void qt_cleanup_painter_state(QPainterPrivate *d)
 {
-    d->savedStates.clear();
+    qDeleteAll(d->states);
+    d->states.clear();
     d->state = nullptr;
     d->engine = nullptr;
     d->device = nullptr;
@@ -1731,7 +1745,7 @@ bool QPainter::begin(QPaintDevice *pd)
     else if (pd->devType() == QInternal::Image)
         static_cast<QImage *>(pd)->detach();
 
-    d->engine.reset(pd->paintEngine());
+    d->engine = pd->paintEngine();
 
     if (!d->engine) {
         qWarning("QPainter::begin: Paint device returned engine == 0, type: %d", pd->devType());
@@ -1740,23 +1754,24 @@ bool QPainter::begin(QPaintDevice *pd)
 
     d->device = pd;
 
-    d->extended = d->engine->isExtended() ? static_cast<QPaintEngineEx *>(d->engine.get()) : nullptr;
+    d->extended = d->engine->isExtended() ? static_cast<QPaintEngineEx *>(d->engine) : nullptr;
     if (d->emulationEngine)
         d->emulationEngine->real_engine = d->extended;
 
     // Setup new state...
     Q_ASSERT(!d->state);
-    d->state.reset(d->extended ? d->extended->createState(nullptr) : new QPainterState);
+    d->state = d->extended ? d->extended->createState(nullptr) : new QPainterState;
     d->state->painter = this;
+    d->states.push_back(d->state);
 
     d->state->redirectionMatrix.translate(-redirectionOffset.x(), -redirectionOffset.y());
     d->state->brushOrigin = QPointF();
 
     // Slip a painter state into the engine before we do any other operations
     if (d->extended)
-        d->extended->setState(d->state.get());
+        d->extended->setState(d->state);
     else
-        d->engine->state = d->state.get();
+        d->engine->state = d->state;
 
     switch (pd->devType()) {
         case QInternal::Pixmap:
@@ -1894,13 +1909,22 @@ bool QPainter::end()
         }
     }
 
-    if (d->savedStates.size() > 0) {
-        qWarning("QPainter::end: Painter ended with %d saved states", int(d->savedStates.size()));
+    if (d->states.size() > 1) {
+        qWarning("QPainter::end: Painter ended with %d saved states", int(d->states.size()));
     }
 
-    d->engine.reset();
-    d->emulationEngine = nullptr;
-    d->extended = nullptr;
+    if (d->engine->autoDestruct()) {
+        delete d->engine;
+    }
+
+    if (d->emulationEngine) {
+        delete d->emulationEngine;
+        d->emulationEngine = nullptr;
+    }
+
+    if (d->extended) {
+        d->extended = nullptr;
+    }
 
     qt_cleanup_painter_state(d);
 
@@ -1917,7 +1941,7 @@ bool QPainter::end()
 QPaintEngine *QPainter::paintEngine() const
 {
     Q_D(const QPainter);
-    return d->engine.get();
+    return d->engine;
 }
 
 /*!

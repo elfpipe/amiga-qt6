@@ -52,8 +52,6 @@
 // We mean it.
 //
 
-// the SVG sources for these pixmaps are in styles/images
-
 static const char * const check_list_controller_xpm[] = {
 "16 16 4 1",
 "        c None",

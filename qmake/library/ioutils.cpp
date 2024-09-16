@@ -263,7 +263,7 @@ bool IoUtils::touchFile(const QString &targetFileName, const QString &referenceF
         return false;
     }
 #    if defined(_POSIX_VERSION) && _POSIX_VERSION >= 200809L
-    const struct timespec times[2] = { { 0, UTIME_NOW }, st.st_mtim };
+    const struct timespec times[2] = { { 0, UTIME_NOW }, st.st_mtime };
     const bool utimeError = utimensat(AT_FDCWD, targetFileName.toLocal8Bit().constData(), times, 0) < 0;
 #    else
     struct utimbuf utb;

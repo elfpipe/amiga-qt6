@@ -96,7 +96,7 @@ int QDateTimeParser::getDigit(const QDateTime &t, int index) const
     case MonthSection: return t.date().month(calendar);
     case DaySection: return t.date().day(calendar);
     case DayOfWeekSectionShort:
-    case DayOfWeekSectionLong: return calendar.dayOfWeek(t.date());
+    case DayOfWeekSectionLong: return t.date().day(calendar);
     case AmPmSection: return t.time().hour() > 11 ? 1 : 0;
 
     default: break;
@@ -105,34 +105,6 @@ int QDateTimeParser::getDigit(const QDateTime &t, int index) const
     qWarning("QDateTimeParser::getDigit() Internal error 2 (%ls %d)",
              qUtf16Printable(t.toString()), index);
     return -1;
-}
-
-/*!
-    \internal
-    Difference between two days of the week.
-
-    Returns a difference in the range from -3 through +3, so that steps by small
-    numbers of days move us through the month in the same direction as through
-    the week.
-*/
-
-static int dayOfWeekDiff(int sought, int held)
-{
-    const int diff = sought - held;
-    return diff < -3 ? diff + 7 : diff > 3 ? diff - 7 : diff;
-}
-
-static bool preferDayOfWeek(const QList<QDateTimeParser::SectionNode> &nodes)
-{
-    // True precisely if there is a day-of-week field but no day-of-month field.
-    bool result = false;
-    for (const auto &node : nodes) {
-        if (node.type & QDateTimeParser::DaySection)
-            return false;
-        if (node.type & QDateTimeParser::DayOfWeekSectionMask)
-            result = true;
-    }
-    return result;
 }
 
 /*!
@@ -155,12 +127,9 @@ bool QDateTimeParser::setDigit(QDateTime &v, int index, int newVal) const
         return false;
     }
 
-    const QDate oldDate = v.date();
-    QCalendar::YearMonthDay date = calendar.partsFromDate(oldDate);
+    QCalendar::YearMonthDay date = calendar.partsFromDate(v.date());
     if (!date.isValid())
         return false;
-    int weekDay = calendar.dayOfWeek(oldDate);
-    enum { NoFix, MonthDay, WeekDay } fixDay = NoFix;
 
     const QTime time = v.time();
     int hour = time.hour();
@@ -181,6 +150,8 @@ bool QDateTimeParser::setDigit(QDateTime &v, int index, int newVal) const
     case YearSection: date.year = newVal; break;
     case MonthSection: date.month = newVal; break;
     case DaySection:
+    case DayOfWeekSectionShort:
+    case DayOfWeekSectionLong:
         if (newVal > 31) {
             // have to keep legacy behavior. setting the
             // date to 32 should return false. Setting it
@@ -188,15 +159,6 @@ bool QDateTimeParser::setDigit(QDateTime &v, int index, int newVal) const
             return false;
         }
         date.day = newVal;
-        fixDay = MonthDay;
-        break;
-    case DayOfWeekSectionShort:
-    case DayOfWeekSectionLong:
-        if (newVal > 7 || newVal <= 0)
-            return false;
-        date.day += dayOfWeekDiff(newVal, weekDay);
-        weekDay = newVal;
-        fixDay = WeekDay;
         break;
     case TimeZoneSection:
         if (newVal < absoluteMin(index) || newVal > absoluteMax(index))
@@ -214,27 +176,9 @@ bool QDateTimeParser::setDigit(QDateTime &v, int index, int newVal) const
     if (!(node.type & DaySectionMask)) {
         if (date.day < cachedDay)
             date.day = cachedDay;
-        fixDay = MonthDay;
-        if (weekDay > 0 && weekDay <= 7 && preferDayOfWeek(sectionNodes)) {
-            const int max = calendar.daysInMonth(date.month, date.year);
-            if (max > 0 && date.day > max)
-                date.day = max;
-            const int newDoW = calendar.dayOfWeek(calendar.dateFromParts(date));
-            if (newDoW > 0 && newDoW <= 7)
-                date.day += dayOfWeekDiff(weekDay, newDoW);
-            fixDay = WeekDay;
-        }
-    }
-
-    if (fixDay != NoFix) {
         const int max = calendar.daysInMonth(date.month, date.year);
-        // max > 0 precisely if the year does have such a month
-        if (max > 0 && date.day > max)
-            date.day = fixDay == WeekDay ? date.day - 7 : max;
-        else if (date.day < 1)
-            date.day = fixDay == WeekDay ? date.day + 7 : 1;
-        Q_ASSERT(fixDay != WeekDay
-                 || calendar.dayOfWeek(calendar.dateFromParts(date)) == weekDay);
+        if (date.day > max)
+            date.day = max;
     }
 
     const QDate newDate = calendar.dateFromParts(date);
@@ -287,10 +231,9 @@ int QDateTimeParser::absoluteMax(int s, const QDateTime &cur) const
     case MonthSection:
         return calendar.maximumMonthsInYear();
     case DaySection:
-        return cur.isValid() ? cur.date().daysInMonth(calendar) : calendar.maximumDaysInMonth();
     case DayOfWeekSectionShort:
     case DayOfWeekSectionLong:
-        return 7;
+        return cur.isValid() ? cur.date().daysInMonth(calendar) : calendar.maximumDaysInMonth();
     case AmPmSection:
         return 1;
     default:
@@ -984,21 +927,19 @@ QDateTimeParser::parseSection(const QDateTime &currentValue, int sectionIndex, i
 /*!
   \internal
 
-  Returns the day-number of a day, as close as possible to the given \a day, in
-  the specified \a month of \a year for the given \a calendar, that falls on the
-  day of the week indicated by \a weekDay.
+  Returns a day-number, in the same month as \a rough and as close to \a rough's
+  day number as is valid, that \a calendar puts on the day of the week indicated
+  by \a weekDay.
 */
 
-static int weekDayWithinMonth(QCalendar calendar, int year, int month, int day, int weekDay)
+static int weekDayWithinMonth(QCalendar calendar, QDate rough, int weekDay)
 {
     // TODO: can we adapt this to cope gracefully with intercallary days (day of
     // week > 7) without making it slower for more widely-used calendars ?
-    const int maxDay = calendar.daysInMonth(month, year); // 0 if no such month
-    day = maxDay > 1 ? qBound(1, day, maxDay) : qMax(1, day);
-    day += dayOfWeekDiff(weekDay, calendar.dayOfWeek(QDate(year, month, day, calendar)));
+    int day = rough.day(calendar) + weekDay - calendar.dayOfWeek(rough);
     if (day <= 0)
         return day + 7;
-    if (maxDay > 0 && day > maxDay)
+    if (day > rough.daysInMonth(calendar))
         return day - 7;
     return day;
 }
@@ -1086,7 +1027,7 @@ static QDate actualDate(QDateTimeParser::Sections known, const QCalendar &calend
 
     if ((known & QDateTimeParser::DaySection) == 0) {
         // Relatively easy to fix.
-        day = weekDayWithinMonth(calendar, year, month, day, dayofweek);
+        day = weekDayWithinMonth(calendar, actual, dayofweek);
         actual = QDate(year, month, day, calendar);
         return actual;
     }
@@ -1359,26 +1300,24 @@ QDateTimeParser::scanString(const QDateTime &defaultValue, bool fixup) const
             }
         }
 
-        const auto fieldType = sectionType(currentSectionIndex);
         const QDate date(year, month, day, calendar);
-        if ((!date.isValid() || dayofweek != calendar.dayOfWeek(date))
+        if (dayofweek != calendar.dayOfWeek(date)
                 && state == Acceptable && isSet & DayOfWeekSectionMask) {
             if (isSet & DaySection)
                 conflicts = true;
-            // Change to day of week should adjust day of month;
-            // when day of month isn't set, so should change to year or month.
-            if (currentSectionIndex == -1 || fieldType & DayOfWeekSectionMask
-                    || (!conflicts && (fieldType & (YearSectionMask | MonthSection)))) {
-                day = weekDayWithinMonth(calendar, year, month, day, dayofweek);
+            const SectionNode &sn = sectionNode(currentSectionIndex);
+            if (sn.type & DayOfWeekSectionMask || currentSectionIndex == -1) {
+                // dayofweek should be preferred
+                day = weekDayWithinMonth(calendar, date, dayofweek);
                 QDTPDEBUG << year << month << day << dayofweek
                           << calendar.dayOfWeek(QDate(year, month, day, calendar));
             }
         }
 
         bool needfixday = false;
-        if (fieldType & DaySectionMask) {
+        if (sectionType(currentSectionIndex) & DaySectionMask) {
             cachedDay = day;
-        } else if (cachedDay > day && !(isSet & DayOfWeekSectionMask && state == Acceptable)) {
+        } else if (cachedDay > day) {
             day = cachedDay;
             needfixday = true;
         }
@@ -2198,25 +2137,21 @@ QString QDateTimeParser::stateName(State s) const
     }
 }
 
-// Only called when we want only one of date or time; use UTC to avoid bogus DST issues.
 bool QDateTimeParser::fromString(const QString &t, QDate *date, QTime *time) const
 {
-    QDateTime val(QDate(1900, 1, 1).startOfDay(Qt::UTC));
-    const StateNode tmp = parse(t, -1, val, false);
-    if (tmp.state != Acceptable || tmp.conflicts)
+    QDateTime datetime;
+    if (!fromString(t, &datetime))
         return false;
 
     if (time) {
-        Q_ASSERT(!date);
-        const QTime t = tmp.value.time();
+        const QTime t = datetime.time();
         if (!t.isValid())
             return false;
         *time = t;
     }
 
     if (date) {
-        Q_ASSERT(!time);
-        const QDate d = tmp.value.date();
+        const QDate d = datetime.date();
         if (!d.isValid())
             return false;
         *date = d;
@@ -2224,8 +2159,7 @@ bool QDateTimeParser::fromString(const QString &t, QDate *date, QTime *time) con
     return true;
 }
 
-// Only called when we want both date and time; default to local time.
-bool QDateTimeParser::fromString(const QString &t, QDateTime *datetime) const
+bool QDateTimeParser::fromString(const QString &t, QDateTime* datetime) const
 {
     QDateTime val(QDate(1900, 1, 1).startOfDay());
     const StateNode tmp = parse(t, -1, val, false);

@@ -8,7 +8,6 @@ qt_internal_add_module(Widgets
     QMAKE_MODULE_CONFIG uic
     PLUGIN_TYPES styles
     SOURCES
-        compat/removed_api.cpp
         itemviews/qfileiconprovider.cpp itemviews/qfileiconprovider.h itemviews/qfileiconprovider_p.h
         kernel/qapplication.cpp kernel/qapplication.h kernel/qapplication_p.h
         kernel/qboxlayout.cpp kernel/qboxlayout.h
@@ -64,7 +63,6 @@ qt_internal_add_module(Widgets
         Qt::GuiPrivate
     PRECOMPILED_HEADER
         "kernel/qt_widgets_pch.h"
-    GENERATE_CPP_EXPORTS
 )
 
 # Resources:
@@ -237,15 +235,6 @@ set(qstyle_resource_files
     "styles/images/viewlist-16.png"
     "styles/images/viewlist-32.png"
 )
-
-set(widgets_no_pch_sources
-    compat/removed_api.cpp
-)
-
-foreach(src ${widgets_no_pch_sources})
-    qt_update_ignore_pch_source(Widgets ${src})
-endforeach()
-
 
 qt_internal_add_resource(Widgets "qstyle"
     PREFIX
