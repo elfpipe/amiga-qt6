@@ -47,6 +47,10 @@
 #  include <stdio.h>
 #endif // Q_OS_WIN
 
+#ifdef __amigaos4__
+#include <proto/exec.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 void dumpRecursive(const QDir &dir, QTextStream &out)
@@ -222,7 +226,6 @@ int runRcc(int argc, char *argv[])
 
     parser.addPositionalArgument(QStringLiteral("inputs"), QStringLiteral("Input files (*.qrc)."));
 
-
     //parse options
     parser.process(app);
 
@@ -349,7 +352,6 @@ int runRcc(int argc, char *argv[])
             break;
     }
 
-
     if (outFilename.isEmpty() || outFilename == QLatin1String("-")) {
 #ifdef Q_OS_WIN
         // Make sure fwrite to stdout doesn't do LF->CRLF
@@ -425,12 +427,14 @@ int runRcc(int argc, char *argv[])
             return 1;
         }
     }
+
     bool success = library.output(out, temp, errorDevice);
     if (!success) {
         // erase the output file if we failed
         out.remove();
         return 1;
     }
+
     return 0;
 }
 

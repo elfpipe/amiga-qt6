@@ -1878,18 +1878,29 @@ void MakefileGenerator::callExtraCompilerDependCommand(const ProString &extraCom
     QString dep_cmd = replaceExtraCompilerVariables(tmp_dep_cmd, inpf, tmp_out, LocalShell);
     if (checkCommandAvailability && !canExecute(dep_cmd))
         return;
+#ifdef __amigaos4__
+    // char cwd[PATH_MAX];
+    // getcwd(cwd, sizeof(cwd));
+    // chdir(Option::fixPathToLocalOS(Option::output_dir, false).toLocal8Bit().constData());
+    // printf("[qmake :] dep_cmd [%s]\n", dep_cmd.toLatin1().constData());
+#else
     dep_cmd = QLatin1String("cd ")
             + IoUtils::shellQuote(Option::fixPathToLocalOS(Option::output_dir, false))
             + QLatin1String(" && ")
             + fixEnvVariables(dep_cmd);
+#endif
     if (FILE *proc = QT_POPEN(dep_cmd.toLatin1().constData(), QT_POPEN_READ)) {
         QByteArray depData;
         while (int read_in = feof(proc) ? 0 : (int)fread(buff, 1, 255, proc))
             depData.append(buff, read_in);
         QT_PCLOSE(proc);
         const QString indeps = QString::fromLocal8Bit(depData);
-        if (indeps.isEmpty())
+        if (indeps.isEmpty()) {
+#ifdef __amigaos4__
+            // chdir(cwd);
+#endif
             return;
+        }
         QDir outDir(Option::output_dir);
         QStringList dep_cmd_deps = splitDeps(indeps, dep_lines);
         for (int i = 0; i < dep_cmd_deps.count(); ++i) {
@@ -1920,6 +1931,9 @@ void MakefileGenerator::callExtraCompilerDependCommand(const ProString &extraCom
         }
         deps->append(dep_cmd_deps);
     }
+#ifdef __amigaos4__
+    // chdir(cwd);
+#endif
 }
 
 void

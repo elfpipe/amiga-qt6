@@ -601,6 +601,7 @@ int main(int argc, char **argv)
 {
 #ifdef __amigaos4__
     enableUnixPaths();
+    // printf("[qmake :] argv[0] == [%s]\n", argv[0]);
 #endif
     // Set name of the qmake application in QCoreApplication instance
     QT_PREPEND_NAMESPACE(QCoreApplication) app(argc, argv);

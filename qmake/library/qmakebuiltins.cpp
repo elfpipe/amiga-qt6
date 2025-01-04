@@ -541,19 +541,15 @@ QByteArray QMakeEvaluator::getCommandOutput(const QString &args, int *exitCode) 
 # endif
 #else
 #ifdef __amigaos4__
-    printf("[QMakeEvaluator::getCommandOutput :] popen : %s\n", args.toLocal8Bit().constData());
     if (FILE *proc = QT_POPEN(args.toLocal8Bit().constData(), QT_POPEN_READ)) {
 #else
     if (FILE *proc = QT_POPEN(QString(QLatin1String("cd ")
                                + IoUtils::shellQuote(QDir::toNativeSeparators(currentDirectory()))
                                + QLatin1String(" && ") + args).toLocal8Bit().constData(), QT_POPEN_READ)) {
 #endif
-printf("[QMakeEvaluator::getCommandOutput :] popen returned.\n");
         while (!feof(proc)) {
             char buff[10 * 1024];
-printf("[QMakeEvaluator::getCommandOutput :] Calling fread\n");
             int read_in = int(fread(buff, 1, sizeof(buff), proc));
-printf("[QMakeEvaluator::getCommandOutput :] fread returned.\n");
             if (!read_in)
                 break;
             out += QByteArray(buff, read_in);

@@ -359,13 +359,13 @@ bool QFSFileEnginePrivate::doStat(QFileSystemMetaData::MetaDataFlags flags) cons
         int localFd = fd;
         if (fh && fileEntry.isEmpty())
             localFd = QT_FILENO(fh);
+
         if (localFd != -1)
             QFileSystemEngine::fillMetaData(localFd, metaData);
 
         if (metaData.missingFlags(flags) && !fileEntry.isEmpty())
             QFileSystemEngine::fillMetaData(fileEntry, metaData, metaData.missingFlags(flags));
     }
-
     return metaData.exists();
 }
 

@@ -222,7 +222,6 @@ QStringList QMakeSourceFileInfo::dependencies(const QString &file)
                 for(int i = 0; i < place.used_nodes; i++) {
                     place.children[i]->traversed = false; //reset flag
                     ret.append(place.children[i]->file.real());
-// printf("####### [%s] : %s\n", file.toLocal8Bit().constData(), place.children[i]->file.real().toLocal8Bit().constData());
                 }
            }
        }
