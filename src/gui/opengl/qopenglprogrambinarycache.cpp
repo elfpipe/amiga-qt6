@@ -196,8 +196,8 @@ bool QOpenGLProgramBinaryCache::setProgramBinary(uint programId, uint blobFormat
         programBinaryOES(programId, blobFormat, p, blobSize);
     } else
 #endif
-    funcs->glProgramBinary(programId, blobFormat, p, blobSize);
-
+    // funcs->glProgramBinary(programId, blobFormat, p, blobSize);
+;
     GLenum err = funcs->glGetError();
     if (err != GL_NO_ERROR) {
         qCDebug(lcOpenGLProgramDiskCache, "Program binary failed to load for program %u, size %d, "
@@ -419,7 +419,7 @@ void QOpenGLProgramBinaryCache::save(const QByteArray &cacheKey, uint programId)
         getProgramBinaryOES(programId, blobSize, &outSize, &blobFormat, p);
     } else
 #endif
-    funcs->glGetProgramBinary(programId, blobSize, &outSize, &blobFormat, p);
+    // funcs->glGetProgramBinary(programId, blobSize, &outSize, &blobFormat, p);
     if (blobSize != outSize) {
         qCDebug(lcOpenGLProgramDiskCache, "glGetProgramBinary returned size %d instead of %d", outSize, blobSize);
         return;
@@ -451,6 +451,7 @@ void QOpenGLProgramBinaryCache::initializeProgramBinaryOES(QOpenGLContext *conte
     m_programBinaryOESInitialized = true;
 
     Q_ASSERT(context);
+
     getProgramBinaryOES = (void (QOPENGLF_APIENTRYP)(GLuint program, GLsizei bufSize, GLsizei *length, GLenum *binaryFormat, GLvoid *binary))context->getProcAddress("glGetProgramBinaryOES");
     programBinaryOES = (void (QOPENGLF_APIENTRYP)(GLuint program, GLenum binaryFormat, const GLvoid *binary, GLint length))context->getProcAddress("glProgramBinaryOES");
 }

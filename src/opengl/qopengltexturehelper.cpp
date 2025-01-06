@@ -45,12 +45,12 @@
 
 QT_BEGIN_NAMESPACE
 
-#ifdef __amigaos4__
-void aglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data);
-void aglCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
-void aglActiveTexture(GLenum texture);
-void aglGenerateMipmap(GLenum target);
-#endif
+// #ifdef __amigaos4__
+// void aglCompressedTexImage2D(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data);
+// void aglCompressedTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data);
+// void aglActiveTexture(GLenum texture);
+// void aglGenerateMipmap(GLenum target);
+// #endif
 
 QOpenGLTextureHelper::QOpenGLTextureHelper(QOpenGLContext *context)
 {
@@ -162,17 +162,29 @@ QOpenGLTextureHelper::QOpenGLTextureHelper(QOpenGLContext *context)
     // OpenGL 1.1
     TexSubImage1D = 0;
 
+#ifdef __amigaos4__
     // OpenGL 1.3
     GetCompressedTexImage = 0;
     CompressedTexSubImage1D = 0;
-    CompressedTexSubImage2D = aglCompressedTexSubImage2D;
+    CompressedTexSubImage2D = reinterpret_cast<void (QOPENGLF_APIENTRYP)(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLsizei imageSize, const void * data)>(context->getProcAddress("glCompressedTexSubImage2D"));
     CompressedTexImage1D = 0;
-    CompressedTexImage2D = aglCompressedTexImage2D;
-    ActiveTexture = aglActiveTexture;
+    CompressedTexImage2D = reinterpret_cast<void (QOPENGLF_APIENTRYP)(GLenum target, GLint level, GLenum internalformat, GLsizei width, GLsizei height, GLint border, GLsizei imageSize, const void * data)>(context->getProcAddress("glCompressedTexImage2D"));
+    ActiveTexture = reinterpret_cast<void (QOPENGLF_APIENTRYP)(GLenum texture)>(context->getProcAddress("glActiveTexture"));
 
     // OpenGL 3.0
-    GenerateMipmap = aglGenerateMipmap;
+    GenerateMipmap = reinterpret_cast<void (QOPENGLF_APIENTRYP)(GLenum target)>(context->getProcAddress("glGenerateMipmap"));
+#else
+    // OpenGL 1.3
+    GetCompressedTexImage = 0;
+    CompressedTexSubImage1D = 0;
+    CompressedTexSubImage2D = ::glCompressedTexSubImage2D;
+    CompressedTexImage1D = 0;
+    CompressedTexImage2D = ::glCompressedTexImage2D;
+    ActiveTexture = ::glActiveTexture;
 
+    // OpenGL 3.0
+    GenerateMipmap = ::glGenerateMipmap;
+#endif
     // OpenGL 3.2
     TexImage3DMultisample = 0;
     TexImage2DMultisample = 0;
