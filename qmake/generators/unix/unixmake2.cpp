@@ -1033,7 +1033,15 @@ UnixMakefileGenerator::writeMakeParts(QTextStream &t)
     if(src_incremental)
         t << "-$(DEL_FILE) $(INCREMENTAL_OBJECTS)\n\t";
     t << fileVarGlue("QMAKE_CLEAN","-$(DEL_FILE) "," ","\n\t")
+#   ifdef __amigaos4__
+        // The tilde is badly interpreted in amiga shell, and the original line
+        //  will wipe out everything.
+        // There are no ways to delete files ending in '~' with wildcards on amiga.
+        // Thankfully, we don't need to.
+      << "-$(DEL_FILE) core *.core\n"
+#   else
       << "-$(DEL_FILE) *~ core *.core\n"
+#   endif
       << fileVarGlue("CLEAN_FILES","\t-$(DEL_FILE) "," ","") << Qt::endl << Qt::endl;
 
     ProString destdir = project->first("DESTDIR");
