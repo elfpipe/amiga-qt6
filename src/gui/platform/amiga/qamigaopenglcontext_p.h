@@ -86,7 +86,7 @@ public:
 				OGLES2_CCT_GET_HEIGHT,&disp_height,
                 TAG_DONE);
             if (aglContext == 0 || errCode) {
-                printf("Error opening OpenGL context. Code : %d.\n", errCode);
+                printf("Error opening OpenGL context. Code : %d.\n", errCode); exit(20);
             } else aglMakeCurrent(aglContext);
         }
         printf("Successfully created context. (0x%x)\n", (void *)aglContext);
