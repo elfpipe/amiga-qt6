@@ -58,6 +58,10 @@
 #include "QtCore/qvarlengtharray.h"
 #include "private/qtimerinfo_unix_p.h"
 
+#ifdef __amigaos4__
+#include <proto/exec.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QEventDispatcherUNIXPrivate;
@@ -146,6 +150,11 @@ public:
 
     QTimerInfoList timerList;
     QAtomicInt interrupt; // bool
+
+#ifdef __amigaos4__
+    uint8 wakeupSignal;
+    struct Task *me;
+#endif
 };
 
 inline QSocketNotifierSetUNIX::QSocketNotifierSetUNIX() noexcept

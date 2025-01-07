@@ -196,8 +196,8 @@ bool QOpenGLProgramBinaryCache::setProgramBinary(uint programId, uint blobFormat
         programBinaryOES(programId, blobFormat, p, blobSize);
     } else
 #endif
-    // funcs->glProgramBinary(programId, blobFormat, p, blobSize);
-;
+    funcs->glProgramBinary(programId, blobFormat, p, blobSize);
+
     GLenum err = funcs->glGetError();
     if (err != GL_NO_ERROR) {
         qCDebug(lcOpenGLProgramDiskCache, "Program binary failed to load for program %u, size %d, "
@@ -419,7 +419,7 @@ void QOpenGLProgramBinaryCache::save(const QByteArray &cacheKey, uint programId)
         getProgramBinaryOES(programId, blobSize, &outSize, &blobFormat, p);
     } else
 #endif
-    // funcs->glGetProgramBinary(programId, blobSize, &outSize, &blobFormat, p);
+        funcs->glGetProgramBinary(programId, blobSize, &outSize, &blobFormat, p);
     if (blobSize != outSize) {
         qCDebug(lcOpenGLProgramDiskCache, "glGetProgramBinary returned size %d instead of %d", outSize, blobSize);
         return;

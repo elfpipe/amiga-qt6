@@ -149,7 +149,8 @@ bool QThreadPipe::init()
         return false;
     }
 
-    initThreadPipeFD(fds[0]);
+    initThreadPipeFD(fds[0]);#ifndef __amigaos4__
+
     fds[1] = fds[0];
 #else
 #  ifndef QT_NO_EVENTFD
@@ -224,12 +225,20 @@ int QThreadPipe::check(const pollfd &pfd)
 
 QEventDispatcherUNIXPrivate::QEventDispatcherUNIXPrivate()
 {
+#ifdef __amigaos4__
+    wakeupSignal = IExec->AllocSignal(-1);
+    me = IExec->FindTask(0);
+#else
     if (Q_UNLIKELY(threadPipe.init() == false))
         qFatal("QEventDispatcherUNIXPrivate(): Cannot continue without a thread pipe");
+#endif
 }
 
 QEventDispatcherUNIXPrivate::~QEventDispatcherUNIXPrivate()
 {
+#ifdef __amigaos4__
+    IExec->FreeSignal(wakeupSignal);
+#endif
     // cleanup timers
     qDeleteAll(timerList);
 }
@@ -484,6 +493,11 @@ bool QEventDispatcherUNIX::processEvents(QEventLoop::ProcessEventsFlags flags)
     timespec *tm = nullptr;
     timespec wait_tm = { 0, 0 };
 
+#ifdef __amigaos4__
+    unsigned int listenSignals = 0;
+    listenSignals |= 1 << d->wakeupSignal;
+#endif
+
     if (!canWait || (include_timers && d->timerList.timerWait(wait_tm)))
         tm = &wait_tm;
 
@@ -499,14 +513,20 @@ bool QEventDispatcherUNIX::processEvents(QEventLoop::ProcessEventsFlags flags)
 
     int nevents = 0;
 
+#ifdef __amigaos4__
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
+#else
     switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm)) {
+#endif
     case -1:
         perror("qt_safe_poll");
         break;
     case 0:
         break;
     default:
+#ifndef __amigaos4__
         nevents += d->threadPipe.check(d->pollfds.takeLast());
+#endif
         if (include_notifiers)
             nevents += d->activateSocketNotifiers();
         break;
@@ -535,7 +555,11 @@ int QEventDispatcherUNIX::remainingTime(int timerId)
 void QEventDispatcherUNIX::wakeUp()
 {
     Q_D(QEventDispatcherUNIX);
+#ifdef __amigaos4__
+    IExec->Signal(d->me, 1 << d->wakeupSignal);
+#else
     d->threadPipe.wakeUp();
+#endif
 }
 
 void QEventDispatcherUNIX::interrupt()

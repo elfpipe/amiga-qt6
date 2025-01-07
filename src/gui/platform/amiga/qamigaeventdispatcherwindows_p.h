@@ -5,23 +5,23 @@
 #include "qamigawindow_p.h"
 #include "qamigacommon_p.h"
 
-#include "../../../corelib/kernel/qeventdispatcher_amiga_p.h"
-
 #include <qpa/qwindowsysteminterface.h>
 #include <QtGui/private/qguiapplication_p.h>
+#include <QtCore/private/qeventdispatcher_unix_p.h>
 
+#include <proto/exec.h>
 #include <proto/intuition.h>
 
 QT_BEGIN_NAMESPACE
 
 class QAmigaWindow;
-class QEventDispatcherAMIGAWindows : public QEventDispatcherAMIGA
+class QEventDispatcherAMIGAWindows : public QEventDispatcherUNIX
 {
-    Q_DECLARE_PRIVATE(QEventDispatcherAMIGA)
+    Q_DECLARE_PRIVATE(QEventDispatcherUNIX)
 
 public:
     explicit QEventDispatcherAMIGAWindows(QObject *parent = nullptr)
-        : QEventDispatcherAMIGA(parent)
+        : QEventDispatcherUNIX(parent)
     {
     }
 
@@ -34,7 +34,7 @@ public:
 
     bool processEvents(QEventLoop::ProcessEventsFlags flags) override
     {
-        Q_D(QEventDispatcherAMIGA);
+        Q_D(QEventDispatcherUNIX);
         d->interrupt.storeRelaxed(0);
 
         // we are awake, broadcast it
@@ -83,6 +83,8 @@ public:
 
 
 
+    // // This must be last, as it's popped off the end below
+    // d->pollfds.append(d->threadPipe.prepare());
 
         
 
@@ -97,7 +99,7 @@ public:
     case 0:
         break;
     default:
-        // nevents += d->threadPipe.check(d->pollfds.takeLast());
+        nevents += d->threadPipe.check(d->pollfds.takeLast());
         if (include_notifiers)
             nevents += d->activateSocketNotifiers();
         break;
@@ -113,8 +115,8 @@ public:
 
 
 
-        if (listenSignals & 1 << d->wakeupSignal)
-            {} //printf("WAKE UP!!!!\n");
+        // if (listenSignals & 1 << d->wakeupSignal)
+        //     {} //printf("WAKE UP!!!!\n");
 
         // if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
         //     IExec->AbortIO((struct IORequest *)d->timerRequest);

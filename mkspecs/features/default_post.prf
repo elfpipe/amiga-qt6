@@ -173,15 +173,8 @@ c99|c11 {
 
 !precompile_header: SOURCES += $$NO_PCH_SOURCES
 
-# amiga
 amiga {
-    amiga_unix_target.path = $$target.path
-    amiga_unix_target.files = .unix
-#    amiga_unix_target.target = .unix
-    amiga_unix_target.commands = touch .unix
-    QMAKE_EXTRA_TARGETS += amiga_unix_target
-    INSTALLS += amiga_unix_target
-    amiga_sobjs_target.path = $${target.path}/sobjs
-    amiga_sobjs_target.files = /qt6-amiga/bin/sobjs/*
+    amiga_sobjs_target.path = $${target.path}
+    amiga_sobjs_target.files = /qt6-amiga/bin/sobjs /qt6-amiga/bin/.unix
     INSTALLS += amiga_sobjs_target
 }

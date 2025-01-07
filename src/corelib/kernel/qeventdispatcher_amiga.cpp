@@ -183,12 +183,9 @@ void QEventDispatcherAMIGAPrivate::markPendingSocketNotifiers()
 
 int QEventDispatcherAMIGAPrivate::activateSocketNotifiers()
 {
-    qInfo() << "activateSocketNotifiers";
     markPendingSocketNotifiers();
-    qInfo() << "check(1)";
 
     if (pendingNotifiers.isEmpty()) {
-        qInfo() << "pendingNotifiers is empty";
         return 0;
     }
 
@@ -197,7 +194,6 @@ int QEventDispatcherAMIGAPrivate::activateSocketNotifiers()
 
     while (!pendingNotifiers.isEmpty()) {
         QSocketNotifier *notifier = pendingNotifiers.takeFirst();
-        qInfo() << "send QEvent::SockAct";
         QCoreApplication::sendEvent(notifier, &event);
         ++n_activated;
     }

@@ -332,7 +332,7 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_ocsp AND QT_FEATURE_opens
         ssl/qocsp_p.h
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_openssl_linked AND QT_FEATURE_ssl
+qt_internal_extend_target(Network CONDITION QT_FEATURE_openssl AND QT_FEATURE_openssl_linked AND QT_FEATURE_ssl AND NOT AMIGA
     LIBRARIES
         WrapOpenSSL::WrapOpenSSL
     PRIVATE_MODULE_INTERFACE
@@ -353,6 +353,8 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_dnslookup AND UNIX AND NO
 qt_internal_add_docs(Network
     doc/qtnetwork.qdocconf
 )
+
+qt_internal_extend_target(Network CONDITION AMIGA AND QT_FEATURE_openssl PUBLIC_LIBRARIES ssl crypto)
 
 qt_internal_extend_target(Network CONDITION WIN32 PUBLIC_LIBRARIES ws2_32) # special case: mkspecs/common/msvc-desktop.conf
 
