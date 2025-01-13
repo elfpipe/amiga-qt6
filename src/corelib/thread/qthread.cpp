@@ -168,8 +168,8 @@ QThreadPrivate::QThreadPrivate(QThreadData *d)
 
 // INTEGRITY doesn't support self-extending stack. The default stack size for
 // a pthread on INTEGRITY is too small so we have to increase the default size
-// to 128K.
-#ifdef Q_OS_INTEGRITY
+// to 128K. The same goes for amiga.
+#if defined(Q_OS_INTEGRITY) || defined(__amigaos4__)
     stackSize = 128 * 1024;
 #elif defined(Q_OS_RTEMS)
     static bool envStackSizeOk = false;

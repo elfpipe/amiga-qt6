@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-//#define QHOSTINFO_DEBUG
+#define QHOSTINFO_DEBUG
 
 #include "qhostinfo.h"
 #include "qhostinfo_p.h"

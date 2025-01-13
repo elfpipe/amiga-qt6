@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-//#define QHOSTINFO_DEBUG
+#define QHOSTINFO_DEBUG
 
 #include "qplatformdefs.h"
 
@@ -114,6 +114,7 @@ static QFunctionPointer resolveSymbol(QLibrary &lib, const char *sym)
         return lib.resolve(sym);
 
 #if defined(RTLD_DEFAULT) && (defined(Q_OS_FREEBSD) || QT_CONFIG(dlopen))
+printf("resolving symbol : [%s] 0x%x\n", sym, dlsym(RTLD_DEFAULT, sym));
     return reinterpret_cast<QFunctionPointer>(dlsym(RTLD_DEFAULT, sym));
 #else
     return nullptr;
@@ -146,6 +147,10 @@ LibResolv::LibResolv()
     }
 
     if (ReinitNecessary || !local_res_ninit) {
+#ifdef __amigaos4__
+        local_res_init = res_init_proto(res_init);
+        local_res = res_state_ptr(__res_state);
+#else
         local_res_init = res_init_proto(resolveSymbol(lib, "__res_init"));
         if (!local_res_init)
             local_res_init = res_init_proto(resolveSymbol(lib, "res_init"));
@@ -154,6 +159,7 @@ LibResolv::LibResolv()
             // if we can't get a thread-safe context, we have to use the global _res state
             local_res = res_state_ptr(resolveSymbol(lib, "_res"));
         }
+#endif
     }
 }
 

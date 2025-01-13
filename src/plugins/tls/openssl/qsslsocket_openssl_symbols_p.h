@@ -82,6 +82,10 @@ QT_BEGIN_NAMESPACE
 
 #define DUMMYARG
 
+#ifdef __amigaos4__
+#define QT_LINKED_OPENSSL
+#endif
+
 #if !defined QT_LINKED_OPENSSL
 // **************** Shared declarations ******************
 // ret func(arg)

@@ -61,6 +61,7 @@ public:
         timespec wait_tm = { 0, 0 };
 
         unsigned int listenSignals = 0;
+        listenSignals |= 1 << d->wakeupSignal;
 
         if (!canWait || (include_timers && d->timerList.timerWait(wait_tm)))
             tm = &wait_tm;
@@ -69,8 +70,6 @@ public:
         if (intuitionPort) {
             listenSignals |= 1 << intuitionPort->mp_SigBit;
         } else printf("No amiga windows.\n");
-
-        listenSignals |= 1 << d->wakeupSignal;
 
         d->pollfds.clear();
         d->pollfds.reserve(1 + (include_notifiers ? d->socketNotifiers.size() : 0));
@@ -92,6 +91,7 @@ public:
         // unsigned int caughtSignals = IExec->Wait(listenSignals);
 
 
+printf("MAIN APP: Enter poll state...\n");
     switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
     case -1:
         perror("qt_safe_poll");
@@ -99,12 +99,12 @@ public:
     case 0:
         break;
     default:
-        nevents += d->threadPipe.check(d->pollfds.takeLast());
+        // nevents += d->threadPipe.check(d->pollfds.takeLast());
         if (include_notifiers)
             nevents += d->activateSocketNotifiers();
         break;
     }
-
+printf("MAIN APP: Back from poll state.\n");
 
 
 

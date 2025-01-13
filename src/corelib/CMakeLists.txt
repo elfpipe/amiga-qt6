@@ -644,14 +644,6 @@ qt_internal_extend_target(Core CONDITION UNIX
     kernel/qpoll_p.h
 )
 
-# qt_internal_extend_target(Core CONDITION AMIGA
-#     SOURCES
-#         kernel/qeventdispatcher_amiga_p.h
-#         kernel/qeventdispatcher_amiga.cpp
-#         kernel/qtimerinfo_unix.cpp kernel/qtimerinfo_unix_p.h
-#         kernel/qpoll_p.h
-#         )
-
 qt_internal_extend_target(Core CONDITION QT_FEATURE_thread
     SOURCES
         thread/qatomic.cpp thread/qatomic.h

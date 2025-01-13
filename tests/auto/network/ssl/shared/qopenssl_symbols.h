@@ -100,6 +100,10 @@ QT_REQUIRE_CONFIG(openssl);
 #include <QtCore/private/qcore_mac_p.h>
 #endif
 
+#ifdef __amigaos4__
+#define QT_LINKED_OPENSSL
+#endif
+
 #include <algorithm>
 #include <memory>
 
@@ -633,7 +637,7 @@ LoadedOpenSsl loadOpenSsl()
     libcrypto->setLoadHints(QLibrary::ExportExternalSymbolsHint);
 #endif
 
-#if defined(SHLIB_VERSION_NUMBER) && !defined(Q_OS_QNX) // on QNX, the libs are always libssl.so and libcrypto.so
+#if defined(SHLIB_VERSION_NUMBER) && !defined(Q_OS_QNX) && !defined(__amigaos4__) // on QNX, the libs are always libssl.so and libcrypto.so
     // first attempt: the canonical name is libssl.so.<SHLIB_VERSION_NUMBER>
     libssl->setFileNameAndVersion(QLatin1String("ssl"), QLatin1String(SHLIB_VERSION_NUMBER));
     libcrypto->setFileNameAndVersion(QLatin1String("crypto"), QLatin1String(SHLIB_VERSION_NUMBER));

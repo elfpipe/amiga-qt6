@@ -139,19 +139,6 @@ static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespe
 #endif
 }
 
-#ifdef __amigaos4__ //overload
-int qt_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals);
-
-static inline int qt_ppoll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals)
-{
-    return ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals);
-#if 0 //def __amigaos4__
-    return qt_poll(fds, nfds, timeout_ts, listenSignals); //no need to use ::select anymore
-#endif
-}
-#endif
-
-
 /*!
     \internal
 
@@ -192,7 +179,7 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
     if (!timeout_ts) {
         // no timeout -> block forever
         int ret;
-        EINTR_LOOP(ret, qt_ppoll(fds, nfds, nullptr));
+        EINTR_LOOP(ret, ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals););
         return ret;
     }
 
@@ -201,7 +188,7 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
 
     // loop and recalculate the timeout as needed
     forever {
-        const int ret = qt_ppoll(fds, nfds, &timeout, listenSignals);
+        const int ret = ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals);;
         if (ret != -1 || errno != EINTR)
             return ret;
 

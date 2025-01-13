@@ -44,13 +44,14 @@
 
 #if QT_CONFIG(opengles2) || defined(Q_QDOC)
 
+#ifdef __amigaos4__
+#include <interfaces/ogles2.h>
+#include <QtGui/qopenglfunctions.h>
+#endif
+
 #include <QtOpenGL/QOpenGLVersionProfile>
 #include <QtOpenGL/QOpenGLVersionFunctions>
 #include <QtGui/qopenglcontext.h>
-
-#ifdef __amigaos4__
-#include <interfaces/ogles2.h>
-#endif
 
 QT_BEGIN_NAMESPACE
 
