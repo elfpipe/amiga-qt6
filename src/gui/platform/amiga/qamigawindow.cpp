@@ -90,6 +90,8 @@ QAmigaWindow::~QAmigaWindow()
     m_windowForWinIdHash.remove(m_winId);
 
     closeWindow();
+
+    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
 }
 
 void QAmigaWindow::setGl(bool set) 
@@ -128,7 +130,7 @@ void QAmigaWindow::openWindow()
         WA_Flags, ( frameless ? 0 : WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET ) | WFLG_ACTIVATE,
         frameless ? TAG_IGNORE : WA_Title, strdup(window()->title().toLocal8Bit().constData()),
 
-        WA_ScreenTitle, "Qt 6.2.0 - welcome to true happiness... :)",
+        WA_ScreenTitle, "Qt 6.2.0 - AmigaOS 4.1 FE",
         WA_PubScreenName, "Workbench",
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ToolBox, window()->type() == Qt::ToolTip ? TRUE : FALSE,
@@ -147,7 +149,6 @@ void QAmigaWindow::closeWindow()
 {
     if(m_intuitionWindow) {
         IIntuition->CloseWindow(m_intuitionWindow);
-        static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
         m_intuitionWindow = 0;
     }
 }
