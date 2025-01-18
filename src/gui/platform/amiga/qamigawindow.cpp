@@ -79,6 +79,8 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
     m_winId = ++counter;
 
     m_windowForWinIdHash[m_winId] = this;
+
+    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
 }
 
 QAmigaWindow::~QAmigaWindow()
@@ -88,6 +90,12 @@ QAmigaWindow::~QAmigaWindow()
     m_windowForWinIdHash.remove(m_winId);
 
     closeWindow();
+}
+
+void QAmigaWindow::setGl(bool set) 
+{
+    gl = set;
+    openWindow();
 }
 
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -115,21 +123,24 @@ void QAmigaWindow::openWindow()
         WA_Height, rect.height(),  
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
+
         WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
         WA_Flags, ( frameless ? 0 : WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET ) | WFLG_ACTIVATE,
-        WA_GimmeZeroZero, TRUE,
         frameless ? TAG_IGNORE : WA_Title, strdup(window()->title().toLocal8Bit().constData()),
+
         WA_ScreenTitle, "Qt 6.2.0 - welcome to true happiness... :)",
         WA_PubScreenName, "Workbench",
         WA_Borderless, frameless ? TRUE : FALSE,
         WA_ToolBox, window()->type() == Qt::ToolTip ? TRUE : FALSE,
         WA_ReportMouse, TRUE,
-        WA_Hidden, TRUE,
+        m_visible ? TAG_IGNORE : WA_Hidden, TRUE,
         WA_UserPort, QAmigaIntegration::messagePort(),
+
+        gl ? TAG_IGNORE : WA_GimmeZeroZero, TRUE,
+        gl ? WA_BackFill : TAG_IGNORE, LAYERS_NOBACKFILL,
+        gl ? WA_SimpleRefresh : TAG_IGNORE,	TRUE,
+
         TAG_DONE );
-
-    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
-
 }
 
 void QAmigaWindow::closeWindow()
@@ -216,8 +227,6 @@ void QAmigaWindow::setVisible(bool visible)
     m_visible = visible;
 
     IIntuition->SetWindowAttrs(m_intuitionWindow, WA_Hidden, visible ? FALSE : TRUE, WA_Activate, visible ? TRUE : FALSE, TAG_DONE);
-    // if(visible) openWindow();
-    // else closeWindow();
 }
 
 void QAmigaWindow::requestActivateWindow()
@@ -368,7 +377,7 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
 
         case IDCMP_MOUSEBUTTONS : {
             Qt::MouseButton button = Qt::NoButton;
-            QEvent::Type type;
+            QEvent::Type type = QEvent::None;
             switch(message->Code) {
                 case SELECTDOWN:
                     button = Qt::LeftButton;

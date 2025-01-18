@@ -158,10 +158,10 @@ void QAmigaIntegration::configure(const QStringList& paramList)
         qFatal("Platform config file parse error: %s", qPrintable(error.errorString()));
 
     // Apply configuration (create screens)
-    bool synchronousWindowSystemEvents = config["synchronousWindowSystemEvents"].toBool(false);
+    bool synchronousWindowSystemEvents = config[QStringLiteral("synchronousWindowSystemEvents")].toBool(false);
     QWindowSystemInterface::setSynchronousWindowSystemEvents(synchronousWindowSystemEvents);
-    m_windowFrameMarginsEnabled = config["windowFrameMargins"].toBool(true);
-    QJsonArray screens = config["screens"].toArray();
+    m_windowFrameMarginsEnabled = config[QStringLiteral("windowFrameMargins")].toBool(true);
+    QJsonArray screens = config[QStringLiteral("screens")].toArray();
     for (QJsonValue screenValue : screens) {
         QJsonObject screen  = screenValue.toObject();
         if (screen.isEmpty()) {
@@ -169,12 +169,12 @@ void QAmigaIntegration::configure(const QStringList& paramList)
             continue;
         }
         QAmigaScreen *amigaScreen = new QAmigaScreen(this);
-        amigaScreen->m_name = screen["name"].toString();
-        amigaScreen->m_geometry = QRect(screen["x"].toInt(0), screen["y"].toInt(0),
-                                            screen["width"].toInt(640), screen["height"].toInt(480));
-        amigaScreen->m_logicalDpi = screen["logicalDpi"].toInt(96);
-        amigaScreen->m_logicalBaseDpi = screen["logicalBaseDpi"].toInt(96);
-        amigaScreen->m_dpr = screen["dpr"].toDouble(1.0);
+        amigaScreen->m_name = screen[QStringLiteral("name")].toString();
+        amigaScreen->m_geometry = QRect(screen[QStringLiteral("x")].toInt(0), screen[QStringLiteral("y")].toInt(0),
+                                            screen[QStringLiteral("width")].toInt(640), screen[QStringLiteral("height")].toInt(480));
+        amigaScreen->m_logicalDpi = screen[QStringLiteral("logicalDpi")].toInt(96);
+        amigaScreen->m_logicalBaseDpi = screen[QStringLiteral("logicalBaseDpi")].toInt(96);
+        amigaScreen->m_dpr = screen[QStringLiteral("dpr")].toDouble(1.0);
 
         m_screens.append(amigaScreen);
         QWindowSystemInterface::handleScreenAdded(amigaScreen);

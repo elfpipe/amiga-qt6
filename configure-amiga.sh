@@ -13,6 +13,7 @@ cmake \
 -DBUILD_WITH_PCH=OFF \
 -DUNIX=1 -DAMIGA=1 \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
+-DCMAKE_PREFIX_PATH="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \
 -DQT_FEATURE_dlopen=ON \

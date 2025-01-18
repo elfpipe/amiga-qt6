@@ -83,6 +83,9 @@ public:
 
     static QAmigaWindow *windowForWinId(WId id);
 
+    bool isGl() { return gl; }
+    void setGl(bool set);
+
 private:
     void setFrameMarginsEnabled(bool enabled);
     void setGeometryImpl(const QRect &rect);
@@ -94,6 +97,8 @@ private:
     bool m_pendingGeometryChangeOnShow;
     bool m_frameMarginsRequested;
     WId m_winId;
+
+    bool gl;
 
     static QHash<WId, QAmigaWindow *> m_windowForWinIdHash;
 

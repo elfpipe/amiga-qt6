@@ -91,7 +91,6 @@ public:
         // unsigned int caughtSignals = IExec->Wait(listenSignals);
 
 
-printf("MAIN APP: Enter poll state...\n");
     switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
     case -1:
         perror("qt_safe_poll");
@@ -104,7 +103,6 @@ printf("MAIN APP: Enter poll state...\n");
             nevents += d->activateSocketNotifiers();
         break;
     }
-printf("MAIN APP: Back from poll state.\n");
 
 
 
@@ -134,11 +132,11 @@ printf("MAIN APP: Back from poll state.\n");
         if(intuitionPort) {
             if (listenSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
                 while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
+                    struct IntuiMessage messageCopy = *message;
+                    IExec->ReplyMsg((struct Message *)message);
                     for(int i = 0; i < windows.size(); i++) {
                         QAmigaWindow *current = windows.at(i);
                         if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                            struct IntuiMessage messageCopy = *message;
-                            IExec->ReplyMsg((struct Message *)message);
                             current->processIntuiMessage(&messageCopy);
                         }
                     }
