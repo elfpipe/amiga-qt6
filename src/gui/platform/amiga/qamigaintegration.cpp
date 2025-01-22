@@ -303,6 +303,11 @@ QPlatformOpenGLContext *QAmigaIntegration::createPlatformOpenGLContext(QOpenGLCo
     return new QAmigaOpenGLContext(context);
 }
 
+QPlatformOffscreenSurface *QAmigaIntegration::createPlatformOffscreenSurface(QOffscreenSurface *surface) const
+{
+    return new QAmigaOffscreenSurface(surface);
+}
+
 QAmigaIntegration *QAmigaIntegration::createAmigaIntegration(const QStringList& paramList)
 {
     QAmigaIntegration *amigaIntegration = nullptr;

@@ -48,7 +48,6 @@
 QT_BEGIN_NAMESPACE
 
 class QAmigaBackendData;
-
 class QAmigaIntegration : public QPlatformIntegration
 {
 public:
@@ -78,6 +77,7 @@ public:
 
     static QAmigaIntegration *createAmigaIntegration(const QStringList& paramList);
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
+    QPlatformOffscreenSurface *createPlatformOffscreenSurface(QOffscreenSurface *surface) const override;
 
     QList<QPlatformScreen *> screens() const;
 protected:
