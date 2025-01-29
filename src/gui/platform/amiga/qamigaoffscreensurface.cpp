@@ -48,33 +48,12 @@ QAmigaOffscreenSurface::QAmigaOffscreenSurface(QOffscreenSurface *offscreenSurfa
     m_surface = IIntuition->OpenWindowTags(NULL,
 								WA_Title,				"",
 								WA_SimpleRefresh,		TRUE,
-								WA_InnerWidth,			800, //size.width(),
-								WA_InnerHeight,			600, //size.height(),
+								WA_InnerWidth,			size.width(),
+								WA_InnerHeight,			size.height(),
 								WA_BackFill, 			LAYERS_NOBACKFILL,
-                                // WA_Hidden,              TRUE,
+                                WA_Hidden,              TRUE,
     
 								TAG_DONE);
- 		// int32 w=400, h=400;
-		// const char titleStrBase[] = "Hello OpenGLES2";
-		// m_surface=IIntuition->OpenWindowTags(NULL,
-		// 						WA_Title,				titleStrBase,
-		// 						WA_Activate,			TRUE,
-		// 						WA_RMBTrap,				TRUE,
-		// 						WA_DragBar,				TRUE,
-		// 						WA_DepthGadget,			TRUE,
-		// 						WA_SimpleRefresh,		TRUE,
-		// 						WA_SizeGadget,			TRUE,
-		// 						WA_CloseGadget,			TRUE,
-		// 						WA_IDCMP,				IDCMP_REFRESHWINDOW | IDCMP_NEWSIZE | 
-		// 												IDCMP_CLOSEWINDOW | IDCMP_RAWKEY,
-		// 						WA_InnerWidth,			w,
-		// 						WA_InnerHeight,			h,
-		// 						WA_MinWidth,			100,
-		// 						WA_MinHeight,			100,
-		// 						WA_MaxWidth,			2048,
-		// 						WA_MaxHeight,			2048,
-		// 						WA_BackFill, 			LAYERS_NOBACKFILL,
-		// 						TAG_DONE);
 }
 
 QAmigaOffscreenSurface::~QAmigaOffscreenSurface()

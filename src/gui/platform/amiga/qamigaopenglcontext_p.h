@@ -9,6 +9,7 @@
 
 #include <proto/exec.h>
 #include <proto/ogles2.h>
+#include <proto/graphics.h>
 
 QT_BEGIN_NAMESPACE
 
@@ -24,29 +25,59 @@ private:
     void *aglContext, *share;
     QOpenGLContext *context;
     QPlatformSurface *surface;
+    QAmigaWindow *prevAWindow;
+    struct Window *dummyW;
+    // struct BitMap *dummyBM;
 
 public:
-    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), share(0), surface(0) //, bitmap(0), shareContext(0), window(0)
+    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), share(0), surface(0), prevAWindow(0) //, bitmap(0), shareContext(0), window(0)
     {
-#if 1
         if(!OGLES2Library) { OGLES2Library = IExec->OpenLibrary("ogles2.library", 0);
             if(OGLES2Library) IOGLES2 = (struct OGLES2IFace *) IExec->GetInterface(OGLES2Library, "main", 1, NULL); }
-        if(!OGLES2Library) { qFatal("ogles2.library not found. OpenGL ES2 rendering is not possible on this platform.\n"); exit(20); }
+        if(!OGLES2Library || !IOGLES2) { qFatal("ogles2.library not found. OpenGL ES2 rendering is not possible on this platform.\n"); exit(20); }
         noContexts++;
+
         this->context = context;
-#endif
+
+        QOpenGLContext *shareContext = context->shareContext();
+        QAmigaOpenGLContext *newShare = shareContext ? static_cast<QAmigaOpenGLContext *>(shareContext->handle()) : 0;
+        share = newShare ? newShare->aglContext : 0;
+
+        // struct Screen *workbench = IIntuition->LockPubScreen(0);
+		// dummyBM = IGraphics->AllocBitMapTags(64, 64, 0, BMATags_Friend, &workbench->BitMap, BMATags_Displayable, TRUE, TAG_DONE);
+
+        dummyW = IIntuition->OpenWindowTags(NULL,
+								WA_Title,				"",
+								WA_SimpleRefresh,		TRUE,
+								WA_InnerWidth,			640,
+								WA_InnerHeight,			480,
+								WA_BackFill, 			LAYERS_NOBACKFILL,
+                                WA_Hidden,              TRUE,    
+								TAG_DONE);
+
+        ULONG errCode = 0;
+        aglContext = aglCreateContextTags2(&errCode, 
+            OGLES2_CCT_WINDOW, dummyW,
+            // OGLES2_CCT_BITMAP, dummyBM,
+            share ? (int)OGLES2_CCT_SHARE_WITH : TAG_IGNORE, share, 
+            OGLES2_CCT_DEPTH, 32,
+            OGLES2_CCT_STENCIL, 8,
+            OGLES2_CCT_VSYNC, 0,
+            OGLES2_CCT_SINGLE_GET_ERROR_MODE, 1,
+            TAG_DONE);
+
+        qInfo() << "created basis context : " << aglContext;
     }
 
     ~QAmigaOpenGLContext()
     {
         if (aglContext) { aglDestroyContext(aglContext); }
-#if 1
+        if (dummyW) { IIntuition->CloseWindow(dummyW); }
         if (--noContexts == 0 && OGLES2Library) {
             if(IOGLES2) IExec->DropInterface((struct Interface *)IOGLES2);
             IExec->CloseLibrary(OGLES2Library);
             OGLES2Library = 0;
         }
-#endif
     }
 
     QSurfaceFormat format() const override
@@ -77,13 +108,35 @@ public:
 
         QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(platformSurface);
         QAmigaOffscreenSurface *offscreenSurface = dynamic_cast<QAmigaOffscreenSurface *>(platformSurface);
+
+        if(!aglContext)
+            return false;
         
-        if (surface != platformSurface || newShare->aglContext != share) {
+        aglMakeCurrent(aglContext);
+        
+        if (surface != platformSurface) {
             surface = platformSurface;
+
+            if (amigaWindow) {
+                if (prevAWindow)
+                    prevAWindow->setGl(false);
+                amigaWindow->setGl(true);
+                prevAWindow = amigaWindow;
+            }
+
+            aglSetParamsTags2(
+                OGLES2_CCT_WINDOW, amigaWindow ? amigaWindow->intuitionWindow() : offscreenSurface ? offscreenSurface->nativeHandle() : 0,
+                TAG_DONE);
+        }
+
+        if (newShare->aglContext != share) {
             share = newShare->aglContext;
 
-            if (amigaWindow) amigaWindow->setGl(true);
-
+            aglSetParamsTags2(
+                share ? (int)OGLES2_CCT_SHARE_WITH : TAG_IGNORE, share,
+                TAG_DONE);
+        }
+#if 0
             if(IOGLES2 && (offscreenSurface || amigaWindow)) {
                 if (aglContext) aglDestroyContext(aglContext);
                 aglContext = 0;
@@ -99,12 +152,9 @@ public:
                     TAG_DONE);
             }
         }
+#endif
 
-        if(aglContext) {
-            aglMakeCurrent(aglContext);
-            return true;
-        }
-        return false;
+        return true;
     }
 
     void doneCurrent() override

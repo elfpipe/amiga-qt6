@@ -139,8 +139,8 @@ void QAmigaWindow::openWindow()
         WA_UserPort, QAmigaIntegration::messagePort(),
 
         gl ? TAG_IGNORE : WA_GimmeZeroZero, TRUE,
-        gl ? WA_BackFill : TAG_IGNORE, LAYERS_NOBACKFILL,
-        gl ? WA_SimpleRefresh : TAG_IGNORE,	TRUE,
+        // gl ? WA_BackFill : TAG_IGNORE, LAYERS_NOBACKFILL,
+        // gl ? WA_SimpleRefresh : TAG_IGNORE,	TRUE,
 
         TAG_DONE );
 }
