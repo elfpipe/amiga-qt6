@@ -94,12 +94,6 @@ QAmigaWindow::~QAmigaWindow()
     static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
 }
 
-void QAmigaWindow::setGl(bool set) 
-{
-    gl = set;
-    openWindow();
-}
-
 #define max(x, y) ((x) > (y) ? (x) : (y))
 
 void QAmigaWindow::openWindow()
@@ -137,10 +131,6 @@ void QAmigaWindow::openWindow()
         WA_ReportMouse, TRUE,
         m_visible ? TAG_IGNORE : WA_Hidden, TRUE,
         WA_UserPort, QAmigaIntegration::messagePort(),
-
-        gl ? TAG_IGNORE : WA_GimmeZeroZero, TRUE,
-        // gl ? WA_BackFill : TAG_IGNORE, LAYERS_NOBACKFILL,
-        // gl ? WA_SimpleRefresh : TAG_IGNORE,	TRUE,
 
         TAG_DONE );
 }

@@ -83,9 +83,6 @@ public:
 
     static QAmigaWindow *windowForWinId(WId id);
 
-    bool isGl() { return gl; }
-    void setGl(bool set);
-
 private:
     void setFrameMarginsEnabled(bool enabled);
     void setGeometryImpl(const QRect &rect);

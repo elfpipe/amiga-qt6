@@ -187,14 +187,16 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
 #ifdef __amigaos4__
     QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
     if(!amigaWindow) {
-        printf("Not an Amiga window!\n");
+        qFatal("Not an Amiga window!\n");
         return;
     }
 
+    struct Window *iWin = amigaWindow->intuitionWindow();
     IGraphics->WritePixelArray(m_image.bits(),
         0, 0,
         4*m_image.width(), PIXF_A8R8G8B8,
-        amigaWindow->intuitionWindow()->RPort, 0, 0,
+        iWin->RPort,
+        iWin->BorderLeft, iWin->BorderTop,
         m_image.width(), m_image.height());
 #endif
 }

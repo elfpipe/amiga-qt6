@@ -25,12 +25,11 @@ private:
     void *aglContext, *share;
     QOpenGLContext *context;
     QPlatformSurface *surface;
-    QAmigaWindow *prevAWindow;
     struct Window *dummyW;
     // struct BitMap *dummyBM;
 
 public:
-    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), share(0), surface(0), prevAWindow(0) //, bitmap(0), shareContext(0), window(0)
+    QAmigaOpenGLContext(QOpenGLContext *context) : QPlatformOpenGLContext(), aglContext(0), share(0), surface(0)
     {
         if(!OGLES2Library) { OGLES2Library = IExec->OpenLibrary("ogles2.library", 0);
             if(OGLES2Library) IOGLES2 = (struct OGLES2IFace *) IExec->GetInterface(OGLES2Library, "main", 1, NULL); }
@@ -116,13 +115,6 @@ public:
         
         if (surface != platformSurface) {
             surface = platformSurface;
-
-            if (amigaWindow) {
-                if (prevAWindow)
-                    prevAWindow->setGl(false);
-                amigaWindow->setGl(true);
-                prevAWindow = amigaWindow;
-            }
 
             aglSetParamsTags2(
                 OGLES2_CCT_WINDOW, amigaWindow ? amigaWindow->intuitionWindow() : offscreenSurface ? offscreenSurface->nativeHandle() : 0,
