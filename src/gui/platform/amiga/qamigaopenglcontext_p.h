@@ -46,13 +46,13 @@ public:
 		// dummyBM = IGraphics->AllocBitMapTags(64, 64, 0, BMATags_Friend, &workbench->BitMap, BMATags_Displayable, TRUE, TAG_DONE);
 
         dummyW = IIntuition->OpenWindowTags(NULL,
-								WA_Title,				"",
-								WA_SimpleRefresh,		TRUE,
-								WA_InnerWidth,			640,
-								WA_InnerHeight,			480,
-								WA_BackFill, 			LAYERS_NOBACKFILL,
-                                WA_Hidden,              TRUE,    
-								TAG_DONE);
+            WA_Title,				"",
+            WA_SimpleRefresh,		TRUE,
+            WA_InnerWidth,			640,
+            WA_InnerHeight,			480,
+            WA_BackFill, 			LAYERS_NOBACKFILL,
+            WA_Hidden,              TRUE,    
+            TAG_DONE);
 
         ULONG errCode = 0;
         aglContext = aglCreateContextTags2(&errCode, 
@@ -116,17 +116,25 @@ public:
         if (surface != platformSurface) {
             surface = platformSurface;
 
-            aglSetParamsTags2(
-                OGLES2_CCT_WINDOW, amigaWindow ? amigaWindow->intuitionWindow() : offscreenSurface ? offscreenSurface->nativeHandle() : 0,
-                TAG_DONE);
+            struct Window *window = amigaWindow ? amigaWindow->intuitionWindow() : (offscreenSurface ? offscreenSurface->nativeHandle() : 0);
+
+            if (window) {
+                aglSetParamsTags2(
+                    OGLES2_CCT_WINDOW, window,
+                    TAG_DONE);
+                if (dummyW)
+                    IIntuition->CloseWindow(dummyW);
+                dummyW = 0;
+            }
         }
 
-        if (newShare->aglContext != share) {
+        if (newShare && newShare->aglContext != share) {
             share = newShare->aglContext;
 
-            aglSetParamsTags2(
-                share ? (int)OGLES2_CCT_SHARE_WITH : TAG_IGNORE, share,
-                TAG_DONE);
+            // if (share)
+                aglSetParamsTags2(
+                    OGLES2_CCT_SHARE_WITH, share,
+                    TAG_DONE);
         }
 #if 0
             if(IOGLES2 && (offscreenSurface || amigaWindow)) {
