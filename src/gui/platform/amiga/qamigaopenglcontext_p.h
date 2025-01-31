@@ -70,6 +70,8 @@ public:
 
     ~QAmigaOpenGLContext()
     {
+        qInfo() << "destroy context";
+
         if (aglContext) { aglDestroyContext(aglContext); }
         if (dummyW) { IIntuition->CloseWindow(dummyW); }
         if (--noContexts == 0 && OGLES2Library) {
@@ -159,6 +161,11 @@ public:
 
     void doneCurrent() override
     {
+        qInfo() << "doneCurrent";
+        aglSetParamsTags2(
+            OGLES2_CCT_WINDOW, 0,
+            OGLES2_CCT_SHARE_WITH, 0,
+            TAG_DONE);
     }
 
     QFunctionPointer getProcAddress(const char *procName) override;

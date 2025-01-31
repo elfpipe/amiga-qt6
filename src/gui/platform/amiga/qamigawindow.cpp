@@ -137,6 +137,8 @@ void QAmigaWindow::openWindow()
 
 void QAmigaWindow::closeWindow()
 {
+    qInfo() << "closeWindow()";
+    
     if(m_intuitionWindow) {
         IIntuition->CloseWindow(m_intuitionWindow);
         m_intuitionWindow = 0;
