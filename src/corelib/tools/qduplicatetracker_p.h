@@ -64,6 +64,9 @@ QT_BEGIN_NAMESPACE
 
 template <typename T, size_t Prealloc = 32>
 class QDuplicateTracker {
+#ifdef __amigaos4__
+#undef __cpp_lib_memory_resource
+#endif
 #ifdef __cpp_lib_memory_resource
     template <typename HT>
     struct QHasher {

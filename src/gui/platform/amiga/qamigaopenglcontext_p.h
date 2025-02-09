@@ -64,14 +64,10 @@ public:
             OGLES2_CCT_VSYNC, 0,
             OGLES2_CCT_SINGLE_GET_ERROR_MODE, 1,
             TAG_DONE);
-
-        qInfo() << "created basis context : " << aglContext;
     }
 
     ~QAmigaOpenGLContext()
     {
-        qInfo() << "destroy context";
-
         if (aglContext) { aglDestroyContext(aglContext); }
         if (dummyW) { IIntuition->CloseWindow(dummyW); }
         if (--noContexts == 0 && OGLES2Library) {
@@ -114,7 +110,15 @@ public:
             return false;
         
         aglMakeCurrent(aglContext);
-        
+
+#if 0
+        struct Window *window = amigaWindow ? amigaWindow->intuitionWindow() : (offscreenSurface ? offscreenSurface->nativeHandle() : 0);
+        share = newShare ? newShare->aglContext : 0;
+        aglSetParamsTags2(
+            OGLES2_CCT_WINDOW, window,
+            OGLES2_CCT_SHARE_WITH, share,
+            TAG_DONE);
+#else
         if (surface != platformSurface) {
             surface = platformSurface;
 
@@ -138,6 +142,7 @@ public:
                     OGLES2_CCT_SHARE_WITH, share,
                     TAG_DONE);
         }
+#endif
 #if 0
             if(IOGLES2 && (offscreenSurface || amigaWindow)) {
                 if (aglContext) aglDestroyContext(aglContext);
@@ -161,7 +166,8 @@ public:
 
     void doneCurrent() override
     {
-        qInfo() << "doneCurrent";
+        surface = 0;
+        share = 0;
         aglSetParamsTags2(
             OGLES2_CCT_WINDOW, 0,
             OGLES2_CCT_SHARE_WITH, 0,
