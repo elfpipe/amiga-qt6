@@ -284,7 +284,7 @@ qt_internal_extend_target(Network CONDITION QT_FEATURE_localserver
         socket/qlocalsocket.cpp socket/qlocalsocket.h socket/qlocalsocket_p.h
 )
 
-qt_internal_extend_target(Network CONDITION INTEGRITY AND QT_FEATURE_localserver
+qt_internal_extend_target(Network CONDITION (INTEGRITY OR AMIGA) AND QT_FEATURE_localserver
     SOURCES
         socket/qlocalserver_tcp.cpp
         socket/qlocalsocket_tcp.cpp
@@ -292,7 +292,7 @@ qt_internal_extend_target(Network CONDITION INTEGRITY AND QT_FEATURE_localserver
         QT_LOCALSOCKET_TCP
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_localserver AND UNIX AND NOT INTEGRITY
+qt_internal_extend_target(Network CONDITION QT_FEATURE_localserver AND UNIX AND NOT INTEGRITY AND NOT AMIGA
     SOURCES
         socket/qlocalserver_unix.cpp
         socket/qlocalsocket_unix.cpp
