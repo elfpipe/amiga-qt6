@@ -90,14 +90,17 @@ STRPTR QSharedMemoryPrivate::handle()
     }
 
     QString keystr = makePlatformSafeKey(key);
-    amiga_key = (STRPTR)IExec->AllocVecTags(1024, TAG_END);
-    strcpy(amiga_key, (const char *)keystr.toLatin1());
+	QByteArray localStr = keystr.toLocal8Bit();
+    amiga_key = (STRPTR)IExec->AllocVecTags(localStr.size()+1, TAG_END);
+    strcpy(amiga_key, (const char *)localStr.constData());
     return amiga_key;
 }
 
 bool QSharedMemoryPrivate::cleanHandle()
 {
-    amiga_key = 0;
+	IExec->FreeNamedMemory("Qt", amiga_key);
+	IExec->FreeVec(amiga_key);
+	amiga_key = 0;
     return true;
 }
 
@@ -110,6 +113,7 @@ bool QSharedMemoryPrivate::create(int size)
 
     // create
     uint32 err;
+
 	aks = (struct amiga_key_struct *)IExec->AllocNamedMemoryTags(size+sizeof(amiga_key_struct), "Qt", amiga_key, ANMT_Error, &err, TAG_END);
 	switch(err)
 	{
@@ -143,7 +147,7 @@ bool QSharedMemoryPrivate::attach(QSharedMemory::AccessMode mode)
     // grab the shared memory segment id
     if (!handle())
         return false;
-	
+
 	aks = (struct amiga_key_struct *)IExec->FindNamedMemory("Qt", amiga_key);
 	if(aks)
 	{
@@ -153,20 +157,13 @@ bool QSharedMemoryPrivate::attach(QSharedMemory::AccessMode mode)
 		
 	    return true;
 	}
-	else
+	else {
 		return false;
+	}
 }
 
 bool QSharedMemoryPrivate::detach()
 {
-	if(aks)
-	{
-		aks->count--;
-		if(aks->count == 0)
-		{
-			IExec->FreeNamedMemory("Qt", amiga_key);
-		}
-	}
     memory = 0;
     return true;
 }

@@ -805,7 +805,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_icu
         text/qcollator_icu.cpp
         text/qlocale_icu.cpp
     LIBRARIES
-        ICU::i18n ICU::uc ICU::data
+        icui18n icuuc icudata
 )
 
 qt_internal_extend_target(Core CONDITION WIN32 AND NOT QT_FEATURE_icu

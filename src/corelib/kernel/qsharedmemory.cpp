@@ -475,8 +475,12 @@ bool QSharedMemory::attach(AccessMode mode)
 {
     Q_D(QSharedMemory);
 
+#ifdef __amigaos4__
+    if (isAttached())
+#else
     if (isAttached() || !d->initKey())
-        return false;
+#endif
+    return false;
 #ifndef QT_NO_SYSTEMSEMAPHORE
     QSharedMemoryLocker lock(this);
     if (!d->key.isNull() && !d->tryLocker(&lock, QLatin1String("QSharedMemory::attach")))

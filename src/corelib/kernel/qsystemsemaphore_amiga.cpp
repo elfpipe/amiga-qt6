@@ -148,8 +148,6 @@ void QSystemSemaphorePrivate::cleanHandle()
  */
 bool QSystemSemaphorePrivate::modifySemaphore(int count)
 {
-qDebug() << "modifySemaphore";
-
     if (0 == handle())
         return false;
 
