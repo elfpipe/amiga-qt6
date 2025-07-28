@@ -701,7 +701,7 @@ qt_internal_extend_target(Core CONDITION ICC
 )
 
 qt_internal_extend_target(Core CONDITION QT_FEATURE_system_zlib
-    LIBRARIES
+    PUBLIC_LIBRARIES
         WrapZLIB::WrapZLIB
 )
 
@@ -804,8 +804,8 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_icu
     SOURCES
         text/qcollator_icu.cpp
         text/qlocale_icu.cpp
-    LIBRARIES
-        icui18n icuuc icudata
+    PUBLIC_LIBRARIES
+        ICU::i18n ICU::uc ICU::data
 )
 
 qt_internal_extend_target(Core CONDITION WIN32 AND NOT QT_FEATURE_icu

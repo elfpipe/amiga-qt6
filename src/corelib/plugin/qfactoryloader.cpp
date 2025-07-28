@@ -185,12 +185,9 @@ void QFactoryLoader::update()
 
         if (qt_debug_component())
             qDebug() << "QFactoryLoader::QFactoryLoader() checking directory path" << path << "...";
-        qInfo() << "QFactoryLoader::QFactoryLoader() checking directory path" << path << "...";
 
         if (!QDir(path).exists(QLatin1String(".")))
             continue;
-
-        qInfo() << "exists() == true";
 
         QStringList plugins = QDir(path).entryList(
 #if defined(Q_OS_WIN)
@@ -226,7 +223,6 @@ void QFactoryLoader::update()
             if (qt_debug_component()) {
                 qDebug() << "QFactoryLoader::QFactoryLoader() looking at" << fileName;
             }
-            qInfo() << "QFactoryLoader::QFactoryLoader() looking at" << fileName;
 
             Q_TRACE(QFactoryLoader_update, fileName);
 
@@ -236,13 +232,9 @@ void QFactoryLoader::update()
                     qDebug() << library->errorString << Qt::endl
                              << "         not a plugin";
                 }
-                qInfo() << library->errorString << Qt::endl
-                             << "         not a plugin";
                 library->release();
                 continue;
             }
-
-            qInfo() << "metaData : " << library->metaData;
 
             QStringList keys;
             bool metaDataOk = false;
@@ -252,21 +244,14 @@ void QFactoryLoader::update()
                 QJsonObject object = library->metaData.value(QLatin1String("MetaData")).toObject();
                 metaDataOk = true;
 
-                qInfo() << "MetaData : " << object;
-
                 QJsonArray k = object.value(QLatin1String("Keys")).toArray();
                 for (int i = 0; i < k.size(); ++i)
                     keys += d->cs ? k.at(i).toString() : k.at(i).toString().toLower();
-
-                qInfo() << "Keys : " << k;
             }
             if (qt_debug_component())
                 qDebug() << "Got keys from plugin meta data" << keys;
-            qInfo() << "Got keys from plugin meta data" << keys;
-
 
             if (!metaDataOk) {
-                qInfo() << "metaDataOk == false";
                 library->release();
                 continue;
             }
@@ -338,8 +323,6 @@ QFactoryLoader::QFactoryLoader(const char *iid,
                                Qt::CaseSensitivity cs)
     : QObject(*new QFactoryLoaderPrivate)
 {
-    qInfo() << "QFactoryLoader : suffix == " << suffix;
-
     moveToThread(QCoreApplicationPrivate::mainThread());
     Q_D(QFactoryLoader);
     d->iid = iid;

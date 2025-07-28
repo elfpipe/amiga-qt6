@@ -37,11 +37,11 @@
 **
 ****************************************************************************/
 
+#include "qamigaopenglcontext_p.h"
 #include "qamigaintegration_p.h"
 #include "qamigawindow_p.h"
 #include "qamigacommon_p.h"
 #include "qamigaeventdispatcherwindows_p.h"
-#include "qamigaopenglcontext_p.h"
 
 #include <QtGui/private/qfreetypefontdatabase_p.h>
 

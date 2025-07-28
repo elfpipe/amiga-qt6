@@ -108,8 +108,6 @@ void QAmigaWindow::openWindow()
     rect.setWidth(max(rect.width(), 64));
     rect.setHeight(max(rect.height(), 64));
 
-    qInfo() << "QAmigaWindow::openWindow() " << rect << "\n";
-
     bool frameless = isFrameless();
 
     m_intuitionWindow = IIntuition->OpenWindowTags(0,
@@ -137,8 +135,6 @@ void QAmigaWindow::openWindow()
 
 void QAmigaWindow::closeWindow()
 {
-    qInfo() << "closeWindow()";
-    
     if(m_intuitionWindow) {
         IIntuition->CloseWindow(m_intuitionWindow);
         m_intuitionWindow = 0;

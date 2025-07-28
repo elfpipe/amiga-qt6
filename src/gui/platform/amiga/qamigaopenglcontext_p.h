@@ -1,6 +1,9 @@
 #ifndef QAMIGAOPENGLCONTEXT_p_h
 #define QAMIGAOPENGLCONTEXT_p_h
 
+#include <GL/gl.h>
+#include <GL/glext.h>
+
 #include <QtCore/qhash.h>
 #include <qpa/qplatformopenglcontext.h>
 #include <qpa/qplatformsurface.h>
@@ -8,6 +11,7 @@
 #include "qamigaoffscreensurface_p.h"
 
 #include <proto/exec.h>
+#include <inline4/ogles2.h>
 #include <proto/ogles2.h>
 #include <proto/graphics.h>
 
@@ -20,7 +24,7 @@ class QAmigaOpenGLContext : public QPlatformOpenGLContext
 {
 private:
     static int noContexts;
-    
+
 private:
     void *aglContext, *share;
     QOpenGLContext *context;

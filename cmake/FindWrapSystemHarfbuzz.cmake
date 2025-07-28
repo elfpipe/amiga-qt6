@@ -6,7 +6,13 @@ if(TARGET WrapSystemHarfbuzz::WrapSystemHarfbuzz)
 endif()
 set(WrapSystemHarfbuzz_REQUIRED_VARS __harfbuzz_found)
 
-find_package(harfbuzz ${${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION} QUIET)
+if(AMIGA)
+    find_package(harfbuzz NAMES harfbuzz PATHS harfbuzz)
+    set_target_properties(harfbuzz::harfbuzz PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "/opt/adtools/ppc-amigaos/SDK/local/clib4/include/harfbuzz")
+else()
+    find_package(harfbuzz ${${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION} QUIET)
+endif()
 
 # Gentoo has some buggy version of a harfbuzz Config file. Check if include paths are valid.
 set(__harfbuzz_target_name "harfbuzz::harfbuzz")
@@ -14,6 +20,7 @@ if(harfbuzz_FOUND AND TARGET "${__harfbuzz_target_name}")
     get_property(__harfbuzz_include_paths TARGET "${__harfbuzz_target_name}"
                                           PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
     foreach(__harfbuzz_include_dir ${__harfbuzz_include_paths})
+    message ("harfbuzz include dir : ${__harfbuzz_include_dir}")
         if(NOT EXISTS "${__harfbuzz_include_dir}")
             # Must be the broken Gentoo harfbuzzConfig.cmake file. Try to use pkg-config instead.
             set(__harfbuzz_broken_config_file TRUE)
@@ -27,6 +34,7 @@ if(harfbuzz_FOUND AND TARGET "${__harfbuzz_target_name}")
     endif()
 endif()
 
+message("harfbuzz ${__harfbuzz_broken_config_file} ${__harfbuzz_found}")
 if(__harfbuzz_broken_config_file OR NOT __harfbuzz_found)
     list(PREPEND WrapSystemHarfbuzz_REQUIRED_VARS HARFBUZZ_LIBRARIES HARFBUZZ_INCLUDE_DIRS)
 

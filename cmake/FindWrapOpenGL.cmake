@@ -7,6 +7,10 @@ endif()
 
 set(WrapOpenGL_FOUND OFF)
 
+if(AMIGA)
+    return()
+endif()
+
 find_package(OpenGL ${WrapOpenGL_FIND_VERSION})
 
 if (OpenGL_FOUND)

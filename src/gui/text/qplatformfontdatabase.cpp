@@ -356,6 +356,10 @@ void QPlatformFontDatabase::releaseHandle(void *handle)
 QString QPlatformFontDatabase::fontDir() const
 {
     QString fontpath = QString::fromLocal8Bit(qgetenv("QT_QPA_FONTDIR"));
+#ifdef __amigaos4__
+    if (fontpath.isEmpty())
+        fontpath = QLatin1String("/Fonts/_TrueType");
+#endif
     if (fontpath.isEmpty())
         fontpath = QLibraryInfo::path(QLibraryInfo::LibrariesPath) + QLatin1String("/fonts");
 

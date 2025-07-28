@@ -59,9 +59,11 @@
 #include <QDebug>
 #include <QRect>
 
+extern "C" void __pthread_init_ctor();
 //! [0]
 int main(int argc, char *argv[])
 {
+// __pthread_init_ctor();
     QApplication app(argc, argv);
 
     QCommandLineParser parser;

@@ -1,0 +1,53 @@
+=== Qt 6.2 for AmigaOS4.1 :
+
+Welcome to Qt6 for AmigaOS! Here are some instructions.
+
+This archive contains a cross compile environment for linux. It only supports static builds at the moment. It supports both qmake and cmake.
+
+
+=== Docker :
+
+The easies way to setup Qt6 is to ignore this archive and get the docker image from walkero. More instructions to follow (check the README on the github page).
+
+
+=== Manual Setup :
+
+Unpack or copy the contents of this archive to your root, such that there is a folder named '/qt6-amiga' containing 'mkspecs', 'bin' etc.
+
+You also need a linux native Qt6 install. You will either need to build this yourself from sources or get it from somewhere. Ideally you will get version 6.2.0, and you will put it in the location /usr/local/Qt-6.2.0. If you already have Qt6 installed on your machine, you can edit /qt6-amiga/bin/qmake to point in the right direction.
+
+Of course you also need a gcc cross compile tool chain. Go to AmigaLabs on github and get one. Remember to set your PATH variable if needed (ie. > PATH=$PATH:/some/path/bin).
+
+You might want to copy or move the examples folder to your user folder or where your usual location for code is.
+
+
+=== Example using qmake :
+
+To build a project with qmake, do the following:
+
+> cd examples/corelib/threads/mandelbrot
+> /qt6-amiga/bin/qmake
+> make
+
+This should give you an executable, mandelbrot, that you can now transfer to the amiga and run.
+
+
+=== Example using cmake :
+
+For this, you need to have cmake installed, and you need the file Modules/Platform/AmigaOS.cmake in your cmake install.
+
+To build a project with cmake, do the following:
+
+> cd examples/corelib/threads/mandelbrot
+> /qt6-amiga/cmake-amiga-qt6-app.sh
+> make
+
+This should give you an executable, mandelbrot, that you can now transfer to the amiga and run.
+
+
+=== Setup on the Amiga :
+
+Assign qt6-amiga: to somewhere (ie. ram: or similar). This assign is for later use, but at present nothing is needed there.
+Now you are ready to run the programs.
+
+Happy coding! :-D

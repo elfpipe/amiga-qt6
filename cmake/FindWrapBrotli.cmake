@@ -3,7 +3,20 @@ if(TARGET WrapBrotli::WrapBrotliDec)
     return()
 endif()
 
-return()
+if(AMIGA)
+    add_library(WrapBrotli::WrapBrotliDec INTERFACE IMPORTED)
+    target_link_libraries(WrapBrotli::WrapBrotliDec INTERFACE brotlidec)
+
+    add_library(WrapBrotli::WrapBrotliEnc INTERFACE IMPORTED)
+    target_link_libraries(WrapBrotli::WrapBrotliEnc INTERFACE brotlienc)
+
+    add_library(WrapBrotli::WrapBrotliCommon INTERFACE IMPORTED)
+    target_link_libraries(WrapBrotli::WrapBrotliCommon INTERFACE brotlicommon)
+
+    set(WrapBrotli_FOUND ON)
+    return()
+endif()
+
 # From VCPKG
 find_package(unofficial-brotli CONFIG QUIET)
 if (unofficial-brotli_FOUND)

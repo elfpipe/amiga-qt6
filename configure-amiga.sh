@@ -1,19 +1,21 @@
 cmake \
--DCMAKE_FIND_ROOT_PATH="/opt/adtools" \
+-DCMAKE_FIND_ROOT_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
 -DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
+-DCMAKE_LIBRARY_PATH="/opt/adtools/ppc-amigaos/SDK/clib4/lib;/opt/adtools/ppc-amigaos/SDK/local/clib4/lib" \
+-DCMAKE_INCLUDE_PATH="/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools/ppc-amigaos/SDK/clib4/include;/opt/adtools/ppc-amigaos/SDK/local/common/include;/opt/adtools/ppc-amigaos/SDK/local/clib4/include" \
+-DCMAKE_PREFIX_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
 -DCMAKE_SYSTEM_NAME="AmigaOS" \
 -DCMAKE_SYSTEM_PROCESSOR="PowerPC" \
 -DCMAKE_C_COMPILER="ppc-amigaos-gcc" \
 -DCMAKE_CXX_COMPILER="ppc-amigaos-g++" \
 -DCMAKE_ASM_COMPILER="ppc-amigaos-as" \
 -DCMAKE_MAKE_PROGRAM="make" \
--DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
--DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native -gstabs" \
--DCMAKE_EXE_LINKER_FLAGS="-use-dynld -mcrt=clib4 -athread=native -gstabs" \
--DBUILD_WITH_PCH=OFF \
+-DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -I/opt/adtools/ppc-amigaos/SDK/local" \
+-DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native" \
+-DCMAKE_EXE_LINKER_FLAGS="-mcrt=clib4 -athread=native" \
 -DUNIX=1 -DAMIGA=1 \
+-DQT_INSTALL_PREFIX="/qt6-amiga" \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
--DCMAKE_PREFIX_PATH="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \
 -DQT_FEATURE_dlopen=ON \
@@ -29,16 +31,21 @@ cmake \
 -DQT_FEATURE_process=ON \
 -DQT_FEATURE_processenvironment=ON \
 -DQT_FEATURE_systemsemaphore=ON \
--DQT_FEATURE_brotli=OFF \
+-DQT_FEATURE_brotli=ON \
+-DQT_FEATURE_icu=ON \
 -DQT_FEATURE_libudev=OFF \
 -DQT_FEATURE_evdev=OFF \
--DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
--DQT_FEATURE_icu=ON \
+-DBUILD_SHARED_LIBS=OFF \
+-DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=OFF \
 ..
+
+
 
 #-DQT_BUILD_EXAMPLES=ON \
 #/amiga-qt6
 # -Wl,--verbose
+
+# -DBUILD_WITH_PCH=OFF \
 
 # cmake -DCMAKE_PREFIX_PATH="/qt6-amiga" \
 # -DCMAKE_FIND_ROOT_PATH="/opt/adtools" \

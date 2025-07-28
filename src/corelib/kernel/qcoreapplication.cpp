@@ -2729,7 +2729,6 @@ QStringList QCoreApplication::libraryPathsLocked()
                 }
             }
         };
-        qInfo() << "QT_PLUGIN_PATH : " << qEnvironmentVariable("QT_PLUGIN_PATH");
         setPathsFromEnv(qEnvironmentVariable("QT_PLUGIN_PATH"));
 #ifdef Q_OS_ANDROID
         setPathsFromEnv(qEnvironmentVariable("QT_BUNDLED_LIBS_PATH"));

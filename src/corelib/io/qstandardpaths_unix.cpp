@@ -258,7 +258,7 @@ QString QStandardPaths::writableLocation(StandardLocation type)
             xdgRuntimeDir = QDir::tempPath() + QLatin1String("/runtime-") + userName;
 
             if (!fromEnv) {
-#ifndef Q_OS_WASM
+#if defined(Q_OS_WASM) && !defined(__amigaos4__)
                 qWarning("QStandardPaths: XDG_RUNTIME_DIR not set, defaulting to '%ls'", qUtf16Printable(xdgRuntimeDir));
 #endif
             }
@@ -321,7 +321,11 @@ QString QStandardPaths::writableLocation(StandardLocation type)
         break;
 
     case FontsLocation:
+#ifdef __amigaos4__
+        path = writableLocation(GenericDataLocation) + QLatin1String("/fonts/_TrueType");
+#else
         path = writableLocation(GenericDataLocation) + QLatin1String("/fonts");
+#endif
         break;
 
     case MusicLocation:

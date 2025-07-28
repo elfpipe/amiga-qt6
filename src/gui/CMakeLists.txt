@@ -327,7 +327,7 @@ qt_internal_extend_target(Gui CONDITION QT_FEATURE_standarditemmodel
 # On Windows with 'dynamic' OpenGL we must not link to opengl32.
 # DO NOT MOVE THIS TO THE BEGINNING OF THE FILE, the feature variables are not
 # available until the qt_internal_add_module call.
-if(QT_FEATURE_opengl)
+if(QT_FEATURE_opengl AND NOT AMIGA) # On Amiga, we use our own library system.
     if(QT_FEATURE_opengles2)
         find_package(GLESv2)
         target_link_libraries(Gui PUBLIC GLESv2::GLESv2)
@@ -716,6 +716,11 @@ qt_internal_extend_target(Gui CONDITION QT_FEATURE_freetype
         WrapFreetype::WrapFreetype
 )
 
+qt_internal_extend_target(Gui CONDITION QT_FEATURE_freetype AND AMIGA
+    PUBLIC_LIBRARIES
+    brotlidec brotlicommon bz2 
+)
+
 qt_internal_extend_target(Gui CONDITION QT_FEATURE_freetype AND UNIX AND NOT APPLE
     SOURCES
         text/unix/qgenericunixfontdatabase_p.h
@@ -989,7 +994,7 @@ qt_internal_extend_target(Gui CONDITION UNIX AND (QT_FEATURE_xcb)
 )
 
 qt_internal_extend_target(Gui CONDITION TARGET Qt::DBus AND UNIX AND (QT_FEATURE_xcb OR NOT UIKIT)
-    LIBRARIES
+    PUBLIC_LIBRARIES
         Qt::DBus
 )
 
@@ -1052,6 +1057,11 @@ qt_internal_extend_target(Gui CONDITION (QT_FEATURE_eglfs OR QT_FEATURE_xcb)
 qt_internal_create_tracepoints(Gui qtgui.tracepoints)
 qt_internal_add_docs(Gui
     doc/qtgui.qdocconf
+)
+
+qt_internal_extend_target(Gui CONDITION AMIGA
+    PUBLIC_LIBRARIES
+        auto
 )
 
 # special case begin

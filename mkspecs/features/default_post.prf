@@ -174,7 +174,14 @@ c99|c11 {
 !precompile_header: SOURCES += $$NO_PCH_SOURCES
 
 amiga {
-    amiga_sobjs_target.path = $${target.path}
-    amiga_sobjs_target.files = /qt6-amiga/bin/sobjs /qt6-amiga/bin/.unix
-    INSTALLS += amiga_sobjs_target
+    amiga_sobjs_copy.target = sobjs
+    amiga_sobjs_copy.commands = cp -r /qt6-amiga/bin/sobjs .
+    amiga_unix_file.target = .unix
+    amiga_unix_file.commands = touch .unix
+    QMAKE_EXTRA_TARGETS += amiga_sobjs_copy amiga_unix_file
+    target.depends += amiga_sobjs_copy amiga_unix_file
+
+    amiga_sobjs_install_target.path = $${target.path}
+    amiga_sobjs_install_target.files = /qt6-amiga/bin/sobjs /qt6-amiga/bin/.unix
+    INSTALLS += amiga_sobjs_install_target
 }

@@ -171,7 +171,7 @@ isEmpty($${target_prefix}.INCDIRS) {
     #
     wasm: {
         # wasm compiler does not work here, just use defaults
-    } else: amiga: {
+    } else: amiga: !CROSS_COMPILE: {
         output = $$system("$$QMAKE_CXX -E -Wp,-v -xc++ - <nil: *>t:incpaths.txt", lines, ec)
         !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
 
@@ -206,17 +206,17 @@ isEmpty($${target_prefix}.INCDIRS) {
         for (line, output) {
             # message("[amiga :] line : $$line")
             contains(line, "SEARCH_DIR.*"): {
-                message("[amiga :] found line")
+                # message("[amiga :] found line")
                 line = $$replace(line, "SEARCH_DIR", "")
-                message("[amiga :] line(2) : $$line")
+                # message("[amiga :] line(2) : $$line")
                 line = $$replace(line, "\"", "")
-                message("[amiga :] line(3) : $$line")
+                # message("[amiga :] line(3) : $$line")
                 line = $$replace(line, "\\(", "")
-                message("[amiga :] line(4) : $$line")
+                # message("[amiga :] line(4) : $$line")
                 line = $$replace(line, "\\)", "")
-                message("[amiga :] line(5) : $$line")
+                # message("[amiga :] line(5) : $$line")
                 line = $$replace(line, " ", "")
-                message("[amiga :] line(6) : $$line")
+                # message("[amiga :] line(6) : $$line")
                     # keep the ';'
                 paths = $$split(line, ;)
                 for (path, paths): {
@@ -231,6 +231,7 @@ isEmpty($${target_prefix}.INCDIRS) {
 
 
     } else: gcc {
+        print(hej)
         cmd_suffix = "<$$QMAKE_SYSTEM_NULL_DEVICE >$$QMAKE_SYSTEM_NULL_DEVICE"
         equals(QMAKE_HOST.os, Windows): \
             cmd_prefix = "set LC_ALL=C&"
