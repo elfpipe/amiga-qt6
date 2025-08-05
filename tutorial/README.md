@@ -96,7 +96,9 @@ make -j$(nproc)
 ### With `qt-cmake-amiga`
 
 ```bash
-qt-cmake-amiga .
+mkdir build
+cd build
+qt-cmake-amiga ..
 make -j$(nproc)
 ```
 
