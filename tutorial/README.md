@@ -17,15 +17,29 @@ To make development efficient, a cross-compilation setup is used on Linux.
 You will need:
 
 * A modern Linux system (e.g., Ubuntu, Fedora, Arch)
-* A cross compile environment for AmigaOS4 with Qt6 support
-* A `clib4`-compatible GCC toolchain
+* A `clib4`-compatible GCC toolchain (adtools)
+* The Amiga Qt6 SDK
 * A working Qt6 installation on the host (Linux) system
 
 ---
 
-## 3. Download and Install the Cross Compile Environment
+## 3. About the adtools GCC Toolchain
 
-Download the Qt6 AmigaOS cross compile environment archive:
+The Amiga Qt6 SDK requires a GCC toolchain that is compatible with the `clib4` runtime. This toolchain is commonly referred to as **adtools** by Amiga developers.
+
+While installation instructions for adtools are not yet officially available, it is expected that information will be published soon at:
+
+👉 [https://amigalabs.net/adtools](https://amigalabs.net/adtools)
+
+Please check that page periodically for updates and documentation.
+
+---
+
+## 4. Download and Install the Amiga Qt6 SDK
+
+> **Note:** Although this tutorial assumes a Linux host, the Amiga Qt6 SDK is platform-independent and may also be used on other systems such as macOS or Windows, provided a suitable Qt6 host build is available. Users on those platforms should consult other sources for setting up Qt6 and supporting tools appropriate for their environment.
+
+Download the Amiga Qt6 SDK archive:
 
 👉 [Download here](https://github.com/elfpipe/amiga-qt6/releases/tag/v6.2.0public-static)
 
@@ -36,14 +50,10 @@ This archive contains both the Amiga Qt6 SDK and wrapper scripts for `qmake` and
 1. Extract the archive **directly to `/`**:
 
    ```bash
-   sudo tar -xvf qt6.2-amiga-linux-cross.tar.gz -C /
+   sudo tar -xvf qt6-amiga-sdk.tar.gz -C /
    ```
 
-2. Ensure the clib4-compatible GCC toolchain from **AmigaLabs** is installed.
-
-   * This must match the toolchain expected by the Qt6 Amiga setup.
-
-3. Add the Qt6 Amiga tools to your PATH:
+2. Add the Qt6 Amiga tools to your PATH:
 
    ```bash
    export PATH="/qt6-amiga/bin:$PATH"
