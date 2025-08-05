@@ -57,28 +57,13 @@ This archive contains both the Amiga Qt6 SDK and wrapper scripts for `qmake` and
 
 In order to build the Amiga Qt6 binaries, you also need a Qt6 installation on your **host Linux system**.
 
-### Option 1: Use your distro’s package manager
+Install the required Qt6 developer packages using your package manager:
 
 ```bash
 sudo apt install qt6-base-dev qt6-tools-dev
 ```
 
-### Option 2: Use the minimal host Qt6 from the GitHub release
-
-* This is also located at the same GitHub link under `qt6-linux-host`.
-
-### Configuration:
-
-Edit the file:
-
-```bash
-/qt6-amiga/bin/qmake-amiga
-```
-
-Update the paths at the top of the script so it knows where to find:
-
-* The **host qmake** (from your Linux Qt6 installation)
-* The **AmigaOS cross compile environment binaries**
+No further configuration is necessary. The build tools will automatically detect and use your system Qt6 installation.
 
 ---
 
@@ -145,7 +130,7 @@ To run your application on AmigaOS4:
 
 1. Transfer the binary to your Amiga system.
 2. The current Qt6 distribution for AmigaOS4 uses static linking, so you do **not** need to include Qt shared libraries as you would on Unix-like systems. However, you **must** ensure that `clib4.library` is present in the `LIBS:` assign.
-3. You are free to create a Workbench icon for your application manually, or launch it from the Shell as usual.
+3. You are free to create a Workbench icon for your application manually, or launch it from the Shell as usual. If your application takes command-line arguments, you can consult the usual Qt documentation for guidance, such as [https://doc.qt.io](https://doc.qt.io), or use the `--help` option if you’ve implemented argument parsing via `QCommandLineParser`.
 
 ---
 
@@ -173,6 +158,7 @@ To run your application on AmigaOS4:
 * AmiQute project by @elfpipe
 * clib4 toolchain by AmigaLabs
 * Qt6 by The Qt Company
+* Tutorial compiled with assistance from ChatGPT (OpenAI)
 
 ---
 
