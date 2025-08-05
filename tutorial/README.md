@@ -36,7 +36,7 @@ This archive contains both the Amiga Qt6 SDK and wrapper scripts for `qmake` and
 1. Extract the archive **directly to `/`**:
 
    ```bash
-   sudo tar -xvf qt6-amiga-6.2.0.tar.gz -C /
+   sudo tar -xvf qt6.2-amiga-linux-cross.tar.gz -C /
    ```
 
 2. Ensure the clib4-compatible GCC toolchain from **AmigaLabs** is installed.
