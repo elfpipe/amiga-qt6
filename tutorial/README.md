@@ -33,7 +33,7 @@ This archive contains both the Amiga Qt6 SDK and wrapper scripts for `qmake` and
 
 ### Installation:
 
-1. Extract the archive *directly to* `\`:
+1. Extract the archive \*\**directly to\*\* `/`:
 
    ```bash
    sudo tar -xvf qt6-amiga-6.2.0.tar.gz -C /
