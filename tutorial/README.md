@@ -144,8 +144,8 @@ The output will be an AmigaOS4-compatible binary you can transfer to your Amiga.
 To run your application on AmigaOS4:
 
 1. Transfer the binary to your Amiga system.
-2. Make sure all required Qt6 shared libraries are present (from AmiQute’s runtime distribution).
-3. Optionally use `QtLaunch` or a script to initialize any environment variables.
+2. The current Qt6 distribution for AmigaOS4 uses static linking, so you do **not** need to include Qt shared libraries as you would on Unix-like systems. However, you **must** ensure that `clib4.library` is present in the `LIBS:` assign.
+3. You are free to create a Workbench icon for your application manually, or launch it from the Shell as usual.
 
 ---
 
