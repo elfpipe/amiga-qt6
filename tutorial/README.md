@@ -17,13 +17,13 @@ To make development efficient, a cross-compilation setup is used on Linux.
 You will need:
 
 * A modern Linux system (e.g., Ubuntu, Fedora, Arch)
-* A cross-compiler for AmigaOS4 with Qt6 support
+* A cross-compile environment for AmigaOS4 with Qt6 support
 * A `clib4`-compatible GCC toolchain
 * A working Qt6 installation on the host (Linux) system
 
 ---
 
-## 3. Download and Install the Cross-Compiler
+## 3. Download and Install the Cross-Compile environment
 
 Download the Qt6 AmigaOS cross-compiler archive:
 
@@ -33,7 +33,7 @@ This archive contains both the Amiga Qt6 SDK and wrapper scripts for `qmake` and
 
 ### Installation:
 
-1. Extract the archive \*\*directly to \*\*\`\`:
+1. Extract the archive \*\*directly to \*\*\ `\`:
 
    ```bash
    sudo tar -xvf qt6-amiga-6.2.0.tar.gz -C /
@@ -88,7 +88,9 @@ make -j$(nproc)
 ### With `qt-cmake-amiga`
 
 ```bash
-qt-cmake-amiga .
+mkdir build
+cd build
+qt-cmake-amiga ..
 make -j$(nproc)
 ```
 
@@ -134,7 +136,7 @@ The output will be an AmigaOS4-compatible binary you can transfer to your Amiga.
 To run your application on AmigaOS4:
 
 1. Transfer the binary to your Amiga system.
-2. Make sure all required Qt6 shared libraries are present (from AmiQute’s runtime distribution).
+2. Make sure all required Qt6 shared libraries (read: just clib4.library) are present (from AmiQute’s runtime distribution).
 3. Optionally use `QtLaunch` or a script to initialize any environment variables.
 
 ---
