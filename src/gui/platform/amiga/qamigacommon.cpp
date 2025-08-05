@@ -64,12 +64,15 @@ QList<QPlatformScreen *> QAmigaScreen::virtualSiblings() const
 class QAmigaCursor : public QPlatformCursor
 {
 public:
-    QAmigaCursor() : m_pos(10, 10) {}
+    QAmigaCursor() : m_pos(10, 10) {
+        pos();
+    }
 
     QPoint pos() const override { struct Screen *pubScreen = IIntuition->LockPubScreen(0);
-                                    QPoint mousePoint (pubScreen->MouseX, pubScreen->MouseY);
+                                    QPoint mousePos(pubScreen->MouseX, pubScreen->MouseY);
                                     IIntuition->UnlockPubScreen(0, pubScreen);
-                                      return m_pos; }
+                                    return m_pos;
+                                 }
                                     
     void setPos(const QPoint &pos) override
     {

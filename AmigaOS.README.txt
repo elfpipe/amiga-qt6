@@ -16,17 +16,18 @@ Unpack or copy the contents of this archive to your root, such that there is a f
 
 You also need a linux native Qt6 install. You will either need to build this yourself from sources or get it from somewhere. Ideally you will get version 6.2.0, and you will put it in the location /usr/local/Qt-6.2.0. If you already have Qt6 installed on your machine, you can edit /qt6-amiga/bin/qmake to point in the right direction.
 
-Of course you also need a gcc cross compile tool chain. Go to AmigaLabs on github and get one. Remember to set your PATH variable if needed (ie. > PATH=$PATH:/some/path/bin).
+Of course you also need a gcc cross compile tool chain. Go to AmigaLabs on github and get one. Remember to set your PATH variable if needed (ie. > PATH=$PATH:/some/path/bin). The toolchain, you get, needs to be clib4 compatible.
 
-You might want to copy or move the examples folder to your user folder or where your usual location for code is.
+You might want to copy or move the examples folder to your user folder or whereever your usual location for code is.
 
+You may want to set your PATH to point to /qt6-amiga/bin. This step is optional, though.
 
 === Example using qmake :
 
 To build a project with qmake, do the following:
 
 > cd examples/corelib/threads/mandelbrot
-> /qt6-amiga/bin/qmake
+> /qt6-amiga/bin/qmake-amiga
 > make
 
 This should give you an executable, mandelbrot, that you can now transfer to the amiga and run.
@@ -39,7 +40,9 @@ For this, you need to have cmake installed, and you need the file Modules/Platfo
 To build a project with cmake, do the following:
 
 > cd examples/corelib/threads/mandelbrot
-> /qt6-amiga/cmake-amiga-qt6-app.sh
+> mkdir build
+> cd build
+> /qt6-amiga/bin/qt-cmake-amiga ..
 > make
 
 This should give you an executable, mandelbrot, that you can now transfer to the amiga and run.
@@ -47,7 +50,9 @@ This should give you an executable, mandelbrot, that you can now transfer to the
 
 === Setup on the Amiga :
 
-Assign qt6-amiga: to somewhere (ie. ram: or similar). This assign is for later use, but at present nothing is needed there.
+(1) Assign qt6-amiga: to somewhere (ie. ram: or similar). This assign is for later use, but at present nothing is needed there.
+(2) Copy clib4.library to LIBS:
+
 Now you are ready to run the programs.
 
 Happy coding! :-D

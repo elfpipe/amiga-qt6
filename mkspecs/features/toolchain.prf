@@ -171,7 +171,7 @@ isEmpty($${target_prefix}.INCDIRS) {
     #
     wasm: {
         # wasm compiler does not work here, just use defaults
-    } else: amiga: !CROSS_COMPILE: {
+    } else: amiga: equals(QMAKE_HOST.spec, $$QMAKESPEC) : {
         output = $$system("$$QMAKE_CXX -E -Wp,-v -xc++ - <nil: *>t:incpaths.txt", lines, ec)
         !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
 
@@ -231,7 +231,6 @@ isEmpty($${target_prefix}.INCDIRS) {
 
 
     } else: gcc {
-        print(hej)
         cmd_suffix = "<$$QMAKE_SYSTEM_NULL_DEVICE >$$QMAKE_SYSTEM_NULL_DEVICE"
         equals(QMAKE_HOST.os, Windows): \
             cmd_prefix = "set LC_ALL=C&"
