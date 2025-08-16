@@ -187,6 +187,7 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
     m_windowAreaHash[id] = bounds;
     m_backingStoreForWinIdHash[id] = this;
 
+
 #ifdef __amigaos4__
     QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(window->handle());
     if(!amigaWindow) {
@@ -200,7 +201,8 @@ void QAmigaBackingStore::flush(QWindow *window, const QRegion &region, const QPo
         4*m_image.width(), PIXF_A8R8G8B8,
         iWin->RPort,
         iWin->BorderLeft, iWin->BorderTop,
-        m_image.width(), m_image.height());
+        // m_image.width(), m_image.height());
+        bounds.width(), bounds.height());
 #endif
 }
 

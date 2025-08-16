@@ -59,11 +59,19 @@
 #include <QDebug>
 #include <QRect>
 
-extern "C" void __pthread_init_ctor();
 //! [0]
 int main(int argc, char *argv[])
 {
-// __pthread_init_ctor();
+#ifdef __amigaos4__
+    char *_argv[] = { "mandelbrot", 0};
+
+    if(argc == 0) { // wb app
+        // code for tooltypes goes in here
+
+        argv = _argv;
+        argc = 1;
+    }
+#endif
     QApplication app(argc, argv);
 
     QCommandLineParser parser;
@@ -86,12 +94,13 @@ int main(int argc, char *argv[])
     }
 
     MandelbrotWidget widget;
+    widget.show();
+
     const auto geometry = widget.screen()->availableGeometry();
     widget.resize((2 * geometry.size()) / 3);
     const auto pos = (geometry.size() - widget.size()) / 2;
     widget.move(geometry.topLeft() + QPoint(pos.width(), pos.height()));
 
-    widget.show();
     return app.exec();
 }
 //! [0]

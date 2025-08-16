@@ -173,21 +173,23 @@ void QAmigaWindow::setGeometryImpl(const QRect &rect)
     QPlatformWindow::setGeometry(adjusted);
     // m_normalGeometry = adjusted;
 
+    if (m_visible) {
+        QWindowSystemInterface::handleGeometryChange(window(), adjusted);
+        QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), adjusted.size()));
+    } else {
+        m_pendingGeometryChangeOnShow = true;
+    }
+
     QRect realRect = windowFrameGeometry();
 
-    if(m_intuitionWindow)
+    if(m_intuitionWindow) {
         IIntuition->SetWindowAttrs(m_intuitionWindow,
                                     WA_Left, realRect.x(),
                                     WA_Top, realRect.y(),
                                     WA_Width, realRect.width(),
                                     WA_Height, realRect.height(),
                                     TAG_DONE);
-
-    if (m_visible) {
-        QWindowSystemInterface::handleGeometryChange(window(), adjusted);
-        QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(), adjusted.size()));
-    } else {
-        m_pendingGeometryChangeOnShow = true;
+        IIntuition->RefreshWindowFrame(m_intuitionWindow);
     }
 }
 

@@ -59,6 +59,16 @@ int main(int argc, char *argv[])
 {
     Q_INIT_RESOURCE(textedit);
 
+#ifdef __amigaos4__
+    char *_argv[] = { "textedit", 0};
+
+    if(argc == 0) { // wb app
+        // code for tooltypes goes in here
+
+        argv = _argv;
+        argc = 1;
+    }
+#endif
     QApplication a(argc, argv);
     QCoreApplication::setOrganizationName("QtProject");
     QCoreApplication::setApplicationName("Rich Text");

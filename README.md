@@ -30,3 +30,9 @@ cd into the source directory containing the .pro file. Then do:
 > make
 
 Transfer the resulting executable to the amiga and test. Good luck :).
+
+
+<h2>Credits</h2>
+
+Qt6 for AmigaOS4 is used under the GNU Lesser General Public License version 3 (LGPLv3).
+Source code is available at: https://github.com/elfpipe/amiga-qt6
