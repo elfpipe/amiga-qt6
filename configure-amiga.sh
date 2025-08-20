@@ -1,19 +1,7 @@
 cmake \
--DCMAKE_FIND_ROOT_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
--DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
--DCMAKE_LIBRARY_PATH="/opt/adtools/ppc-amigaos/SDK/clib4/lib;/opt/adtools/ppc-amigaos/SDK/local/clib4/lib" \
--DCMAKE_INCLUDE_PATH="/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools/ppc-amigaos/SDK/clib4/include;/opt/adtools/ppc-amigaos/SDK/local/common/include;/opt/adtools/ppc-amigaos/SDK/local/clib4/include" \
--DCMAKE_PREFIX_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
--DCMAKE_SYSTEM_NAME="AmigaOS" \
--DCMAKE_SYSTEM_PROCESSOR="PowerPC" \
--DCMAKE_C_COMPILER="ppc-amigaos-gcc" \
--DCMAKE_CXX_COMPILER="ppc-amigaos-g++" \
--DCMAKE_ASM_COMPILER="ppc-amigaos-as" \
--DCMAKE_MAKE_PROGRAM="make" \
--DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -I/opt/adtools/ppc-amigaos/SDK/local" \
--DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native" \
--DCMAKE_EXE_LINKER_FLAGS="-mcrt=clib4 -athread=native" \
--DUNIX=1 -DAMIGA=1 \
+-G "Unix Makefiles" \
+-DCMAKE_TOOLCHAIN_FILE="/home/alfkil/toolchain-amigaos4-clib4.cmake" \
+-DCMAKE_MAKE_PROGRAM=/usr/bin/make \
 -DQT_INSTALL_PREFIX="/qt6-amiga" \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
