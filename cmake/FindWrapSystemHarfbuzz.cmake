@@ -6,13 +6,8 @@ if(TARGET WrapSystemHarfbuzz::WrapSystemHarfbuzz)
 endif()
 set(WrapSystemHarfbuzz_REQUIRED_VARS __harfbuzz_found)
 
-if(AMIGA)
-    find_package(harfbuzz NAMES harfbuzz PATHS harfbuzz)
-    set_target_properties(harfbuzz::harfbuzz PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "/opt/adtools/ppc-amigaos/SDK/local/clib4/include/harfbuzz")
-else()
-    find_package(harfbuzz ${${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION} QUIET)
-endif()
+
+find_package(harfbuzz ${${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION} QUIET)
 
 # Gentoo has some buggy version of a harfbuzz Config file. Check if include paths are valid.
 set(__harfbuzz_target_name "harfbuzz::harfbuzz")
@@ -20,7 +15,6 @@ if(harfbuzz_FOUND AND TARGET "${__harfbuzz_target_name}")
     get_property(__harfbuzz_include_paths TARGET "${__harfbuzz_target_name}"
                                           PROPERTY INTERFACE_INCLUDE_DIRECTORIES)
     foreach(__harfbuzz_include_dir ${__harfbuzz_include_paths})
-    message ("harfbuzz include dir : ${__harfbuzz_include_dir}")
         if(NOT EXISTS "${__harfbuzz_include_dir}")
             # Must be the broken Gentoo harfbuzzConfig.cmake file. Try to use pkg-config instead.
             set(__harfbuzz_broken_config_file TRUE)
@@ -34,7 +28,6 @@ if(harfbuzz_FOUND AND TARGET "${__harfbuzz_target_name}")
     endif()
 endif()
 
-message("harfbuzz ${__harfbuzz_broken_config_file} ${__harfbuzz_found}")
 if(__harfbuzz_broken_config_file OR NOT __harfbuzz_found)
     list(PREPEND WrapSystemHarfbuzz_REQUIRED_VARS HARFBUZZ_LIBRARIES HARFBUZZ_INCLUDE_DIRS)
 
@@ -42,7 +35,7 @@ if(__harfbuzz_broken_config_file OR NOT __harfbuzz_found)
     pkg_check_modules(PC_HARFBUZZ harfbuzz IMPORTED_TARGET)
 
     find_path(HARFBUZZ_INCLUDE_DIRS
-              NAMES harfbuzz/hb.h
+              NAMES harfbuzz/hb.h hb.h
               HINTS ${PC_HARFBUZZ_INCLUDEDIR})
     find_library(HARFBUZZ_LIBRARIES
                 NAMES harfbuzz
@@ -54,6 +47,14 @@ if(__harfbuzz_broken_config_file OR NOT __harfbuzz_found)
         set(WrapSystemHarfbuzz_VERSION "${PC_HARFBUZZ_VERSION}")
     endif()
 endif()
+
+if(AMIGA AND NOT EXISTS "${__harfbuzz_include_dir}")
+    set(__harfbuzz_include_dir "/opt/ppc-amigaos/ppc-amigaos/SDK/local/clib4/include/harfbuzz")    
+endif()
+
+message (STATUS "harfbuzz include dir : ${__harfbuzz_include_dir}")
+message (STATUS "harfbuzz broken      : ${__harfbuzz_broken_config_file}")
+message (STATUS "harfbuzz found       : ${__harfbuzz_found}")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(WrapSystemHarfbuzz

@@ -174,6 +174,7 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
 }
 
 #ifdef __amigaos4__
+extern "C" int waitpoll(struct pollfd *, nfds_t, int, uint32_t *);
 int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout_ts, uint32_t *listenSignals)
 {
     if (!timeout_ts) {

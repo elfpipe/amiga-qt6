@@ -1,19 +1,12 @@
 cmake \
--DCMAKE_FIND_ROOT_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
--DCMAKE_FIND_ROOT_PATH_MODE_INCLUDE=ONLY \
--DCMAKE_LIBRARY_PATH="/opt/adtools/ppc-amigaos/SDK/clib4/lib;/opt/adtools/ppc-amigaos/SDK/local/clib4/lib" \
--DCMAKE_INCLUDE_PATH="/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools/ppc-amigaos/SDK/clib4/include;/opt/adtools/ppc-amigaos/SDK/local/common/include;/opt/adtools/ppc-amigaos/SDK/local/clib4/include" \
--DCMAKE_PREFIX_PATH="/opt/adtools;/opt/adtools/ppc-amigaos/SDK/clib4;/opt/adtools/ppc-amigaos/SDK/local;/opt/adtools;/opt/adtools/ppc-amigaos/SDK/local/clib4;/opt/adtools/ppc-amigaos/SDK/local/common" \
--DCMAKE_SYSTEM_NAME="AmigaOS" \
--DCMAKE_SYSTEM_PROCESSOR="PowerPC" \
--DCMAKE_C_COMPILER="ppc-amigaos-gcc" \
--DCMAKE_CXX_COMPILER="ppc-amigaos-g++" \
--DCMAKE_ASM_COMPILER="ppc-amigaos-as" \
--DCMAKE_MAKE_PROGRAM="make" \
--DCMAKE_CXX_FLAGS_INIT="-mcrt=clib4 -athread=native -I/opt/adtools/ppc-amigaos/SDK/local" \
--DCMAKE_C_FLAGS_INIT="-mcrt=clib4 -athread=native" \
--DCMAKE_EXE_LINKER_FLAGS="-mcrt=clib4 -athread=native" \
--DUNIX=1 -DAMIGA=1 \
+-G Ninja \
+-DCMAKE_TOOLCHAIN_FILE="/home/alfkil/toolchain-amigaos4-clib4.cmake" \
+-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja \
+-DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+-DCMAKE_TRY_COMPILE_PLATFORM_VARIABLES="CMAKE_MAKE_PROGRAM;CMAKE_C_STANDARD_LIBRARIES;CMAKE_CXX_STANDARD_LIBRARIES;CMAKE_EXE_LINKER_FLAGS;CMAKE_SHARED_LINKER_FLAGS;CMAKE_MODULE_LINKER_FLAGS" \
+-DCMAKE_PREFIX_PATH="/qt6-amiga;/opt/ppc-amigaos/ppc-amigaos/SDK/clib4;/opt/ppc-amigaos/ppc-amigaos/SDK/local/clib4" \
+-DQT_TARGET_PREFIX="/qt6-amiga" \
+-DQt6_DIR="/qt6-amiga/lib/cmake/Qt6" \
 -DQT_INSTALL_PREFIX="/qt6-amiga" \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
@@ -35,9 +28,12 @@ cmake \
 -DQT_FEATURE_icu=ON \
 -DQT_FEATURE_libudev=OFF \
 -DQT_FEATURE_evdev=OFF \
+-DQT_FEATURE_pcre2=ON \
+-DQT_FEATURE_system_pcre2=ON \
 -DBUILD_SHARED_LIBS=OFF \
 -DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=OFF \
 ..
+
 
 
 
