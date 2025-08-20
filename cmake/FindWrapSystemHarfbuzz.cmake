@@ -6,13 +6,13 @@ if(TARGET WrapSystemHarfbuzz::WrapSystemHarfbuzz)
 endif()
 set(WrapSystemHarfbuzz_REQUIRED_VARS __harfbuzz_found)
 
-if(AMIGA)
-    find_package(harfbuzz NAMES harfbuzz PATHS harfbuzz)
-    set_target_properties(harfbuzz::harfbuzz PROPERTIES
-        INTERFACE_INCLUDE_DIRECTORIES "/opt/adtools/ppc-amigaos/SDK/local/clib4/include/harfbuzz")
-else()
+# if(AMIGA)
+#     find_package(harfbuzz NAMES harfbuzz PATHS harfbuzz)
+#     set_target_properties(harfbuzz::harfbuzz PROPERTIES
+#         INTERFACE_INCLUDE_DIRECTORIES "/opt/adtools/ppc-amigaos/SDK/local/clib4/include/harfbuzz")
+# else()
     find_package(harfbuzz ${${CMAKE_FIND_PACKAGE_NAME}_FIND_VERSION} QUIET)
-endif()
+# endif()
 
 # Gentoo has some buggy version of a harfbuzz Config file. Check if include paths are valid.
 set(__harfbuzz_target_name "harfbuzz::harfbuzz")
