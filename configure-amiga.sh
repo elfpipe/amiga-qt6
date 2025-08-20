@@ -1,12 +1,7 @@
 cmake \
--G Ninja \
+-G "Unix Makefiles" \
 -DCMAKE_TOOLCHAIN_FILE="/home/alfkil/toolchain-amigaos4-clib4.cmake" \
--DCMAKE_MAKE_PROGRAM=/usr/bin/ninja \
--DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
--DCMAKE_TRY_COMPILE_PLATFORM_VARIABLES="CMAKE_MAKE_PROGRAM;CMAKE_C_STANDARD_LIBRARIES;CMAKE_CXX_STANDARD_LIBRARIES;CMAKE_EXE_LINKER_FLAGS;CMAKE_SHARED_LINKER_FLAGS;CMAKE_MODULE_LINKER_FLAGS" \
--DCMAKE_PREFIX_PATH="/qt6-amiga;/opt/ppc-amigaos/ppc-amigaos/SDK/clib4;/opt/ppc-amigaos/ppc-amigaos/SDK/local/clib4" \
--DQT_TARGET_PREFIX="/qt6-amiga" \
--DQt6_DIR="/qt6-amiga/lib/cmake/Qt6" \
+-DCMAKE_MAKE_PROGRAM=/usr/bin/make \
 -DQT_INSTALL_PREFIX="/qt6-amiga" \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
@@ -35,6 +30,19 @@ cmake \
 ..
 
 
+# -G Ninja \
+# -DCMAKE_TOOLCHAIN_FILE="/home/alfkil/toolchain-amigaos4-clib4.cmake" \
+# -DCMAKE_MAKE_PROGRAM=/usr/bin/ninja \
+
+
+# -DCMAKE_TRY_COMPILE_TARGET_TYPE=STATIC_LIBRARY \
+# -DCMAKE_TRY_COMPILE_PLATFORM_VARIABLES="CMAKE_MAKE_PROGRAM;CMAKE_C_STANDARD_LIBRARIES;CMAKE_CXX_STANDARD_LIBRARIES;CMAKE_EXE_LINKER_FLAGS;CMAKE_SHARED_LINKER_FLAGS;CMAKE_MODULE_LINKER_FLAGS" \
+
+# -DQT_TARGET_PREFIX="/qt6-amiga" \
+
+# -DQt6_DIR="/qt6-amiga/lib/cmake/Qt6" \
+
+# -DCMAKE_PREFIX_PATH="/qt6-amiga;/opt/ppc-amigaos/ppc-amigaos/SDK/clib4;/opt/ppc-amigaos/ppc-amigaos/SDK/local/clib4" \
 
 
 #-DQT_BUILD_EXAMPLES=ON \
