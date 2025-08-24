@@ -46,6 +46,7 @@ defineReplace(cmakePortablePaths) {
     !isEmpty(SYSR): SYSR = ${CMAKE_SYSROOT}
     variable = $$1
     out =
+    message("cmake Portable Paths : variable = $${variable}")
     for(v, variable) {
         path = $$cmakeTargetPath($$v)
         contains(path, /.*): \

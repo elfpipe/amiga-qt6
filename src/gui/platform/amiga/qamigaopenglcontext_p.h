@@ -68,6 +68,8 @@ public:
             OGLES2_CCT_VSYNC, 0,
             OGLES2_CCT_SINGLE_GET_ERROR_MODE, 1,
             TAG_DONE);
+        qInfo() << "== OpenGL ==" << "\n" << 
+                   "aglContext : " << aglContext << "\n";
     }
 
     ~QAmigaOpenGLContext()

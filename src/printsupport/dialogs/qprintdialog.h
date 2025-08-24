@@ -91,7 +91,7 @@ Q_SIGNALS:
     void accepted(QPrinter *printer);
 
 private:
-#if defined (Q_OS_UNIX) && !defined(Q_OS_MAC)
+#if defined (Q_OS_UNIX) && !defined(Q_OS_MAC) && !defined(__amigaos4__)
     Q_PRIVATE_SLOT(d_func(), void _q_togglePageSetCombo(bool))
     Q_PRIVATE_SLOT(d_func(), void _q_collapseOrExpandDialog())
 #if QT_CONFIG(messagebox)

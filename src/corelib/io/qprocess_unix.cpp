@@ -957,7 +957,7 @@ bool QProcessPrivate::startDetached(qint64 *pid)
 
 #ifndef __amigaos4__
     pid_t childPid = fork();
-    childPid == 0) {
+    if(childPid == 0) {
         ::signal(SIGPIPE, SIG_DFL);     // reset the signal that we ignored
         ::setsid();
 

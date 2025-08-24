@@ -454,7 +454,6 @@ GLuint QPlatformBackingStoreOpenGLSupport::toTexture(const QRegion &dirtyRegion,
 
 void qt_registerDefaultPlatformBackingStoreOpenGLSupport()
 {
-    printf("qt_registerDefaultPlatformBackingStoreOpenGLSupport\n");
     if (!QPlatformBackingStoreOpenGLSupportBase::factoryFunction()) {
         QPlatformBackingStoreOpenGLSupportBase::setFactoryFunction([]() -> QPlatformBackingStoreOpenGLSupportBase* {
             return new QPlatformBackingStoreOpenGLSupport;
