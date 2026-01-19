@@ -299,6 +299,11 @@ set_property(TARGET Core APPEND PROPERTY COMPATIBLE_INTERFACE_STRING QT_COORD_TY
 # Aka if the feature is enabled, publically link against the threading library.
 # This also ensures the link flag is in the .prl file.
 if(QT_FEATURE_thread)
+    if(AMIGA)
+        # add_library(mylib INTERFACE)
+        # target_link_libraries(mylib INTERFACE pthread)
+        target_link_libraries(Threads::Threads INTERFACE pthread)
+    endif()
     target_link_libraries(Platform INTERFACE Threads::Threads)
 endif()
 

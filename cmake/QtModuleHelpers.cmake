@@ -655,7 +655,7 @@ set(QT_LIBINFIX \"${QT_LIBINFIX}\")")
         PRIVATE_HEADER DESTINATION ${INSTALL_INCLUDEDIR}/${module_include_name}/${PROJECT_VERSION}/${module}/private
         )
 
-    if(BUILD_SHARED_LIBS)
+    if(BUILD_SHARED_LIBS AND NOT AMIGA)
         qt_apply_rpaths(TARGET "${target}" INSTALL_PATH "${INSTALL_LIBDIR}" RELATIVE_RPATH)
     endif()
 

@@ -20,7 +20,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 # Amiga C runtime (be consistent)
 set(CMAKE_C_FLAGS_INIT   "-mcrt=clib4 -athread=native")
 set(CMAKE_CXX_FLAGS_INIT "-mcrt=clib4 -athread=native")
-set(CMAKE_EXE_LINKER_FLAGS "-mcrt=clib4 -athread=native")
+set(CMAKE_EXE_LINKER_FLAGS "-use-dynld -mcrt=clib4 -athread=native")
 
 set(UNIX 1)
 set(AMIGA 1)

@@ -254,8 +254,9 @@ message("+++++++++++++++++++++++++")
             qt_internal_install_versioned_link("${install_dir}" "${target_name}")
         endif()
 
-        qt_apply_rpaths(TARGET "${target_name}" INSTALL_PATH "${install_dir}" RELATIVE_RPATH)
-
+        if(NOT AMIGA)
+            qt_apply_rpaths(TARGET "${target_name}" INSTALL_PATH "${install_dir}" RELATIVE_RPATH)
+        endif()
     endif()
 
     qt_enable_separate_debug_info(${target_name} "${install_dir}" QT_EXECUTABLE)

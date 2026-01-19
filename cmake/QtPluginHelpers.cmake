@@ -413,7 +413,7 @@ function(qt_internal_add_plugin target)
                    NAMESPACE ${QT_CMAKE_EXPORT_NAMESPACE}::
                    DESTINATION "${config_install_dir}"
         )
-        if(BUILD_SHARED_LIBS)
+        if(BUILD_SHARED_LIBS AND NOT AMIGA)
             qt_apply_rpaths(TARGET "${target}" INSTALL_PATH "${install_directory}" RELATIVE_RPATH)
         endif()
     endif()

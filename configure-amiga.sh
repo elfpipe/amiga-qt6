@@ -3,6 +3,8 @@ cmake \
 -DCMAKE_TOOLCHAIN_FILE="/home/alfkil/repos/amiga-qt6/toolchain-amigaos4-clib4.cmake" \
 -DCMAKE_MAKE_PROGRAM=/usr/bin/make \
 -DCMAKE_INSTALL_PREFIX="/qt6-amiga" \
+-DCMAKE_INSTALL_RPATH="/qt6-amiga/lib" \
+-DCMAKE_BUILD_WITH_INSTALL_RPATH=ON \
 -DQT_INSTALL_PREFIX="/qt6-amiga" \
 -DQT_HOST_PATH="/usr/local/Qt-6.2.0" \
 -DQT_QMAKE_TARGET_MKSPEC=amiga-g++ \
@@ -28,12 +30,12 @@ cmake \
 -DQT_FEATURE_sql_odbc=ON \
 -DQT_FEATURE_system_sqlite=ON \
 -DBUILD_SHARED_LIBS=OFF \
--DCMAKE_FIND_LIBRARY_SUFFIXES=".a" \
--DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=OFF \
+-DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
 ..
 
 
-# -DQT_INSTALL_PREFIX="/qt6-amiga" \
+
+# -DCMAKE_FIND_LIBRARY_SUFFIXES=".a" \
 
 #-DQT_BUILD_EXAMPLES=ON \
 #/amiga-qt6
