@@ -126,10 +126,7 @@ static void destroy_current_thread_data(void *p)
         Q_ASSERT(thread);
         QThreadPrivate *thread_p = static_cast<QThreadPrivate *>(QObjectPrivate::get(thread));
         Q_ASSERT(!thread_p->finished);
-#ifndef __amigaos4__
-        //thread private might be invalid at this point + finish will be called more than once
         thread_p->finish(thread);
-#endif
     }
     data->deref();
 

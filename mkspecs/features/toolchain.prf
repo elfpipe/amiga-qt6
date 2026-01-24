@@ -171,7 +171,7 @@ isEmpty($${target_prefix}.INCDIRS) {
     #
     wasm: {
         # wasm compiler does not work here, just use defaults
-    } else: amiga: equals(QMAKE_HOST.spec, $$QMAKESPEC) : {
+    } else: amiga: equals(QMAKE_HOST.os, AmigaOS) : {
         output = $$system("$$QMAKE_CXX -E -Wp,-v -xc++ - <nil: *>t:incpaths.txt", lines, ec)
         !equals(ec, 0): qtCompilerError($$QMAKE_CXX, $$output)
 
