@@ -153,7 +153,6 @@ static void destroy_current_thread_data_key()
 }
 Q_DESTRUCTOR_FUNCTION(destroy_current_thread_data_key)
 
-
 // Utility functions for getting, setting and clearing thread specific data.
 static QThreadData *get_thread_data()
 {

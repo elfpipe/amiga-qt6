@@ -70,7 +70,6 @@ QMutexPrivate::QMutexPrivate()
 
 QMutexPrivate::~QMutexPrivate()
 {
-
     report_error(sem_destroy(&semaphore), "QMutex", "sem_destroy");
 }
 

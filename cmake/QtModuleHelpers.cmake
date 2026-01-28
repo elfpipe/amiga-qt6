@@ -526,7 +526,7 @@ function(qt_internal_add_module target)
         )
     endif()
 
-    if(NOT arg_HEADER_MODULE)
+    if(NOT arg_HEADER_MODULE AND NOT AMIGA)
         if(DEFINED module_headers_private)
             qt_internal_add_linker_version_script("${target}" PRIVATE_HEADERS ${module_headers_private} ${module_headers_qpa})
         else()

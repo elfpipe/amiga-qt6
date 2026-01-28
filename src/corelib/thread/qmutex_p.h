@@ -64,7 +64,7 @@
 
 #if defined(Q_OS_MAC)
 # include <mach/semaphore.h>
-#elif defined(Q_OS_UNIX)
+#elif defined(Q_OS_UNIX) // && !defined(__amigaos4__)
 # if _POSIX_VERSION-0 >= 200112L || _XOPEN_VERSION-0 >= 600
 #  include <semaphore.h>
 #  define QT_UNIX_SEMAPHORE

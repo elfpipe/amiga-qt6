@@ -90,8 +90,6 @@ QThreadData::~QThreadData()
     // negative, but that's acceptable.
     QThread *t = thread.loadAcquire();
     thread.storeRelease(nullptr);
-
-// AmigaOS FIXME
     delete t;
 
     for (int i = 0; i < postEventList.size(); ++i) {
@@ -169,7 +167,7 @@ QThreadPrivate::QThreadPrivate(QThreadData *d)
 // INTEGRITY doesn't support self-extending stack. The default stack size for
 // a pthread on INTEGRITY is too small so we have to increase the default size
 // to 128K. The same goes for amiga.
-#if defined(Q_OS_INTEGRITY) || defined(__amigaos4__)
+#if defined(Q_OS_INTEGRITY)
     stackSize = 128 * 1024;
 #elif defined(Q_OS_RTEMS)
     static bool envStackSizeOk = false;
