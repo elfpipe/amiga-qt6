@@ -349,7 +349,7 @@ function(qt_internal_add_plugin target)
             qt_generate_plugin_pri_file("${target}" pri_file)
         endif()
 
-        if(qt_module_target)
+        if(qt_module_target AND plugin_init_target)
             qt_internal_link_internal_platform_for_object_library("${plugin_init_target}")
         endif()
     endif()

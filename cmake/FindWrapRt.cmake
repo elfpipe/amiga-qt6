@@ -10,7 +10,7 @@ set(WrapRt_FOUND OFF)
 include(CheckCXXSourceCompiles)
 include(CMakePushCheckState)
 
-if(NOT DBUILD_SHARED_LIBS)
+if(NOT BUILD_SHARED_LIBS)
     find_library(LIBRT librt.a)
 else()
     find_library(LIBRT rt)
