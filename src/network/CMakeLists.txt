@@ -164,7 +164,7 @@ qt_internal_extend_target(Network CONDITION UNIX
         socket/qnet_unix_p.h
 )
 
-qt_internal_extend_target(Network CONDITION QT_FEATURE_dlopen AND UNIX
+qt_internal_extend_target(Network CONDITION QT_FEATURE_dlopen AND UNIX AND NOT AMIGA
     LIBRARIES
         ${CMAKE_DL_LIBS}
 )

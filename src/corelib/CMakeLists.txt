@@ -1071,7 +1071,7 @@ qt_internal_extend_target(Core CONDITION QT_FEATURE_library AND WIN32
         plugin/qlibrary_win.cpp
 )
 
-qt_internal_extend_target(Core CONDITION QT_FEATURE_dlopen AND QT_FEATURE_library
+qt_internal_extend_target(Core CONDITION QT_FEATURE_dlopen AND QT_FEATURE_library AND NOT AMIGA
     LIBRARIES
         ${CMAKE_DL_LIBS}
 )

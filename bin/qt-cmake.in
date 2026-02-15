@@ -41,5 +41,5 @@ exec "$cmake_path" -DCMAKE_TOOLCHAIN_FILE="$toolchain_path" @__qt_cmake_extra@ \
 -DQT_FEATURE_sql_odbc=ON \
 -DQT_FEATURE_system_sqlite=ON \
 -DBUILD_SHARED_LIBS=OFF \
--DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=ON \
+-DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=OFF \
 "$@"
