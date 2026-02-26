@@ -253,6 +253,8 @@ bool QLibraryPrivate::load_sys()
 			//qDebug() << "dlopen()" << amigapath << (void *)pHnd << dlFlags;
 			free (amigapath);
 #else
+            qInfo() << "load_sys() attempt == " << attempt << "\n";
+            qInfo() << "load_sys() path == " << QFile::encodeName(attempt) << "\n";
             hnd = dlopen(QFile::encodeName(attempt), dlFlags);
 #endif
 

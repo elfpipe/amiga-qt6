@@ -12,6 +12,7 @@ cmake \
 -DQT_FEATURE_thread=ON \
 -DQT_FEATURE_network=ON \
 -DQT_FEATURE_ssl=ON \
+-DINSTALL_QMLDIR=qml \
 -DQT_FEATURE_openssl=ON \
 -DQT_FEATURE_openssl_linked=OFF \
 -DQT_FEATURE_library=ON \
@@ -30,7 +31,9 @@ cmake \
 -DQT_FEATURE_system_sqlite=ON \
 -DQT_FEATURE_qml_debug=OFF \
 -DBUILD_SHARED_LIBS=OFF \
+-DAMIGA_STATIC_BUILD=ON \
 -DQT_BUILD_TOOLS_WHEN_CROSSCOMPILING=OFF \
+-DINSTALL_QMLDIR=/qt6-amiga/qml \
 ..
 
 

@@ -37,11 +37,11 @@
 **
 ****************************************************************************/
 
-#include "qamigaopenglcontext_p.h"
-#include "qamigaintegration_p.h"
-#include "qamigawindow_p.h"
-#include "qamigacommon_p.h"
-#include "qamigaeventdispatcherwindows_p.h"
+#include "qamigaintegration.h"
+#include "qamigawindow.h"
+#include "qamigacommon.h"
+#include "qamigaeventdispatcher.h"
+#include "qamigaglcontext.h"
 
 #include <QtGui/private/qfreetypefontdatabase_p.h>
 
@@ -62,10 +62,6 @@
 
 #include <proto/intuition.h>
 
-#if QT_CONFIG(xlib) && QT_CONFIG(opengl) && !QT_CONFIG(opengles2)
-#include "qAmigaintegration_x11.h"
-#endif
-
 QT_BEGIN_NAMESPACE
 
 class QCoreTextFontEngine;
@@ -73,7 +69,7 @@ class QCoreTextFontEngine;
 QAbstractEventDispatcher *QAmigaIntegration::m_eventDispatcher = 0;
 struct MsgPort *QAmigaIntegration::m_messagePort = 0;
 
-QAmigaIntegration::QAmigaIntegration()
+QAmigaIntegration::QAmigaIntegration(const QStringList &paramList)
 {
     m_fontDatabase.reset(new QFreeTypeFontDatabase());
 
@@ -81,6 +77,8 @@ QAmigaIntegration::QAmigaIntegration()
     m_drag.reset(new QAmigaDrag);
 #endif
     m_services.reset(new QPlatformServices);
+
+    configure(paramList);
 }
 
 QAmigaIntegration::~QAmigaIntegration()
@@ -204,29 +202,29 @@ bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) cons
 
 QPlatformWindow *QAmigaIntegration::createPlatformWindow(QWindow *window) const
 {
-    Q_UNUSED(window);
+    char *env = getenv("QT6AMIGA_OPENGL");
+    bool useOpenGL = (env && env[0] == '1') || window->surfaceType() == QWindow::OpenGLSurface;
     QPlatformWindow *w = new QAmigaWindow(window, m_windowFrameMarginsEnabled);
+    if(useOpenGL)
+        window->setSurfaceType(QSurface::OpenGLSurface);
     w->requestActivateWindow();
     return w;
 }
 
 QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *window) const
 {
+    char *env = getenv("QT6AMIGA_OPENGL");
+    bool useOpenGL = env && env[0] == '1';
+    if(window->surfaceType() == QWindow::OpenGLSurface || useOpenGL)
+        return new QAmigaGLBackingStore(window);
     return new QAmigaBackingStore(window);
 }
 
 QAbstractEventDispatcher *QAmigaIntegration::createEventDispatcher() const
 {
     if(!m_eventDispatcher)
-        m_eventDispatcher = new QEventDispatcherAMIGAWindows;
+        m_eventDispatcher = new QAmigaEventDispatcher;
     return m_eventDispatcher;
-// #if defined(Q_OS_UNIX)
-//     return createUnixEventDispatcher();
-// #elif defined(Q_OS_WIN)
-//     return new QAmigaEventDispatcher<QEventDispatcherWin32>();
-// #else
-//     return 0;
-// #endif
 }
 
 QPlatformNativeInterface *QAmigaIntegration::nativeInterface() const
@@ -308,22 +306,22 @@ QPlatformOffscreenSurface *QAmigaIntegration::createPlatformOffscreenSurface(QOf
     return new QAmigaOffscreenSurface(surface);
 }
 
-QAmigaIntegration *QAmigaIntegration::createAmigaIntegration(const QStringList& paramList)
-{
-    QAmigaIntegration *amigaIntegration = nullptr;
+// QAmigaIntegration *QAmigaIntegration::createAmigaIntegration(const QStringList& paramList)
+// {
+//     QAmigaIntegration *amigaIntegration = nullptr;
 
-#if QT_CONFIG(xlib) && QT_CONFIG(opengl) && !QT_CONFIG(opengles2)
-    QByteArray glx = qgetenv("QT_QPA_OFFSCREEN_NO_GLX");
-    if (glx.isEmpty())
-        offscreenIntegration = new QOffscreenX11Integration;
-#endif
+// #if QT_CONFIG(xlib) && QT_CONFIG(opengl) && !QT_CONFIG(opengles2)
+//     QByteArray glx = qgetenv("QT_QPA_OFFSCREEN_NO_GLX");
+//     if (glx.isEmpty())
+//         offscreenIntegration = new QOffscreenX11Integration;
+// #endif
 
-     if (!amigaIntegration)
-        amigaIntegration = new QAmigaIntegration;
+//      if (!amigaIntegration)
+//         amigaIntegration = new QAmigaIntegration;
 
-    amigaIntegration->configure(paramList);
-    return amigaIntegration;
-}
+//     amigaIntegration->configure(paramList);
+//     return amigaIntegration;
+// }
 
 QList<QPlatformScreen *> QAmigaIntegration::screens() const
 {

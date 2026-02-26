@@ -1,0 +1,9 @@
+{
+    "Keys": [
+        "amiga"
+    ],
+    "ClassName": "QAmigaIntegrationPlugin",
+    "Dependencies": [
+        "opengl"
+    ]
+}

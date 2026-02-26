@@ -966,15 +966,16 @@ qt_internal_extend_target(Gui CONDITION UNIX AND NOT AMIGA
         platform/unix/qunixnativeinterface.cpp
 )
 
-qt_internal_extend_target(Gui CONDITION AMIGA
-    SOURCES
-        platform/amiga/qamigaintegration.cpp
-        platform/amiga/qamigacommon.cpp
-        platform/amiga/qamigaintegration.cpp
-        platform/amiga/qamigawindow.cpp
-        platform/amiga/qamigaopenglcontext.cpp
-        platform/amiga/qamigaoffscreensurface.cpp
-)
+# qt_internal_extend_target(Gui CONDITION AMIGA
+#     SOURCES
+#         platform/amiga/qamigaintegration.cpp
+#         platform/amiga/qamigacommon.cpp
+#         platform/amiga/qamigaintegration.cpp
+#         platform/amiga/qamigawindow.cpp
+#         platform/amiga/qamigaopenglcontext.cpp
+#         platform/amiga/qamigaoffscreensurface.cpp
+#         platform/amiga/qamigaglbackingstore.cpp
+# )
 
 qt_internal_extend_target(Gui CONDITION QT_FEATURE_glib AND UNIX
     SOURCES

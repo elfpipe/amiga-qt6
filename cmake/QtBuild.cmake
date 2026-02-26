@@ -44,7 +44,7 @@ qt_configure_process_path(INSTALL_BINDIR "bin" "Executables [PREFIX/bin]")
 qt_configure_process_path(INSTALL_INCLUDEDIR "include" "Header files [PREFIX/include]")
 qt_configure_process_path(INSTALL_LIBDIR "lib" "Libraries [PREFIX/lib]")
 qt_configure_process_path(INSTALL_MKSPECSDIR "mkspecs" "Mkspecs files [PREFIX/mkspecs]")
-qt_configure_process_path(INSTALL_ARCHDATADIR "." "Arch-dependent data [PREFIX]")
+qt_configure_process_path(INSTALL_ARCHDATADIR "" "Arch-dependent data [PREFIX]")
 qt_configure_process_path(INSTALL_PLUGINSDIR
                           "${INSTALL_ARCHDATADIR}/plugins"
                           "Plugins [ARCHDATADIR/plugins]")
@@ -119,10 +119,8 @@ qt_configure_process_path(
     INSTALL_LIBEXECDIR
     "${_default_libexec}"
     "Helper programs [ARCHDATADIR/bin on Windows, ARCHDATADIR/libexec otherwise]")
-qt_configure_process_path(INSTALL_QMLDIR
-                          "${INSTALL_ARCHDATADIR}/qml"
-                           "QML imports [ARCHDATADIR/qml]")
-qt_configure_process_path(INSTALL_DATADIR "." "Arch-independent data [PREFIX]")
+qt_configure_process_path(INSTALL_QMLDIR "qml" "QML imports [ARCHDATADIR/qml]")
+qt_configure_process_path(INSTALL_DATADIR "" "Arch-independent data [PREFIX]")
 qt_configure_process_path(INSTALL_DOCDIR "${INSTALL_DATADIR}/doc" "Documentation [DATADIR/doc]")
 qt_configure_process_path(INSTALL_TRANSLATIONSDIR "${INSTALL_DATADIR}/translations"
     "Translations [DATADIR/translations]")

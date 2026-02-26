@@ -43,16 +43,16 @@ project(QtBase
     LANGUAGES CXX C ASM
 )
 
-if(NOT CMAKE_SYSTEM_NAME STREQUAL "AmigaOS")    
-    # Should this Qt be static or dynamically linked?
-    option(BUILD_SHARED_LIBS "Build Qt statically or dynamically" ON)
-    set(QT_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
-else()
+if(AMIGA_STATIC_BUILD)
     set(BUILD_SHARED_LIBS OFF CACHE BOOL "Force static build" FORCE)
     set(QT_BUILD_SHARED_LIBS OFF CACHE BOOL "Force static build" FORCE)
     set(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
     set(CMAKE_SHARED_LIBRARY_SUFFIX ".a")
     set(CMAKE_EXTRA_SHARED_LIBRARY_SUFFIXES "")
+else()
+    # Should this Qt be static or dynamically linked?
+    option(BUILD_SHARED_LIBS "Build Qt statically or dynamically" ON)
+    set(QT_BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS})
 endif()
 
 # This variable is also set in Qt6CoreConfigExtras.cmake, but it's not loaded when building

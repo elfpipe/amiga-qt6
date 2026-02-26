@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the plugins of the Qt Toolkit.
@@ -37,74 +37,45 @@
 **
 ****************************************************************************/
 
-#ifndef QAmigaWINDOW_H
-#define QAmigaWINDOW_H
-
-#include <qpa/qplatformbackingstore.h>
-#include <qpa/qplatformwindow.h>
-
-#include <qhash.h>
-
-#include <proto/intuition.h>
+#include "qamigaoffscreensurface.h"
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLWindowPrivate;
-class QAmigaOpenGLContext;
-
-class QAmigaWindow : public QPlatformWindow
+QAmigaOffscreenSurface::QAmigaOffscreenSurface(QOffscreenSurface *offscreenSurface)
+    : QPlatformOffscreenSurface(offscreenSurface)
 {
-public:
-
-    QAmigaWindow(QWindow *window, bool frameMarginsEnabled);
-    ~QAmigaWindow();
-
-#ifdef __amigaos4__
-    void processIntuiMessage(struct IntuiMessage *message);
-    struct Window *intuitionWindow() { return m_intuitionWindow; }
-
-    void openWindow();
-    void closeWindow();
-#endif
-
-    bool isFrameless();
+    QSize size = offscreenSurface->size();
+    m_surface = IIntuition->OpenWindowTags(NULL,
+								WA_Title,				"",
+								WA_SimpleRefresh,		TRUE,
+								WA_InnerWidth,			size.width(),
+								WA_InnerHeight,			size.height(),
+								WA_BackFill, 			LAYERS_NOBACKFILL,
+                                WA_Hidden,              TRUE,
     
-    void setGeometry(const QRect &rect) override;
-    void setWindowState(Qt::WindowStates states) override;
+								TAG_DONE);
+}
 
-    void setWindowTitle(const QString &title) override;
+QAmigaOffscreenSurface::~QAmigaOffscreenSurface()
+{
+    IIntuition->CloseWindow(m_surface);
+}
 
-    QMargins frameMargins() const override;
+QSurfaceFormat QAmigaOffscreenSurface::format() const
+{
+    QSurfaceFormat format;
+    format.setRenderableType(QSurfaceFormat::OpenGLES);
+    format.setRedBufferSize(8);
+    format.setGreenBufferSize(8);
+    format.setBlueBufferSize(8);
+    format.setAlphaBufferSize(8);
+    return format;
+}
 
-    void setVisible(bool visible) override;
-    void requestActivateWindow() override;
-
-    WId winId() const override;
-
-    static QAmigaWindow *windowForWinId(WId id);
-
-private:
-    void setFrameMarginsEnabled(bool enabled);
-    void setGeometryImpl(const QRect &rect);
-
-    QRect m_normalGeometry;
-    QMargins m_margins;
-    bool m_positionIncludesFrame;
-    bool m_visible;
-    bool m_pendingGeometryChangeOnShow;
-    bool m_frameMarginsRequested;
-    WId m_winId;
-
-    bool gl;
-
-    static QHash<WId, QAmigaWindow *> m_windowForWinIdHash;
-
-#ifdef __amigaos4__
-private:
-    struct Window *m_intuitionWindow;
-#endif
-};
+bool QAmigaOffscreenSurface::isValid() const
+{
+    return m_surface != 0;
+}
 
 QT_END_NAMESPACE
 
-#endif

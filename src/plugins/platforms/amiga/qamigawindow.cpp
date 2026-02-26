@@ -37,9 +37,9 @@
 **
 ****************************************************************************/
 
-#include "qamigawindow_p.h"
-#include "qamigacommon_p.h"
-#include "qamigaeventdispatcherwindows_p.h"
+#include "qamigawindow.h"
+#include "qamigacommon.h"
+#include "qamigaeventdispatcher.h"
 
 #include <qpa/qplatformscreen.h>
 #include <qpa/qwindowsysteminterface.h>
@@ -80,7 +80,7 @@ QAmigaWindow::QAmigaWindow(QWindow *window, bool frameMarginsEnabled)
 
     m_windowForWinIdHash[m_winId] = this;
 
-    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
+    static_cast<QAmigaEventDispatcher *>(QAmigaIntegration::eventDispatcher())->registerWindow(this);
 }
 
 QAmigaWindow::~QAmigaWindow()
@@ -91,7 +91,7 @@ QAmigaWindow::~QAmigaWindow()
 
     closeWindow();
 
-    static_cast<QEventDispatcherAMIGAWindows *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
+    static_cast<QAmigaEventDispatcher *>(QAmigaIntegration::eventDispatcher())->unregisterWindow(this);
 }
 
 #define max(x, y) ((x) > (y) ? (x) : (y))
@@ -524,5 +524,15 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
             break;
     }
 }
+
+// QAmigaGLWindow::QAmigaGLWindow(QWindow *window, bool frameMarginsEnabled)
+//     : QAmigaWindow(window, frameMarginsEnabled)
+// {
+//     w->setSurfaceType(QSurface::OpenGLSurface);
+// }
+
+// QAmigaGLWindow::~QAmigaGLWindow()
+// {
+// }
 
 QT_END_NAMESPACE

@@ -45,13 +45,15 @@
 
 #include <qscopedpointer.h>
 
+#include "qamigaglbackingstore.h"
+
 QT_BEGIN_NAMESPACE
 
 class QAmigaBackendData;
 class QAmigaIntegration : public QPlatformIntegration
 {
 public:
-    QAmigaIntegration();
+    explicit QAmigaIntegration(const QStringList &parameters);
     ~QAmigaIntegration();
 
     void configure(const QStringList& paramList);

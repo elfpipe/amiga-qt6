@@ -1,0 +1,25 @@
+QMAKE_CXX.QT_COMPILER_STDCXX = 201703L
+QMAKE_CXX.QMAKE_GCC_MAJOR_VERSION = 11
+QMAKE_CXX.QMAKE_GCC_MINOR_VERSION = 5
+QMAKE_CXX.QMAKE_GCC_PATCH_VERSION = 0
+QMAKE_CXX.COMPILER_MACROS = \
+    QT_COMPILER_STDCXX \
+    QMAKE_GCC_MAJOR_VERSION \
+    QMAKE_GCC_MINOR_VERSION \
+    QMAKE_GCC_PATCH_VERSION
+QMAKE_CXX.INCDIRS = \
+    /opt/ppc-amigaos/ppc-amigaos/include/c++/11.5.0 \
+    /opt/ppc-amigaos/ppc-amigaos/include/c++/11.5.0/ppc-amigaos/clib4 \
+    /opt/ppc-amigaos/ppc-amigaos/include/c++/11.5.0/backward \
+    /opt/ppc-amigaos/lib/gcc/ppc-amigaos/11.5.0/include \
+    /opt/ppc-amigaos/lib/gcc/ppc-amigaos/11.5.0/include-fixed \
+    /opt/ppc-amigaos/ppc-amigaos/include \
+    /opt/ppc-amigaos/ppc-amigaos/SDK/clib4/include \
+    /opt/ppc-amigaos/ppc-amigaos/SDK/local/clib4/include \
+    /opt/ppc-amigaos/ppc-amigaos/SDK/include/include_h \
+    /opt/ppc-amigaos/ppc-amigaos/SDK/include/netinclude
+QMAKE_CXX.LIBDIRS = \
+    /opt/ppc-amigaos/lib/gcc/ppc-amigaos/11.5.0/clib4 \
+    /opt/ppc-amigaos/ppc-amigaos/lib/clib4 \
+    /opt/ppc-amigaos/lib/gcc/ppc-amigaos/11.5.0 \
+    /opt/ppc-amigaos/ppc-amigaos/lib

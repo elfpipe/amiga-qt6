@@ -1,4 +1,4 @@
-#include "qamigaopenglcontext_p.h"
+#include "qamigaglcontext.h"
 #include <proto/ogles2.h>
 
 QT_BEGIN_NAMESPACE

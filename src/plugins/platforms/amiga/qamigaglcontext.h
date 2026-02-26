@@ -1,19 +1,24 @@
 #ifndef QAMIGAOPENGLCONTEXT_p_h
 #define QAMIGAOPENGLCONTEXT_p_h
 
-#include <GL/gl.h>
-#include <GL/glext.h>
+// #include <GL/gl.h>
+// #include <GL/glext.h>
 
 #include <QtCore/qhash.h>
 #include <qpa/qplatformopenglcontext.h>
 #include <qpa/qplatformsurface.h>
-#include "qamigawindow_p.h"
-#include "qamigaoffscreensurface_p.h"
+
+#include "qamigawindow.h"
+#include "qamigaoffscreensurface.h"
 
 #include <proto/exec.h>
 #include <inline4/ogles2.h>
 #include <proto/ogles2.h>
 #include <proto/graphics.h>
+
+#ifdef glPolygonMode
+#undef glPolygonMode
+#endif
 
 QT_BEGIN_NAMESPACE
 

@@ -37,9 +37,9 @@
 **
 ****************************************************************************/
 
-#include "qamigacommon_p.h"
-#include "qamigaintegration_p.h"
-#include "qamigawindow_p.h"
+#include "qamigacommon.h"
+#include "qamigaintegration.h"
+#include "qamigawindow.h"
 
 
 #include <QtGui/private/qpixmap_raster_p.h>

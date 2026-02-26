@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2020 The Qt Company Ltd.
+** Copyright (C) 2016 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the plugins of the Qt Toolkit.
@@ -37,45 +37,35 @@
 **
 ****************************************************************************/
 
-#include "qamigaoffscreensurface_p.h"
+#ifndef QAMIGLGLBACKINGSTORE_H
+#define QAMIGLGLBACKINGSTORE_H
+
+#include <qpa/qplatformbackingstore.h>
 
 QT_BEGIN_NAMESPACE
 
-QAmigaOffscreenSurface::QAmigaOffscreenSurface(QOffscreenSurface *offscreenSurface)
-    : QPlatformOffscreenSurface(offscreenSurface)
-{
-    QSize size = offscreenSurface->size();
-    m_surface = IIntuition->OpenWindowTags(NULL,
-								WA_Title,				"",
-								WA_SimpleRefresh,		TRUE,
-								WA_InnerWidth,			size.width(),
-								WA_InnerHeight,			size.height(),
-								WA_BackFill, 			LAYERS_NOBACKFILL,
-                                WA_Hidden,              TRUE,
-    
-								TAG_DONE);
-}
+class QOpenGLContext;
+class QOpenGLPaintDevice;
 
-QAmigaOffscreenSurface::~QAmigaOffscreenSurface()
+class QAmigaGLBackingStore : public QPlatformBackingStore
 {
-    IIntuition->CloseWindow(m_surface);
-}
+public:
+    QAmigaGLBackingStore(QWindow *window);
+    ~QAmigaGLBackingStore();
 
-QSurfaceFormat QAmigaOffscreenSurface::format() const
-{
-    QSurfaceFormat format;
-    format.setRenderableType(QSurfaceFormat::OpenGLES);
-    format.setRedBufferSize(8);
-    format.setGreenBufferSize(8);
-    format.setBlueBufferSize(8);
-    format.setAlphaBufferSize(8);
-    return format;
-}
+    QPaintDevice *paintDevice() override;
 
-bool QAmigaOffscreenSurface::isValid() const
-{
-    return m_surface != 0;
-}
+    void beginPaint(const QRegion &) override;
+    void endPaint() override;
+
+    void flush(QWindow *window, const QRegion &region, const QPoint &offset) override;
+    void resize(const QSize &size, const QRegion &staticContents) override;
+
+private:
+    QOpenGLContext *m_context;
+    QOpenGLPaintDevice *m_device;
+};
 
 QT_END_NAMESPACE
 
+#endif // QAMIGLGLBACKINGSTORE_H

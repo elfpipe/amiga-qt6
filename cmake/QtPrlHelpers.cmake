@@ -51,7 +51,7 @@ function(qt_generate_prl_file target install_dir)
     endif()
 
     if(rcc_objects AND QT_WILL_INSTALL)
-        list(TRANSFORM rcc_objects PREPEND "${QT_INSTALL_PREFIX}/")
+        list(TRANSFORM rcc_objects PREPEND "${CMAKE_INSTALL_PREFIX}/")
     endif()
 
     # Generate a preliminary .prl file that contains absolute paths to all libraries

@@ -20,7 +20,7 @@ set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 # Amiga C runtime (be consistent)
 set(CMAKE_C_FLAGS_INIT   "-mlongcall -mcrt=clib4 -athread=native -Wno-ignored-attributes")
 set(CMAKE_CXX_FLAGS_INIT "-mlongcall -mcrt=clib4 -athread=native -Wno-ignored-attributes")
-set(CMAKE_EXE_LINKER_FLAGS "-mlongcall -mcrt=clib4 -athread=native")
+set(CMAKE_EXE_LINKER_FLAGS "-mlongcall -mcrt=clib4 -athread=native -Wl,-Bstatic")
 
 # Force a single absolute RPATH for all executables
 set(CMAKE_INSTALL_RPATH "/qt6-amiga/lib")
