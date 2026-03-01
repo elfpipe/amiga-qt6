@@ -116,14 +116,12 @@ public:
         QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(platformSurface);
         QAmigaOffscreenSurface *offscreenSurface = dynamic_cast<QAmigaOffscreenSurface *>(platformSurface);
 
-
         if(!aglContext)
             return false;
         
-        if (aglContext)
-            aglMakeCurrent(aglContext);
+        aglMakeCurrent(aglContext);
 
-        if (surface != platformSurface) {
+        if (surface != platformSurface || amigaWindow) {
             surface = platformSurface;
             struct Window *window = amigaWindow ? amigaWindow->intuitionWindow() : (offscreenSurface ? offscreenSurface->nativeHandle() : 0);
             if (!window)

@@ -38,6 +38,7 @@
 ****************************************************************************/
 
 #include "qamigaglbackingstore.h"
+#include "qamigaglcontext.h"
 
 #include <QtGui/QOpenGLContext>
 #include <QtOpenGL/QOpenGLPaintDevice>

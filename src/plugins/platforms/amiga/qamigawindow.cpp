@@ -118,7 +118,7 @@ void QAmigaWindow::openWindow()
         WA_MaxWidth, 1920,
         WA_MaxHeight, 1080,
 
-        WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY,
+        WA_IDCMP, IDCMP_CLOSEWINDOW|IDCMP_NEWSIZE|IDCMP_CHANGEWINDOW|IDCMP_MOUSEBUTTONS|IDCMP_MOUSEMOVE|IDCMP_EXTENDEDMOUSE|IDCMP_RAWKEY|IDCMP_REFRESHWINDOW,
         WA_Flags, ( frameless ? 0 : WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET ) | WFLG_ACTIVATE,
         frameless ? TAG_IGNORE : WA_Title, strdup(window()->title().toLocal8Bit().constData()),
 
@@ -129,6 +129,8 @@ void QAmigaWindow::openWindow()
         WA_ReportMouse, TRUE,
         m_visible ? TAG_IGNORE : WA_Hidden, TRUE,
         WA_UserPort, QAmigaIntegration::messagePort(),
+        WA_BackFill, LAYERS_NOBACKFILL,
+        WA_SimpleRefresh, TRUE,
 
         TAG_DONE );
 }
@@ -354,6 +356,12 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
             QWindowSystemInterface::handleCloseEvent(window());
             break;
 
+        case IDCMP_REFRESHWINDOW:
+            IIntuition->BeginRefresh(message->IDCMPWindow);
+            QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(0, 0), window()->size()));
+            IIntuition->EndRefresh(message->IDCMPWindow, TRUE);
+            break;
+
         case IDCMP_NEWSIZE:
         case IDCMP_CHANGEWINDOW: {
             int x, y, w, h;
@@ -362,6 +370,7 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
 
             QWindowSystemInterface::handleGeometryChange(window(), newGeometry);
             QWindowSystemInterface::handleExposeEvent(window(), QRect(QPoint(0, 0), newGeometry.size()));
+            window()->requestUpdate();
 
             QWindowSystemInterface::handleWindowStateChanged(window(), Qt::WindowNoState);
         }
