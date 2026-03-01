@@ -982,6 +982,10 @@ void QWidgetRepaintManager::paintAndFlush()
     dirty = QRegion();
     updateRequestSent = false;
 
+#ifdef __amigaos4__
+    QPaintDevice *pd = store->paintDevice();
+#endif
+
     // Paint opaque non overlapped widgets.
     for (int i = 0; i < opaqueNonOverlappedWidgets.size(); ++i) {
         QWidget *w = opaqueNonOverlappedWidgets[i];
@@ -1000,13 +1004,23 @@ void QWidgetRepaintManager::paintAndFlush()
         QPoint offset;
         if (w != tlw)
             offset += w->mapTo(tlw, QPoint());
+#ifdef __amigaos4__
+        if (pd)
+            wd->drawWidget(pd, toBePainted, offset, flags, nullptr, this);
+#else
         wd->drawWidget(store->paintDevice(), toBePainted, offset, flags, nullptr, this);
+#endif
     }
 
     // Paint the rest with composition.
     if (repaintAllWidgets || !dirtyCopy.isEmpty()) {
         QWidgetPrivate::DrawWidgetFlags flags = QWidgetPrivate::DrawAsRoot | QWidgetPrivate::DrawRecursive;
+#ifdef __amigaos4__
+        if (pd)
+            tlw->d_func()->drawWidget(pd, dirtyCopy, QPoint(), flags, nullptr, this);
+#else
         tlw->d_func()->drawWidget(store->paintDevice(), dirtyCopy, QPoint(), flags, nullptr, this);
+#endif
     }
 
     store->endPaint();

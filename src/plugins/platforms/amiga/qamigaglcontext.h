@@ -99,8 +99,11 @@ public:
         return format;
     }
 
-    void swapBuffers(QPlatformSurface */*platformSurface*/) override
+    void swapBuffers(QPlatformSurface *platformSurface) override
     {
+        qInfo() << "== OpenGL ==" << "\n" << 
+                   "swapBuffers" << "\n";
+        makeCurrent(platformSurface);
         aglSwapBuffers();
     }
 
@@ -117,43 +120,34 @@ public:
         QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(platformSurface);
         QAmigaOffscreenSurface *offscreenSurface = dynamic_cast<QAmigaOffscreenSurface *>(platformSurface);
 
+        qInfo() << "== OpenGL ==" << "\n" << 
+                   "aglContext : " << aglContext << "\n";
+
         if(!aglContext)
             return false;
         
-        aglMakeCurrent(aglContext);
+        if (aglContext)
+            aglMakeCurrent(aglContext);
 
-#if 0
-        struct Window *window = amigaWindow ? amigaWindow->intuitionWindow() : (offscreenSurface ? offscreenSurface->nativeHandle() : 0);
-        share = newShare ? newShare->aglContext : 0;
-        aglSetParamsTags2(
-            OGLES2_CCT_WINDOW, window,
-            OGLES2_CCT_SHARE_WITH, share,
-            TAG_DONE);
-#else
         if (surface != platformSurface) {
             surface = platformSurface;
-
             struct Window *window = amigaWindow ? amigaWindow->intuitionWindow() : (offscreenSurface ? offscreenSurface->nativeHandle() : 0);
+            if (!window)
+                window = dummyW;
 
             if (window) {
                 aglSetParamsTags2(
                     OGLES2_CCT_WINDOW, window,
                     TAG_DONE);
-                if (dummyW)
-                    IIntuition->CloseWindow(dummyW);
-                dummyW = 0;
             }
         }
 
         if (newShare && newShare->aglContext != share) {
             share = newShare->aglContext;
-
-            // if (share)
-                aglSetParamsTags2(
-                    OGLES2_CCT_SHARE_WITH, share,
-                    TAG_DONE);
+            aglSetParamsTags2(
+                OGLES2_CCT_SHARE_WITH, share,
+                TAG_DONE);
         }
-#endif
 #if 0
             if(IOGLES2 && (offscreenSurface || amigaWindow)) {
                 if (aglContext) aglDestroyContext(aglContext);
@@ -172,17 +166,15 @@ public:
         }
 #endif
 
+        qInfo() << "== OpenGL ==" << "\n" << 
+                   "makeCurrent EXIT" << "\n";
+
         return true;
     }
 
     void doneCurrent() override
     {
-        surface = 0;
-        share = 0;
-        aglSetParamsTags2(
-            OGLES2_CCT_WINDOW, 0,
-            OGLES2_CCT_SHARE_WITH, 0,
-            TAG_DONE);
+        aglMakeCurrent(nullptr);
     }
 
     QFunctionPointer getProcAddress(const char *procName) override;

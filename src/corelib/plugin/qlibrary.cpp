@@ -696,10 +696,8 @@ bool QLibrary::isLibrary(const QString &fileName)
 # elif defined(Q_OS_DARWIN)
             QLatin1String("so"),
             QLatin1String("bundle"),
-# elif defined(Q_OS_UNIX)
-            QLatin1String("so"),
-# elif defined(Q_OS_AMIGA)
-            QLatin1String("so"),
+# elif defined(Q_OS_UNIX) || defined(__amigaos4__)
+            QLatin1String("so")
 # endif
         }; // candidates
         bool result = std::find(std::begin(candidates), std::end(candidates), s) != std::end(candidates);

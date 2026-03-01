@@ -43,13 +43,17 @@
 #include <qpa/qplatformbackingstore.h>
 #include <qpa/qplatformwindow.h>
 
+#include <qopenglwindow.h>
+#include <QtGui/private/qpaintdevicewindow_p.h>
+#include <QtGui/private/qopenglcontext_p.h>
+
 #include <qhash.h>
 
 #include <proto/intuition.h>
 
 QT_BEGIN_NAMESPACE
 
-class QOpenGLWindowPrivate;
+class QAmigaOpenGLWindowPrivate;
 class QAmigaOpenGLContext;
 
 class QAmigaWindow : public QPlatformWindow
@@ -83,8 +87,6 @@ public:
 
     static QAmigaWindow *windowForWinId(WId id);
 
-    // QSurfaceFormat format() const override { if(gl) return m_glWindowPrivate->format(); else return QPlatformSurface::format(); };
-
 private:
     void setFrameMarginsEnabled(bool enabled);
     void setGeometryImpl(const QRect &rect);
@@ -100,19 +102,16 @@ private:
     bool gl;
 
     static QHash<WId, QAmigaWindow *> m_windowForWinIdHash;
+    static QMargins m_cachedMargins;
+    static bool m_marginsCached;
 
 #ifdef __amigaos4__
 private:
     struct Window *m_intuitionWindow;
-#endif  
-};
+#endif
 
-// class QAmigaGLWindow : public QAmigaWindow
-// {
-// public:
-//     QAmigaGLWindow(QWindow *window, bool frameMarginsEnabled);
-//     ~QAmigaGLWindow();
-// };
+    // friend class QAmigaGLWindow;
+};
 
 QT_END_NAMESPACE
 

@@ -238,25 +238,29 @@ QMargins QAmigaWindow::frameMargins() const
 
 void QAmigaWindow::setFrameMarginsEnabled(bool enabled)
 {
-    //first, open dummy window to read dimensions
-    struct Window *dummy = IIntuition->OpenWindowTags(0,
-        WA_Flags, WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET    | WFLG_CLOSEGADGET | WFLG_ACTIVATE,
-        WA_Title, "Qt Analog Clock",
-        WA_Left, 0,
-        WA_Top, 0,
-        WA_Width, 640,
-        WA_Height, 512,
-        WA_Hidden, TRUE,
-        TAG_DONE);
+    if (enabled && !isFrameless() && (parent() == nullptr)) {
+        if (!m_marginsCached) {
+            // first, open dummy window to read dimensions
+            struct Window *dummy = IIntuition->OpenWindowTags(0,
+                WA_Flags, WFLG_SIZEGADGET | WFLG_DRAGBAR | WFLG_DEPTHGADGET | WFLG_CLOSEGADGET | WFLG_ACTIVATE,
+                WA_Title, "Qt Margin Calculation",
+                WA_Left, 0,
+                WA_Top, 0,
+                WA_Width, 640,
+                WA_Height, 512,
+                WA_Hidden, TRUE,
+                TAG_DONE);
 
-    if (enabled
-        && !isFrameless()
-        && (parent() == nullptr)) {
-        m_margins = QMargins(dummy->BorderLeft, dummy->BorderTop, dummy->BorderRight, dummy->BorderBottom);
+            if (dummy) {
+                m_cachedMargins = QMargins(dummy->BorderLeft, dummy->BorderTop, dummy->BorderRight, dummy->BorderBottom);
+                IIntuition->CloseWindow(dummy);
+                m_marginsCached = true;
+            }
+        }
+        m_margins = m_cachedMargins;
     } else {
         m_margins = QMargins(0, 0, 0, 0);
     }
-    IIntuition->CloseWindow(dummy);
 }
 
 void QAmigaWindow::setWindowState(Qt::WindowStates state)
@@ -304,6 +308,8 @@ QAmigaWindow *QAmigaWindow::windowForWinId(WId id)
 }
 
 QHash<WId, QAmigaWindow *> QAmigaWindow::m_windowForWinIdHash;
+QMargins QAmigaWindow::m_cachedMargins;
+bool QAmigaWindow::m_marginsCached = false;
 
 bool qt_swap_ctrl_and_amiga_keys = false;
 int qt_wheel_sensitivity = 120;
@@ -524,15 +530,5 @@ void QAmigaWindow::processIntuiMessage(struct IntuiMessage *message) {
             break;
     }
 }
-
-// QAmigaGLWindow::QAmigaGLWindow(QWindow *window, bool frameMarginsEnabled)
-//     : QAmigaWindow(window, frameMarginsEnabled)
-// {
-//     w->setSurfaceType(QSurface::OpenGLSurface);
-// }
-
-// QAmigaGLWindow::~QAmigaGLWindow()
-// {
-// }
 
 QT_END_NAMESPACE

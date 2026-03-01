@@ -186,7 +186,7 @@ QPaintDevice *QBackingStore::paintDevice()
 */
 void QBackingStore::endPaint()
 {
-    if (paintDevice()->paintingActive())
+    if (paintDevice() && paintDevice()->paintingActive())
         qWarning("QBackingStore::endPaint() called with active painter; did you forget to destroy it or call QPainter::end() on it?");
 
     handle()->endPaint();

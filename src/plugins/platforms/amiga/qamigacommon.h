@@ -62,11 +62,14 @@ public:
     QAmigaScreen(const QAmigaIntegration *integration);
 
     QRect geometry() const override { return m_geometry; }
+    QRect availableGeometry() const override { return m_geometry; }
     int depth() const override { return 32; }
     QImage::Format format() const override { return QImage::Format_RGB32; }
+    QSizeF physicalSize() const override { return QSizeF(m_geometry.width(), m_geometry.height()); }
     QDpi logicalDpi() const override { return QDpi(m_logicalDpi, m_logicalDpi); }
     QDpi logicalBaseDpi() const override { return QDpi(m_logicalBaseDpi, m_logicalBaseDpi); }
     qreal devicePixelRatio() const override { return m_dpr; }
+    qreal refreshRate() const override { return 60; }
     QString name() const override { return m_name; }
     QPlatformCursor *cursor() const override { return m_cursor.data(); }
     QList<QPlatformScreen *> virtualSiblings() const override;

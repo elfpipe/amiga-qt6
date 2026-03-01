@@ -41,7 +41,6 @@
 #include "qamigaintegration.h"
 #include "qamigawindow.h"
 
-
 #include <QtGui/private/qpixmap_raster_p.h>
 #include <QtGui/private/qguiapplication_p.h>
 

@@ -16,6 +16,7 @@ qt_internal_add_plugin(QAmigaIntegrationPlugin
         qamigaeventdispatcher.h qamigaeventdispatcher.cpp
         qamigaglbackingstore.cpp qamigaglbackingstore.h
         qamigaglcontext.cpp qamigaglcontext.h
+        # qamigaglwindow.cpp qamigaglwindow.h
         qamigaintegration.cpp qamigaintegration.h
         qamigaoffscreensurface.h qamigaoffscreensurface.cpp
         qamigawindow.cpp qamigawindow.h

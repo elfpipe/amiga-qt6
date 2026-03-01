@@ -57,15 +57,7 @@
 #include <QtCore/qjnienvironment.h>
 #endif
 
-#ifdef Q_OS_AMIGA
-#include <QString>
-#endif
-
 QT_BEGIN_NAMESPACE
-
-#ifdef Q_OS_AMIGA
-extern QString qt_unix_to_amiga_path_name(const QString &);
-#endif
 
 static QString qdlerror()
 {
@@ -243,20 +235,7 @@ bool QLibraryPrivate::load_sys()
             } else {
                 attempt = path + prefixes.at(prefix) + name + suffixes.at(suffix);
             }
-#if 0 //defined(Q_OS_AMIGA)
-            qInfo() << "load_sys() attempt == " << attempt << "\n";
-			QString path (qt_unix_to_amiga_path_name (attempt));
-            qInfo() << "load_sys() path == " << path << "\n";
-			char *amigapath = strdup(path.toLocal8Bit().constData());
-
-            hnd = dlopen(amigapath, dlFlags);
-			//qDebug() << "dlopen()" << amigapath << (void *)pHnd << dlFlags;
-			free (amigapath);
-#else
-            qInfo() << "load_sys() attempt == " << attempt << "\n";
-            qInfo() << "load_sys() path == " << QFile::encodeName(attempt) << "\n";
             hnd = dlopen(QFile::encodeName(attempt), dlFlags);
-#endif
 
 #ifdef Q_OS_ANDROID
             if (!hnd) {

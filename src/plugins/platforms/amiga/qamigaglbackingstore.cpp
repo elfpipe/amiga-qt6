@@ -56,6 +56,7 @@ QAmigaGLBackingStore::QAmigaGLBackingStore(QWindow *window)
 
 QAmigaGLBackingStore::~QAmigaGLBackingStore()
 {
+    delete m_device;
     delete m_context;
 }
 
@@ -69,22 +70,21 @@ void QAmigaGLBackingStore::flush(QWindow *window, const QRegion &region, const Q
     Q_UNUSED(region);
     Q_UNUSED(offset);
 
-#ifdef QEGL_EXTRA_DEBUG
-    qWarning("QEglBackingStore::flush %p", window);
-#endif
-
     m_context->swapBuffers(window);
 }
 
 void QAmigaGLBackingStore::beginPaint(const QRegion &)
 {
     m_context->makeCurrent(window());
-    m_device = new QOpenGLPaintDevice(window()->size());
+    if (!m_device || m_device->size() != window()->size()) {
+        delete m_device;
+        m_device = new QOpenGLPaintDevice(window()->size());
+    }
 }
 
 void QAmigaGLBackingStore::endPaint()
 {
-    delete m_device;
+    m_context->doneCurrent();
 }
 
 void QAmigaGLBackingStore::resize(const QSize &size, const QRegion &staticContents)

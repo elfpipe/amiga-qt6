@@ -98,17 +98,33 @@ default:
 
 
     if(intuitionPort) {
-        if (listenSignals & 1 << intuitionPort->mp_SigBit) { //all Amiga windows use the same UserPort *
-            while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
-                struct IntuiMessage messageCopy = *message;
-                IExec->ReplyMsg((struct Message *)message);
-                for(int i = 0; i < windows.size(); i++) {
-                    QAmigaWindow *current = windows.at(i);
-                    if(current && current->intuitionWindow() == message->IDCMPWindow) {
-                        current->processIntuiMessage(&messageCopy);
-                    }
+        // Drain the port regardless of listenSignals, as Wait() might have missed it 
+        // or other signals might have arrived.
+        while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
+            struct IntuiMessage messageCopy = *message;
+            nevents++;
+
+            QAmigaWindow *target = nullptr;
+            for(int i = 0; i < windows.size(); i++) {
+                if(windows.at(i)->intuitionWindow() == messageCopy.IDCMPWindow) {
+                    target = windows.at(i);
+                    break;
                 }
             }
+
+            // Early Reply strategy: Reply to certain events immediately to prevent Intuition deadlocks
+            // when we call window attribute getters during processing.
+            if (message->Class == IDCMP_NEWSIZE || message->Class == IDCMP_CHANGEWINDOW) {
+                IExec->ReplyMsg((struct Message *)message);
+                message = nullptr; // Don't reply twice
+            }
+
+            if(target) {
+                target->processIntuiMessage(&messageCopy);
+            }
+
+            if (message)
+                IExec->ReplyMsg((struct Message *)message);
         }
     }
 

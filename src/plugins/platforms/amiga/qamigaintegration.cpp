@@ -194,7 +194,7 @@ bool QAmigaIntegration::hasCapability(QPlatformIntegration::Capability cap) cons
     switch (cap) {
     case ThreadedPixmaps: return true;
     case MultipleWindows: return true;
-    case RhiBasedRendering: return false;
+    case RhiBasedRendering: return true;
     case RasterGLSurface: return true;
     default: return QPlatformIntegration::hasCapability(cap);
     }
@@ -206,7 +206,7 @@ QPlatformWindow *QAmigaIntegration::createPlatformWindow(QWindow *window) const
     bool useOpenGL = (env && env[0] == '1') || window->surfaceType() == QWindow::OpenGLSurface;
     QPlatformWindow *w = new QAmigaWindow(window, m_windowFrameMarginsEnabled);
     if(useOpenGL)
-        window->setSurfaceType(QSurface::OpenGLSurface);
+        window->setSurfaceType(QSurface::RasterGLSurface);
     w->requestActivateWindow();
     return w;
 }
@@ -215,8 +215,10 @@ QPlatformBackingStore *QAmigaIntegration::createPlatformBackingStore(QWindow *wi
 {
     char *env = getenv("QT6AMIGA_OPENGL");
     bool useOpenGL = env && env[0] == '1';
-    if(window->surfaceType() == QWindow::OpenGLSurface || useOpenGL)
+    if(window->surfaceType() == QWindow::OpenGLSurface || useOpenGL) {
+        window->setSurfaceType(QSurface::RasterGLSurface);
         return new QAmigaGLBackingStore(window);
+    }
     return new QAmigaBackingStore(window);
 }
 
@@ -305,23 +307,6 @@ QPlatformOffscreenSurface *QAmigaIntegration::createPlatformOffscreenSurface(QOf
 {
     return new QAmigaOffscreenSurface(surface);
 }
-
-// QAmigaIntegration *QAmigaIntegration::createAmigaIntegration(const QStringList& paramList)
-// {
-//     QAmigaIntegration *amigaIntegration = nullptr;
-
-// #if QT_CONFIG(xlib) && QT_CONFIG(opengl) && !QT_CONFIG(opengles2)
-//     QByteArray glx = qgetenv("QT_QPA_OFFSCREEN_NO_GLX");
-//     if (glx.isEmpty())
-//         offscreenIntegration = new QOffscreenX11Integration;
-// #endif
-
-//      if (!amigaIntegration)
-//         amigaIntegration = new QAmigaIntegration;
-
-//     amigaIntegration->configure(paramList);
-//     return amigaIntegration;
-// }
 
 QList<QPlatformScreen *> QAmigaIntegration::screens() const
 {
