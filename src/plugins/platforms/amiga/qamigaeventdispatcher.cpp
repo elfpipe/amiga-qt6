@@ -37,10 +37,10 @@ bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
     struct MsgPort *intuitionPort = QAmigaIntegration::messagePort();
     if (intuitionPort) {
         listenSignals |= 1 << intuitionPort->mp_SigBit;
-    } else printf("No amiga windows.\n");
+    }
 
     d->pollfds.clear();
-    d->pollfds.reserve(1 + (include_notifiers ? d->socketNotifiers.size() : 0));
+    d->pollfds.reserve(include_notifiers ? d->socketNotifiers.size() : 0);
 
     if (include_notifiers)
         for (auto it = d->socketNotifiers.cbegin(); it != d->socketNotifiers.cend(); ++it)
@@ -48,86 +48,46 @@ bool QAmigaEventDispatcher::processEvents(QEventLoop::ProcessEventsFlags flags)
 
     int nevents = 0;
 
-
-
-// // This must be last, as it's popped off the end below
-// d->pollfds.append(d->threadPipe.prepare());
-
-    
-
-
-    // unsigned int caughtSignals = IExec->Wait(listenSignals);
-
-
-switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
-case -1:
-    perror("qt_safe_poll");
-    break;
-case 0:
-    break;
-default:
-    // nevents += d->threadPipe.check(d->pollfds.takeLast());
-    if (include_notifiers)
-        nevents += d->activateSocketNotifiers();
-    break;
-}
-
-
-
-
-
-
-
-
-
-
-    // if (listenSignals & 1 << d->wakeupSignal)
-    //     {} //printf("WAKE UP!!!!\n");
-
-    // if(!(caughtSignals & 1 << d->timerPort->mp_SigBit))
-    //     IExec->AbortIO((struct IORequest *)d->timerRequest);
-
+    switch (qt_safe_poll(d->pollfds.data(), d->pollfds.size(), tm, &listenSignals)) {
+    case -1:
+        perror("qt_safe_poll");
+        break;
+    case 0:
+        break;
+    default:
+        if (include_notifiers)
+            nevents += d->activateSocketNotifiers();
+        break;
+    }
 
     if (include_timers)
         nevents += d->activateTimers();
 
-
-    if (include_notifiers)
-        nevents += d->activateSocketNotifiers();
-
-
-
-    if(intuitionPort) {
-        // Drain the port regardless of listenSignals, as Wait() might have missed it 
-        // or other signals might have arrived.
-        while(struct IntuiMessage *message = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
-            struct IntuiMessage messageCopy = *message;
+    if (intuitionPort) {
+        while (struct IntuiMessage *msg = (struct IntuiMessage *)IExec->GetMsg(intuitionPort)) {
+            struct IntuiMessage msgCopy = *msg;
             nevents++;
+            bool replied = false;
+            if (msgCopy.Class == IDCMP_NEWSIZE || msgCopy.Class == IDCMP_CHANGEWINDOW) {
+                IExec->ReplyMsg((struct Message *)msg);
+                replied = true;
+            }
 
             QAmigaWindow *target = nullptr;
-            for(int i = 0; i < windows.size(); i++) {
-                if(windows.at(i)->intuitionWindow() == messageCopy.IDCMPWindow) {
+            for (int i = 0; i < windows.size(); i++) {
+                if (windows.at(i)->intuitionWindow() == msgCopy.IDCMPWindow) {
                     target = windows.at(i);
                     break;
                 }
             }
 
-            // Early Reply strategy: Reply to certain events immediately to prevent Intuition deadlocks
-            // when we call window attribute getters during processing.
-            if (message->Class == IDCMP_NEWSIZE || message->Class == IDCMP_CHANGEWINDOW) {
-                IExec->ReplyMsg((struct Message *)message);
-                message = nullptr; // Don't reply twice
-            }
+            if (target)
+                target->processIntuiMessage(&msgCopy);
 
-            if(target) {
-                target->processIntuiMessage(&messageCopy);
-            }
-
-            if (message)
-                IExec->ReplyMsg((struct Message *)message);
+            if (!replied)
+                IExec->ReplyMsg((struct Message *)msg);
         }
     }
 
-    // return true if we handled events, false otherwise
     return QWindowSystemInterface::sendWindowSystemEvents(flags) || nevents > 0;
 }

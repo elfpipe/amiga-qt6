@@ -396,7 +396,6 @@ void QOpenGLTextureGlyphCache::resizeTextureData(int width, int height)
     blitProgram->setUniformValue("imageTexture", QT_IMAGE_TEXTURE_UNIT);
 
     funcs->glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-
     funcs->glBindTexture(GL_TEXTURE_2D, m_textureResource->m_texture);
 
     funcs->glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, oldWidth, oldHeight);

@@ -182,6 +182,11 @@ void QAmigaIntegration::configure(const QStringList& paramList)
 void QAmigaIntegration::initialize()
 {
     m_inputContext.reset(QPlatformInputContextFactory::create());
+
+    // Force font population early to avoid deadlocks during the first render cycle
+    if (auto db = fontDatabase()) {
+        db->populateFontDatabase();
+    }
 }
 
 QPlatformInputContext *QAmigaIntegration::inputContext() const

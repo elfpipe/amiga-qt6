@@ -73,8 +73,6 @@ public:
             OGLES2_CCT_VSYNC, 0,
             OGLES2_CCT_SINGLE_GET_ERROR_MODE, 1,
             TAG_DONE);
-        qInfo() << "== OpenGL ==" << "\n" << 
-                   "aglContext : " << aglContext << "\n";
     }
 
     ~QAmigaOpenGLContext()
@@ -101,8 +99,6 @@ public:
 
     void swapBuffers(QPlatformSurface *platformSurface) override
     {
-        qInfo() << "== OpenGL ==" << "\n" << 
-                   "swapBuffers" << "\n";
         makeCurrent(platformSurface);
         aglSwapBuffers();
     }
@@ -120,8 +116,6 @@ public:
         QAmigaWindow *amigaWindow = dynamic_cast<QAmigaWindow *>(platformSurface);
         QAmigaOffscreenSurface *offscreenSurface = dynamic_cast<QAmigaOffscreenSurface *>(platformSurface);
 
-        qInfo() << "== OpenGL ==" << "\n" << 
-                   "aglContext : " << aglContext << "\n";
 
         if(!aglContext)
             return false;
@@ -166,8 +160,6 @@ public:
         }
 #endif
 
-        qInfo() << "== OpenGL ==" << "\n" << 
-                   "makeCurrent EXIT" << "\n";
 
         return true;
     }

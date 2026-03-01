@@ -615,7 +615,6 @@ QFontEngineFT *QFontEngineFT::create(const QFontDef &fontDef, FaceId faceId, con
         return nullptr;
     }
 
-    engine->setQtDefaultHintStyle(static_cast<QFont::HintingPreference>(fontDef.hintingPreference));
     return engine.take();
 }
 

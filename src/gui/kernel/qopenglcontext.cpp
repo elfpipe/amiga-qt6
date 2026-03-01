@@ -694,7 +694,8 @@ bool QOpenGLContext::makeCurrent(QSurface *surface)
             const char *rendererString = reinterpret_cast<const char *>(functions()->glGetString(GL_RENDERER));
             if (rendererString)
                 needsWorkaround =
-                        qstrncmp(rendererString, "Mali-4xx", 6) == 0 // Mali-400, Mali-450
+                        qstrncmp(rendererString, "Warp3D Nova", 11) == 0
+                        || qstrncmp(rendererString, "Mali-4xx", 6) == 0 // Mali-400, Mali-450
                         || qstrcmp(rendererString, "Mali-T880") == 0
                         || qstrncmp(rendererString, "Adreno (TM) 2xx", 13) == 0 // Adreno 200, 203, 205
                         || qstrncmp(rendererString, "Adreno 2xx", 8) == 0 // Same as above but without the '(TM)'

@@ -179,7 +179,7 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
     if (!timeout_ts) {
         // no timeout -> block forever
         int ret;
-        EINTR_LOOP(ret, ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals););
+        EINTR_LOOP(ret, ::waitpoll(fds, nfds, -1, listenSignals));
         return ret;
     }
 
@@ -188,7 +188,7 @@ int qt_safe_poll(struct pollfd *fds, nfds_t nfds, const struct timespec *timeout
 
     // loop and recalculate the timeout as needed
     forever {
-        const int ret = ::waitpoll(fds, nfds, timespecToMillisecs(timeout_ts), listenSignals);;
+        const int ret = ::waitpoll(fds, nfds, timespecToMillisecs(&timeout), listenSignals);
         if (ret != -1 || errno != EINTR)
             return ret;
 
